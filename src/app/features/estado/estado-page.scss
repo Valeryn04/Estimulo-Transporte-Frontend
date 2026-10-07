@@ -1,0 +1,12 @@
+.estado {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem;
+  border: 2px solid var(--color-ok);
+  border-radius: var(--radius);
+
+  &--error {
+    border-color: var(--color-error);
+  }
+}

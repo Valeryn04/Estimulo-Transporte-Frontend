@@ -1,0 +1,86 @@
+.intro {
+  margin: 0 0 16px;
+  color: var(--color-muted);
+}
+
+textarea {
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.variables {
+  margin: 0 0 20px;
+  padding: 12px 16px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+
+  legend {
+    padding: 0 6px;
+    font-weight: 700;
+  }
+
+  .nota {
+    margin: 0 0 8px;
+    color: var(--color-muted);
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 12px;
+    margin-bottom: 6px;
+  }
+
+  .boton {
+    min-height: 36px;
+    padding: 4px 12px;
+    font-family: monospace;
+  }
+}
+
+.vista {
+  margin-top: 20px;
+
+  .aviso ul {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+
+  .cuerpo {
+    margin: 8px 0 0;
+    padding: 12px 16px;
+    white-space: pre-wrap;
+    font-family: inherit;
+    background: #fff;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+  }
+}
+
+.versiones {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  small {
+    display: block;
+    color: var(--color-muted);
+  }
+}

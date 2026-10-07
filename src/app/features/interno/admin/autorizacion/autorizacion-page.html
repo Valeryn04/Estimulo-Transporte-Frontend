@@ -1,0 +1,65 @@
+<div class="encabezado">
+  <h1>Autorización de datos personales</h1>
+</div>
+
+<p class="intro">
+  Este texto lo lee y acepta el ciudadano antes de enviar su preinscripción (Ley 1581 de 2012). La
+  plataforma guarda la fecha, la hora, la IP y la versión que aceptó. Al publicar un cambio se crea
+  una versión nueva; las aceptaciones anteriores no se modifican.
+</p>
+
+@if (mensaje()) {
+  <p class="aviso exito" role="status">{{ mensaje() }}</p>
+}
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+
+@if (cargando()) {
+  <p role="status">Cargando…</p>
+} @else if (estado(); as e) {
+  <form class="tarjeta" (submit)="publicar($event)" novalidate>
+    <p class="version-actual">
+      @if (e.vigente; as v) {
+        Versión vigente: <strong>{{ v.version }}</strong> · publicada el
+        {{ v.vigenteDesde | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
+      }
+    </p>
+    <app-campo
+      idCampo="autorizacion-texto"
+      etiqueta="Texto de la autorización"
+      ayuda="Edite el texto y publique para crear una versión nueva (entre 50 y 20.000 caracteres)."
+      [control]="contenido"
+    >
+      <textarea appCampoControl [formControl]="contenido" rows="16"></textarea>
+    </app-campo>
+    <div class="acciones">
+      <button type="submit" class="boton" [disabled]="guardando() || contenido.pristine">
+        {{ guardando() ? 'Publicando…' : 'Publicar como versión nueva' }}
+      </button>
+    </div>
+  </form>
+
+  <h2>Todas las versiones</h2>
+  <ul class="versiones">
+    @for (v of e.versiones; track v.version) {
+      <li>
+        <button
+          type="button"
+          class="boton secundario"
+          [attr.aria-expanded]="verVersion() === v.version"
+          [attr.aria-controls]="'texto-v' + v.version"
+          (click)="alternarVersion(v.version)"
+        >
+          Versión {{ v.version }} · {{ v.vigenteDesde | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
+          @if (v.creadoPor) {
+            · {{ v.creadoPor }}
+          }
+        </button>
+        @if (verVersion() === v.version) {
+          <pre [id]="'texto-v' + v.version" class="texto">{{ v.contenido }}</pre>
+        }
+      </li>
+    }
+  </ul>
+}

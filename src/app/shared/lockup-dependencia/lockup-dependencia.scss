@@ -1,0 +1,40 @@
+:host {
+  display: inline-block;
+  // Área de resguardo del logo: nunca se pega a otros elementos.
+  padding: 4px 0;
+  --lockup-altura: 34px;
+  --lockup-linea: var(--alc-amarillo, #ffea00);
+  --lockup-texto: #fff;
+}
+
+:host(.tamano-grande) {
+  --lockup-altura: 50px;
+}
+
+:host(.fondo-claro) {
+  --lockup-linea: var(--alc-verde, #279b48);
+  --lockup-texto: var(--alc-azul, #142334);
+}
+
+.logo-caja {
+  padding-bottom: 7px;
+  border-bottom: 3px solid var(--lockup-linea);
+}
+
+.logo {
+  display: block;
+  width: auto;
+  height: var(--lockup-altura);
+  max-width: 100%;
+}
+
+.dependencia {
+  margin: 8px 0 0;
+  font-family: var(--fuente-titulo, Arial, sans-serif);
+  font-size: calc(var(--lockup-altura) * 0.3);
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: var(--lockup-texto);
+}

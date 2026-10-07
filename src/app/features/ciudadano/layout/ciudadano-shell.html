@@ -1,0 +1,15 @@
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+<header class="cabecera">
+  <div class="cabecera-interior">
+    <app-lockup-dependencia fondo="oscuro" />
+  </div>
+</header>
+<main id="contenido" class="contenedor" tabindex="-1">
+  @if (!enInicio()) {
+    <a class="volver no-imprimir" routerLink="/">
+      <app-icono nombre="atras" />
+      Volver al inicio
+    </a>
+  }
+  <router-outlet />
+</main>

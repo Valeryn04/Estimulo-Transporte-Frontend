@@ -1,0 +1,124 @@
+<div class="encabezado">
+  <h1>Vigencias y cupos</h1>
+  <button type="button" class="boton" (click)="abrirNueva()">Nueva vigencia</button>
+</div>
+
+<p class="intro">
+  La vigencia activa es la que recibe las preinscripciones. Los cupos totales limitan las
+  asignaciones del año; el descuento de cupos por cada asignación se habilita con la etapa de
+  asignación.
+</p>
+
+@if (mensaje()) {
+  <p class="aviso exito" role="status">{{ mensaje() }}</p>
+}
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+
+@if (cargando()) {
+  <p role="status">Cargando…</p>
+} @else {
+  <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Tabla de vigencias">
+    <table class="tabla">
+      <caption class="solo-lectores">
+        Vigencias y cupos
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Vigencia</th>
+          <th scope="col">Desde</th>
+          <th scope="col">Hasta</th>
+          <th scope="col" class="num">Cupos totales</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (v of vigencias(); track v.id) {
+          <tr [class.inactivo]="!v.activa">
+            <th scope="row">{{ v.anio }}</th>
+            <td>{{ v.fechaInicio.split('-').reverse().join('/') }}</td>
+            <td>{{ v.fechaFin.split('-').reverse().join('/') }}</td>
+            <td class="num">{{ v.cuposTotales | number: '1.0-0' }}</td>
+            <td>
+              <span class="etiqueta" [class.ok]="v.activa" [class.mal]="!v.activa">
+                {{ v.activa ? 'Activa' : 'Inactiva' }}
+              </span>
+              <small>Versión {{ v.version }}</small>
+            </td>
+            <td class="acciones-fila">
+              <span class="grupo-acciones">
+                <button
+                  type="button"
+                  class="accion-icono"
+                  [title]="'Editar la vigencia ' + v.anio"
+                  (click)="abrirEditar(v)"
+                >
+                  <app-icono nombre="editar" />
+                  <span class="solo-lectores">Editar la vigencia {{ v.anio }}</span>
+                </button>
+                @if (!v.activa) {
+                  <button
+                    type="button"
+                    class="accion-icono"
+                    [title]="'Activar la vigencia ' + v.anio"
+                    (click)="activar(v)"
+                  >
+                    <app-icono nombre="check" />
+                    <span class="solo-lectores">Activar la vigencia {{ v.anio }}</span>
+                  </button>
+                }
+              </span>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6">Todavía no hay vigencias.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+<app-dialogo
+  [titulo]="editando() ? 'Editar la vigencia ' + editando()!.anio : 'Nueva vigencia'"
+  [abierto]="abierto()"
+  (cierra)="cerrar()"
+>
+  <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+    <app-campo idCampo="vig-anio" etiqueta="Año" [control]="form.controls.anio">
+      <input appCampoControl type="number" formControlName="anio" min="2020" max="2100" />
+    </app-campo>
+    <div class="rejilla">
+      <app-campo
+        idCampo="vig-inicio"
+        etiqueta="Fecha inicial"
+        [control]="form.controls.fechaInicio"
+      >
+        <input appCampoControl type="date" formControlName="fechaInicio" />
+      </app-campo>
+      <app-campo idCampo="vig-fin" etiqueta="Fecha final" [control]="form.controls.fechaFin">
+        <input appCampoControl type="date" formControlName="fechaFin" />
+      </app-campo>
+    </div>
+    <app-campo
+      idCampo="vig-cupos"
+      etiqueta="Cupos totales"
+      ayuda="Número de beneficiarios que se pueden asignar en esta vigencia."
+      [control]="form.controls.cuposTotales"
+    >
+      <input appCampoControl type="number" formControlName="cuposTotales" min="0" />
+    </app-campo>
+    @if (errorDialogo()) {
+      <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
+    }
+    <div class="acciones">
+      <button type="submit" class="boton" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando…' : 'Guardar' }}
+      </button>
+      <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>
+    </div>
+  </form>
+</app-dialogo>

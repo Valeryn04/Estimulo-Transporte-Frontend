@@ -1,0 +1,68 @@
+@if (sesion.perfil(); as perfil) {
+  <h1>Bienvenido(a), {{ perfil.nombres }}</h1>
+  <p>
+    Su acceso depende de los permisos de su rol. Lo que no aparece en el menú es porque su rol no lo
+    incluye.
+  </p>
+
+  @if (
+    sesion.tieneAlguno(PERMISO.usuarios, PERMISO.catalogos, PERMISO.parametros, PERMISO.plantillas)
+  ) {
+    <h2>Administración</h2>
+    <div class="atajos">
+      @if (sesion.tiene(PERMISO.usuarios)) {
+        <a class="tarjeta" routerLink="/interno/admin/usuarios">
+          <strong>Usuarios</strong>
+          <span
+            >Crear, modificar, bloquear y dar de baja funcionarios; asignar roles y vigencias.</span
+          >
+        </a>
+        <a class="tarjeta" routerLink="/interno/admin/roles">
+          <strong>Roles y permisos</strong>
+          <span>Cree roles y elija qué puede hacer cada uno. Cada usuario tiene un solo rol.</span>
+        </a>
+      }
+      @if (sesion.tiene(PERMISO.catalogos)) {
+        <a class="tarjeta" routerLink="/interno/admin/catalogos">
+          <strong>Listas del formulario</strong>
+          <span>Barrios, localidades, EPS, tipos de identificación y de transporte, causales.</span>
+        </a>
+      }
+      @if (sesion.tiene(PERMISO.catalogos)) {
+        <a class="tarjeta" routerLink="/interno/admin/documentos">
+          <strong>Documentos exigidos</strong>
+          <span>Soportes que debe cargar el ciudadano.</span>
+        </a>
+      }
+      @if (sesion.tiene(PERMISO.parametros)) {
+        <a class="tarjeta" routerLink="/interno/admin/parametros">
+          <strong>Parámetros y plazos</strong>
+          <span>Plazos, formatos y tamaños de archivo, sesión, meta.</span>
+        </a>
+      }
+      @if (sesion.tiene(PERMISO.parametros)) {
+        <a class="tarjeta" routerLink="/interno/admin/vigencias">
+          <strong>Vigencias y cupos</strong>
+          <span>Año del programa y cupos totales.</span>
+        </a>
+      }
+      @if (sesion.tiene(PERMISO.plantillas)) {
+        <a class="tarjeta" routerLink="/interno/admin/plantillas">
+          <strong>Plantillas de correo</strong>
+          <span>Textos de los correos al ciudadano, con variables y versiones.</span>
+        </a>
+      }
+      @if (sesion.tiene(PERMISO.parametros)) {
+        <a class="tarjeta" routerLink="/interno/admin/autorizacion">
+          <strong>Autorización de datos personales</strong>
+          <span>Texto que acepta el ciudadano (Ley 1581 de 2012).</span>
+        </a>
+      }
+    </div>
+  } @else {
+    <p class="aviso" role="note">
+      Por ahora su rol no tiene opciones disponibles en el portal interno. Las demás funciones se
+      habilitan con cada etapa del programa.
+    </p>
+  }
+}

@@ -1,0 +1,120 @@
+<p><a routerLink="/interno/admin/plantillas">← Volver a las plantillas</a></p>
+
+@if (cargando()) {
+  <p role="status">Cargando…</p>
+} @else if (plantilla(); as p) {
+  <h1>{{ p.nombre }}</h1>
+  <p class="intro">{{ p.descripcion }}</p>
+
+  @if (mensaje()) {
+    <p class="aviso exito" role="status">{{ mensaje() }}</p>
+  }
+  @if (error()) {
+    <p class="aviso error" role="alert">{{ error() }}</p>
+  }
+
+  <form class="tarjeta" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+    <app-campo idCampo="pl-asunto" etiqueta="Asunto" [control]="form.controls.asunto">
+      <input appCampoControl type="text" formControlName="asunto" maxlength="200" />
+    </app-campo>
+
+    <app-campo
+      idCampo="pl-cuerpo"
+      etiqueta="Texto del correo"
+      ayuda="Use las variables de la lista de abajo; se reemplazan al enviar."
+      [control]="form.controls.cuerpo"
+    >
+      <textarea
+        #cuerpoEl
+        appCampoControl
+        formControlName="cuerpo"
+        rows="14"
+        maxlength="10000"
+      ></textarea>
+    </app-campo>
+
+    <fieldset class="variables">
+      <legend>Variables disponibles</legend>
+      <p class="nota">
+        Pulse una variable para insertarla donde está el cursor. Las marcadas con * son
+        obligatorias.
+      </p>
+      <ul>
+        @for (v of p.variables; track v.nombre) {
+          <li>
+            <button type="button" class="boton secundario" (click)="insertar(v.nombre)">
+              {{ '{{' + v.nombre + '}}' }}{{ v.obligatoria ? ' *' : '' }}
+            </button>
+            <span>{{ v.descripcion }}</span>
+          </li>
+        }
+      </ul>
+    </fieldset>
+
+    <app-campo
+      idCampo="pl-motivo"
+      etiqueta="Motivo del cambio (opcional)"
+      [control]="form.controls.justificacion"
+    >
+      <input appCampoControl type="text" formControlName="justificacion" maxlength="500" />
+    </app-campo>
+
+    <div class="acciones">
+      <button type="button" class="boton secundario" (click)="previsualizar()">Vista previa</button>
+      <button
+        type="submit"
+        class="boton"
+        [disabled]="guardando() || form.pristine || conProblemas()"
+      >
+        {{ guardando() ? 'Guardando…' : 'Guardar como versión nueva' }}
+      </button>
+    </div>
+  </form>
+
+  @if (vista(); as v) {
+    <section class="tarjeta vista" aria-labelledby="titulo-vista">
+      <h2 id="titulo-vista">Vista previa (con datos de ejemplo)</h2>
+      @if (v.problemas.length > 0) {
+        <p class="nota">Corrija estos puntos para poder guardar:</p>
+        <div class="aviso advertencia" role="alert">
+          <ul>
+            @for (pr of v.problemas; track pr) {
+              <li>{{ pr }}</li>
+            }
+          </ul>
+        </div>
+      } @else {
+        <p class="aviso exito" role="status">La plantilla cumple las reglas y se puede guardar.</p>
+      }
+      <p class="asunto"><strong>Asunto:</strong> {{ v.asunto }}</p>
+      <pre class="cuerpo">{{ v.cuerpo }}</pre>
+    </section>
+  }
+
+  <h2>Versiones</h2>
+  <ul class="versiones">
+    @for (v of p.versiones; track v.version) {
+      <li>
+        <div>
+          <strong>Versión {{ v.version }}</strong>
+          @if (v.version === p.vigente.version) {
+            <span class="etiqueta ok">Vigente</span>
+          }
+          <small
+            >{{ v.creadoAt | date: 'dd/MM/yyyy HH:mm' : '-0500' }} · {{ v.creadoPor ?? 'Sistema' }}
+            @if (v.justificacion) {
+              · {{ v.justificacion }}
+            }
+          </small>
+        </div>
+        @if (v.version !== p.vigente.version) {
+          <button type="button" class="boton secundario" (click)="cargarVersion(v)">
+            Cargar en el editor
+          </button>
+        }
+      </li>
+    }
+  </ul>
+} @else if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}

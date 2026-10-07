@@ -1,0 +1,151 @@
+:host {
+  position: relative;
+  display: block;
+}
+
+.disparador {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 4px 10px 4px 4px;
+  font: inherit;
+  color: #fff;
+  text-align: left;
+  background: transparent;
+  border: 1px solid rgb(255 255 255 / 35%);
+  border-radius: 999px;
+  cursor: pointer;
+
+  &:hover,
+  &[aria-expanded='true'] {
+    background: rgb(255 255 255 / 12%);
+  }
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  font-family: var(--fuente-titulo);
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: var(--alc-azul);
+  background: var(--alc-amarillo);
+  border-radius: 50%;
+
+  &.grande {
+    width: 48px;
+    height: 48px;
+    font-size: 1.15rem;
+  }
+}
+
+.datos {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  max-width: 190px;
+}
+
+.nombre {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rol {
+  font-size: 0.78rem;
+  opacity: 0.9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flecha {
+  width: 1.1rem;
+  height: 1.1rem;
+  transition: transform 0.15s;
+
+  &.girada {
+    transform: rotate(180deg);
+  }
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 40;
+  width: min(300px, calc(100vw - 32px));
+  padding: 8px;
+  color: var(--alc-azul);
+  background: #fff;
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgb(20 35 52 / 22%);
+}
+
+.cabecera {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 8px 14px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.panel-nombre {
+  margin: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.panel-detalle {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-muted);
+  overflow-wrap: anywhere;
+}
+
+.opcion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 46px;
+  padding: 8px 10px;
+  font: inherit;
+  font-weight: 700;
+  color: var(--alc-azul);
+  text-align: left;
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--alc-gris);
+  }
+
+  &.salir {
+    color: var(--color-error);
+  }
+}
+
+// En pantallas angostas solo se ve el avatar y el panel conserva los datos completos.
+@media (max-width: 640px) {
+  .datos,
+  .flecha {
+    display: none;
+  }
+
+  .disparador {
+    padding: 4px;
+  }
+}

@@ -1,0 +1,44 @@
+.intro {
+  margin: 0 0 16px;
+  color: var(--color-muted);
+}
+
+.modelo {
+  min-width: 180px;
+
+  .nombre-modelo {
+    display: block;
+    overflow-wrap: anywhere;
+    font-weight: 600;
+  }
+
+  small {
+    display: block;
+    margin-bottom: 6px;
+  }
+}
+
+.chico {
+  min-height: 40px;
+  padding: 6px 14px;
+  font-size: 0.9rem;
+}
+
+label.boton {
+  position: relative;
+
+  &:focus-within {
+    outline: 3px solid var(--alc-amarillo, #ffea00);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px var(--alc-azul);
+  }
+}
+
+.oculto {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}

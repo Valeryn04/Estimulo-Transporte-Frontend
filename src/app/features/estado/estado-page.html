@@ -1,0 +1,10 @@
+<h1>Estado del servicio</h1>
+@let r = resultado();
+@if (r.cargando) {
+  <p role="status">Consultando el estado…</p>
+} @else {
+  <p role="status" class="estado" [class.estado--error]="!r.ok">
+    <strong>{{ r.ok ? 'Servicio disponible' : 'Servicio con problemas' }}</strong>
+    <span>{{ r.detalle }}</span>
+  </p>
+}

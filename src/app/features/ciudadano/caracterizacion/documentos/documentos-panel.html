@@ -1,0 +1,143 @@
+@if (cargando()) {
+  <p role="status">Cargando los documentos…</p>
+} @else if (error()) {
+  <p class="aviso error" role="alert">
+    <span>{{ error() }}</span>
+  </p>
+  <button type="button" class="boton secundario" (click)="cargar()">Intentar de nuevo</button>
+} @else if (datos(); as d) {
+  <div class="resumen" role="group" aria-label="Documentos obligatorios cargados">
+    <div
+      class="barra"
+      role="progressbar"
+      aria-label="Documentos obligatorios cargados"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      [attr.aria-valuenow]="porcentaje()"
+    >
+      <span [style.width.%]="porcentaje()"></span>
+    </div>
+    <p>
+      <strong>{{ d.resumen.cargados }} de {{ d.resumen.obligatorios }}</strong> documentos
+      obligatorios cargados.
+    </p>
+  </div>
+
+  <p class="reglas">
+    Formatos permitidos: <strong>{{ formatosTexto() }}</strong
+    >. Tamaño máximo: <strong>{{ d.reglas.maxMb }} MB</strong> por documento. El archivo debe verse
+    completo y legible. Si carga uno nuevo, reemplaza al anterior.
+  </p>
+
+  @for (g of grupos(); track g.clave) {
+    <section class="grupo" [attr.aria-labelledby]="'grupo-' + g.clave">
+      <h3 [id]="'grupo-' + g.clave">{{ g.nombre }}</h3>
+      <ul class="lista">
+        @for (doc of g.documentos; track doc.id) {
+          <li class="documento" [attr.data-estado]="doc.estado">
+            <div class="cabeza">
+              <div class="titulo">
+                <h4 [id]="'doc-' + doc.id">{{ doc.nombre }}</h4>
+                @if (!doc.obligatorio) {
+                  <span class="etiqueta">Opcional</span>
+                }
+              </div>
+              <span
+                class="estado"
+                [class.ok]="doc.estado === 'CARGADO'"
+                [class.mal]="doc.estado === 'RECHAZADO'"
+              >
+                {{ ESTADO[doc.estado] }}
+              </span>
+            </div>
+            @if (doc.descripcion) {
+              <p class="descripcion">{{ doc.descripcion }}</p>
+            }
+
+            @if (doc.archivo; as a) {
+              <div class="archivo">
+                <app-icono nombre="documento" />
+                <div class="datos">
+                  <strong>{{ a.nombre }}</strong>
+                  <span>
+                    {{ a.formato.toUpperCase() }} · {{ tamano(a.tamanoBytes) }} · cargado el
+                    {{ a.cargadoAt | date: 'dd/MM/yyyy HH:mm' : '-0500' }}
+                  </span>
+                  <span class="huella">Huella de integridad: {{ huella(a.sha256) }}…</span>
+                  @if (doc.reemplazos > 0) {
+                    <span class="huella"
+                      >Reemplazado {{ doc.reemplazos }}
+                      {{ doc.reemplazos === 1 ? 'vez' : 'veces' }}; se conservan los
+                      anteriores.</span
+                    >
+                  }
+                </div>
+                <button
+                  type="button"
+                  class="boton secundario chico"
+                  [attr.aria-label]="'Descargar el archivo cargado de ' + doc.nombre"
+                  (click)="descargar(doc)"
+                >
+                  Ver mi archivo
+                </button>
+              </div>
+            }
+
+            @if (subiendo()[doc.id] !== undefined) {
+              <div class="subida" role="status">
+                <div class="barra" aria-hidden="true">
+                  <span [style.width.%]="subiendo()[doc.id]"></span>
+                </div>
+                <span>Cargando el archivo… {{ subiendo()[doc.id] }} %</span>
+              </div>
+            }
+            @if (errores()[doc.id]; as texto) {
+              <p class="error" role="alert">{{ texto }}</p>
+            }
+            @if (mensajes()[doc.id]; as texto) {
+              <p class="exito" role="status">{{ texto }}</p>
+            }
+
+            <div class="acciones">
+              @if (editable()) {
+                <label class="boton chico" [class.desactivado]="subiendo()[doc.id] !== undefined">
+                  {{ doc.archivo ? 'Reemplazar archivo' : 'Cargar archivo' }}
+                  <input
+                    type="file"
+                    class="oculto"
+                    [accept]="accept()"
+                    [disabled]="subiendo()[doc.id] !== undefined"
+                    [attr.aria-describedby]="'doc-' + doc.id"
+                    (change)="elegir(doc, $event)"
+                  />
+                </label>
+                @if (tactil) {
+                  <label
+                    class="boton secundario chico"
+                    [class.desactivado]="subiendo()[doc.id] !== undefined"
+                  >
+                    Tomar fotografía
+                    <input
+                      type="file"
+                      class="oculto"
+                      accept="image/*"
+                      capture="environment"
+                      [disabled]="subiendo()[doc.id] !== undefined"
+                      [attr.aria-describedby]="'doc-' + doc.id"
+                      (change)="elegir(doc, $event)"
+                    />
+                  </label>
+                }
+              }
+              @if (doc.tieneModelo) {
+                <a class="boton secundario chico" [href]="modelo(doc)" download>
+                  Descargar el modelo
+                </a>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+}

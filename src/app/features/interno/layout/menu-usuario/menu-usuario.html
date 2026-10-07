@@ -1,0 +1,39 @@
+@if (perfil(); as p) {
+  <button
+    type="button"
+    class="disparador"
+    aria-controls="panel-usuario"
+    [attr.aria-expanded]="abierto()"
+    (click)="alternar()"
+  >
+    <span class="avatar" aria-hidden="true">{{ iniciales() }}</span>
+    <span class="datos">
+      <span class="nombre">{{ p.usuario }}</span>
+      <span class="rol">{{ roles() }}</span>
+    </span>
+    <app-icono class="flecha" [class.girada]="abierto()" nombre="flecha" />
+    <span class="solo-lectores">Menú de la cuenta de {{ p.usuario }}</span>
+  </button>
+
+  @if (abierto()) {
+    <div id="panel-usuario" class="panel">
+      <div class="cabecera">
+        <span class="avatar grande" aria-hidden="true">{{ iniciales() }}</span>
+        <div>
+          <p class="panel-nombre">{{ p.nombres }}</p>
+          <p class="panel-detalle">Usuario: {{ p.usuario }}</p>
+          <p class="panel-detalle">{{ p.correo }}</p>
+          <p class="panel-detalle">{{ roles() }}</p>
+        </div>
+      </div>
+      <a class="opcion" routerLink="/interno/cambiar-password" (click)="cerrar()">
+        <app-icono nombre="candado" />
+        Cambiar contraseña
+      </a>
+      <button type="button" class="opcion salir" (click)="salir()">
+        <app-icono nombre="salir" />
+        Cerrar sesión
+      </button>
+    </div>
+  }
+}

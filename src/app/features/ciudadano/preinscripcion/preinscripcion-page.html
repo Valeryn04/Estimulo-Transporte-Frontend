@@ -1,0 +1,287 @@
+<h1>Preinscripción al Estímulo Social de Transporte</h1>
+
+<p class="aviso" role="note">
+  <span>
+    <strong>Importante:</strong> la preinscripción no equivale a la aprobación del beneficio. La
+    asignación depende de la verificación de requisitos, la disponibilidad presupuestal y los
+    criterios de priorización vigentes.
+  </span>
+</p>
+
+@if (cargando()) {
+  <p role="status">Cargando el formulario…</p>
+} @else if (errorCarga()) {
+  <p class="aviso error" role="alert">{{ errorCarga() }}</p>
+  <button type="button" class="boton" (click)="cargar()">Intentar de nuevo</button>
+} @else if (datos(); as d) {
+  @if (!d.abierta || !d.autorizacion) {
+    <section class="tarjeta" aria-labelledby="titulo-cerrada">
+      <h2 id="titulo-cerrada">Las preinscripciones no están abiertas</h2>
+      <p>
+        Por ahora no se están recibiendo preinscripciones. Consulte la página institucional del
+        programa para conocer cuándo se abrirá la próxima convocatoria.
+      </p>
+      <p><a routerLink="/">Volver al inicio</a></p>
+    </section>
+  } @else {
+    <p class="intro">
+      Este es el primer paso. Solo le pedimos los datos básicos de la persona con discapacidad y de
+      su cuidador. Los campos con <span aria-hidden="true">*</span
+      ><span class="solo-lectores">asterisco</span> son obligatorios. Al terminar le enviaremos un
+      correo para verificar su dirección; después podrá completar la caracterización y cargar los
+      documentos.
+    </p>
+
+    @if (resumen().length > 0) {
+      <div #resumenEl class="aviso error resumen" role="alert" tabindex="-1">
+        <div>
+          <h2>Revise estos datos antes de enviar</h2>
+          <ul>
+            @for (r of resumen(); track r.id) {
+              <li>
+                <a [href]="'#' + r.id" (click)="irAlCampo(r.id, $event)">{{ r.mensaje }}</a>
+              </li>
+            }
+          </ul>
+        </div>
+      </div>
+    }
+
+    @if (aviso(); as a) {
+      <div
+        class="aviso"
+        [class.error]="a.tipo === 'error'"
+        [class.advertencia]="a.tipo === 'advertencia'"
+        role="alert"
+      >
+        <span>
+          {{ a.texto }}
+          @if (a.consulta) {
+            <a routerLink="/consulta">Consultar el estado de mi solicitud</a>
+          }
+        </span>
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+      <fieldset class="seccion">
+        <legend>Persona con discapacidad</legend>
+        <p class="por-que">Necesitamos identificar a quién se le registra la solicitud.</p>
+        <app-campo
+          idCampo="pcd-nombre"
+          etiqueta="Nombre completo"
+          [control]="form.controls.pcdNombre"
+          [mensajes]="{ pattern: 'use solo letras, espacios, punto, apóstrofo o guion' }"
+        >
+          <input
+            appCampoControl
+            type="text"
+            formControlName="pcdNombre"
+            autocomplete="off"
+            maxlength="150"
+          />
+        </app-campo>
+        <div class="rejilla">
+          <app-campo
+            idCampo="pcd-tipo"
+            etiqueta="Tipo de identificación"
+            [control]="form.controls.pcdTipoIdentificacionId"
+            [mensajes]="{ required: 'elija una opción de la lista' }"
+          >
+            <select appCampoControl formControlName="pcdTipoIdentificacionId">
+              <option [ngValue]="null" disabled>Seleccione</option>
+              @for (t of d.tiposIdentificacion; track t.id) {
+                <option [ngValue]="t.id">{{ t.codigo }} – {{ t.nombre }}</option>
+              }
+            </select>
+          </app-campo>
+          <app-campo
+            idCampo="pcd-numero"
+            etiqueta="Número de identificación"
+            [control]="form.controls.pcdNumero"
+          >
+            <input
+              appCampoControl
+              type="text"
+              formControlName="pcdNumero"
+              autocomplete="off"
+              [attr.inputmode]="modoPcd()"
+              maxlength="25"
+            />
+          </app-campo>
+        </div>
+        <p class="nota-campo">Escriba el número sin puntos ni espacios.</p>
+      </fieldset>
+
+      <fieldset class="seccion">
+        <legend>Cuidador o asistente personal</legend>
+        <p class="por-que">
+          El cuidador acompaña a la persona con discapacidad. Una persona solo puede tener un
+          cuidador asociado.
+        </p>
+        <app-campo
+          idCampo="cui-nombre"
+          etiqueta="Nombre completo"
+          [control]="form.controls.cuidadorNombre"
+          [mensajes]="{ pattern: 'use solo letras, espacios, punto, apóstrofo o guion' }"
+        >
+          <input
+            appCampoControl
+            type="text"
+            formControlName="cuidadorNombre"
+            autocomplete="off"
+            maxlength="150"
+          />
+        </app-campo>
+        <div class="rejilla">
+          <app-campo
+            idCampo="cui-tipo"
+            etiqueta="Tipo de identificación"
+            [control]="form.controls.cuidadorTipoIdentificacionId"
+            [mensajes]="{ required: 'elija una opción de la lista' }"
+          >
+            <select appCampoControl formControlName="cuidadorTipoIdentificacionId">
+              <option [ngValue]="null" disabled>Seleccione</option>
+              @for (t of d.tiposIdentificacion; track t.id) {
+                <option [ngValue]="t.id">{{ t.codigo }} – {{ t.nombre }}</option>
+              }
+            </select>
+          </app-campo>
+          <app-campo
+            idCampo="cui-numero"
+            etiqueta="Número de identificación"
+            [control]="form.controls.cuidadorNumero"
+          >
+            <input
+              appCampoControl
+              type="text"
+              formControlName="cuidadorNumero"
+              autocomplete="off"
+              [attr.inputmode]="modoCuidador()"
+              maxlength="25"
+            />
+          </app-campo>
+        </div>
+        <p class="nota-campo">Escriba el número sin puntos ni espacios.</p>
+      </fieldset>
+
+      <fieldset class="seccion">
+        <legend>Residencia</legend>
+        <p class="por-que">
+          Nos ayuda a conocer en qué zona de Barranquilla vive. Puede completarlo más adelante.
+        </p>
+        <app-campo
+          idCampo="direccion"
+          etiqueta="Dirección de residencia"
+          [control]="form.controls.direccion"
+        >
+          <input
+            appCampoControl
+            type="text"
+            formControlName="direccion"
+            autocomplete="street-address"
+            maxlength="200"
+          />
+        </app-campo>
+        <div class="rejilla">
+          <app-campo idCampo="localidad" etiqueta="Localidad" [control]="form.controls.localidadId">
+            <select appCampoControl formControlName="localidadId">
+              <option [ngValue]="null">Seleccione</option>
+              @for (l of d.localidades; track l.id) {
+                <option [ngValue]="l.id">{{ l.nombre }}</option>
+              }
+            </select>
+          </app-campo>
+          <app-campo
+            idCampo="barrio"
+            etiqueta="Barrio"
+            [ayuda]="form.controls.localidadId.value ? '' : 'Primero elija la localidad.'"
+            [control]="form.controls.barrioId"
+          >
+            <select appCampoControl formControlName="barrioId">
+              <option [ngValue]="null">Seleccione</option>
+              @for (b of barriosDeLocalidad(); track b.id) {
+                <option [ngValue]="b.id">{{ b.nombre }}</option>
+              }
+            </select>
+          </app-campo>
+        </div>
+      </fieldset>
+
+      <fieldset class="seccion">
+        <legend>Correo para notificaciones</legend>
+        <p class="por-que">
+          Todas las comunicaciones del programa le llegarán a este correo. Le enviaremos un enlace
+          para verificarlo.
+        </p>
+        <app-campo
+          idCampo="correo"
+          etiqueta="Correo electrónico"
+          [control]="form.controls.correo"
+          [mensajes]="{ email: 'escriba un correo válido, por ejemplo nombre@correo.com' }"
+        >
+          <input
+            appCampoControl
+            type="email"
+            formControlName="correo"
+            autocomplete="email"
+            inputmode="email"
+            autocapitalize="none"
+            maxlength="150"
+          />
+        </app-campo>
+      </fieldset>
+
+      <section class="seccion" aria-labelledby="titulo-autorizacion">
+        <h2 id="titulo-autorizacion">Autorización de tratamiento de datos personales</h2>
+        <p class="por-que">
+          Léala completa. Incluye la autorización para tratar datos sensibles de salud y
+          discapacidad, necesarios para verificar los requisitos del programa.
+        </p>
+        <div
+          class="texto-autorizacion"
+          tabindex="0"
+          role="region"
+          aria-label="Texto de la autorización de tratamiento de datos personales"
+        >
+          {{ d.autorizacion.contenido }}
+        </div>
+        <app-campo
+          tipo="grupo"
+          idCampo="acepta"
+          etiqueta="Aceptación"
+          [control]="form.controls.aceptaAutorizacion"
+          [mensajes]="{
+            required: 'debe aceptar la autorización para poder enviar la preinscripción',
+          }"
+        >
+          <label class="opcion">
+            <input appCampoControl type="checkbox" formControlName="aceptaAutorizacion" />
+            <span>He leído y acepto la autorización de tratamiento de datos personales.</span>
+          </label>
+        </app-campo>
+      </section>
+
+      <div class="trampa" aria-hidden="true">
+        <label for="contacto-alterno">No escriba nada en este campo</label>
+        <input
+          id="contacto-alterno"
+          type="text"
+          formControlName="contactoAlterno"
+          tabindex="-1"
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="acciones">
+        <button type="submit" class="boton" [disabled]="enviando()">
+          {{ enviando() ? 'Enviando…' : 'Enviar preinscripción' }}
+        </button>
+      </div>
+      <p class="por-que">
+        ¿Ya se preinscribió y no verificó su correo?
+        <a routerLink="/reenviar-verificacion">Reciba el enlace de nuevo</a>.
+      </p>
+    </form>
+  }
+}

@@ -1,0 +1,254 @@
+<div class="encabezado">
+  <h1>Listas del formulario</h1>
+  <button type="button" class="boton" (click)="abrirNuevo()">
+    Agregar a «{{ nombres[catalogo()] }}»
+  </button>
+</div>
+
+<p class="intro">
+  Estas listas alimentan los desplegables del formulario de preinscripción y caracterización. Los
+  elementos no se borran: se desactivan, y cada cambio queda versionado y en la bitácora.
+</p>
+
+@if (mensaje()) {
+  <p class="aviso exito" role="status">{{ mensaje() }}</p>
+}
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+
+<form
+  class="tarjeta filtros"
+  [formGroup]="filtros"
+  (ngSubmit)="buscar()"
+  role="search"
+  aria-label="Elegir y filtrar la lista"
+>
+  <div class="rejilla">
+    <div class="campo-simple">
+      <label for="lista">Lista</label>
+      <select id="lista" [value]="catalogo()" (change)="cambiarCatalogo($any($event.target).value)">
+        @for (c of listas; track c) {
+          <option [value]="c" [selected]="c === catalogo()">
+            {{ nombres[c] }} ({{ totalDe(c)?.activos ?? 0 }} activos)
+          </option>
+        }
+      </select>
+    </div>
+    <div class="campo-simple">
+      <label for="q">Buscar por nombre o código</label>
+      <input id="q" type="search" formControlName="q" />
+    </div>
+    <div class="campo-simple">
+      <label for="estado">Estado</label>
+      <select id="estado" formControlName="estado">
+        <option value="">Todos</option>
+        <option value="true">Activos</option>
+        <option value="false">Inactivos</option>
+      </select>
+    </div>
+    @if (esBarrio()) {
+      <div class="campo-simple">
+        <label for="filtro-localidad">Localidad</label>
+        <select id="filtro-localidad" formControlName="padreId">
+          <option [ngValue]="null">Todas</option>
+          @for (l of localidades(); track l.id) {
+            <option [ngValue]="l.id">{{ l.nombre }}</option>
+          }
+        </select>
+      </div>
+    }
+  </div>
+  <div class="acciones">
+    <button type="submit" class="boton">Buscar</button>
+    <button type="button" class="boton secundario" (click)="limpiar()">Limpiar</button>
+  </div>
+</form>
+
+@if (cargando() && !datos()) {
+  <p role="status">Cargando…</p>
+} @else if (datos(); as d) {
+  <p class="total" role="status">{{ d.total }} elemento(s) en «{{ nombres[catalogo()] }}».</p>
+  <div
+    class="tabla-contenedor"
+    tabindex="0"
+    role="region"
+    [attr.aria-label]="'Tabla de ' + nombres[catalogo()]"
+  >
+    <table class="tabla">
+      <caption class="solo-lectores">
+        {{
+          nombres[catalogo()]
+        }}
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Nombre</th>
+          <th scope="col">Código</th>
+          @if (esBarrio()) {
+            <th scope="col">Localidad</th>
+          }
+          <th scope="col" class="num">Orden</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (i of d.items; track i.id) {
+          <tr [class.inactivo]="!i.activo">
+            <th scope="row">{{ i.nombre }}</th>
+            <td>{{ i.codigo }}</td>
+            @if (esBarrio()) {
+              <td>{{ i.padreNombre }}</td>
+            }
+            <td class="num">{{ i.orden }}</td>
+            <td>
+              <span class="etiqueta" [class.ok]="i.activo" [class.mal]="!i.activo">
+                {{ i.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="acciones-fila">
+              <span class="grupo-acciones">
+                <button
+                  type="button"
+                  class="accion-icono"
+                  [title]="'Editar ' + i.nombre"
+                  (click)="abrirEditar(i)"
+                >
+                  <app-icono nombre="editar" />
+                  <span class="solo-lectores">Editar {{ i.nombre }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="accion-icono"
+                  [class.peligro]="i.activo"
+                  [title]="(i.activo ? 'Desactivar ' : 'Activar ') + i.nombre"
+                  (click)="cambiarActivo(i)"
+                >
+                  <app-icono [nombre]="i.activo ? 'apagar' : 'check'" />
+                  <span class="solo-lectores"
+                    >{{ i.activo ? 'Desactivar' : 'Activar' }} {{ i.nombre }}</span
+                  >
+                </button>
+                <button
+                  type="button"
+                  class="accion-icono"
+                  [title]="'Historial de ' + i.nombre"
+                  (click)="verHistorial(i)"
+                >
+                  <app-icono nombre="descargar" />
+                  <span class="solo-lectores">Historial de versiones de {{ i.nombre }}</span>
+                </button>
+              </span>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td [attr.colspan]="esBarrio() ? 6 : 5">No hay elementos con esos filtros.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (totalPaginas() > 1) {
+    <nav class="paginacion" aria-label="Paginación">
+      <button
+        type="button"
+        class="boton secundario"
+        [disabled]="pagina() <= 1"
+        (click)="buscar(pagina() - 1)"
+      >
+        Anterior
+      </button>
+      <span>Página {{ pagina() }} de {{ totalPaginas() }}</span>
+      <button
+        type="button"
+        class="boton secundario"
+        [disabled]="pagina() >= totalPaginas()"
+        (click)="buscar(pagina() + 1)"
+      >
+        Siguiente
+      </button>
+    </nav>
+  }
+}
+
+<!-- Crear / editar -->
+<app-dialogo
+  [titulo]="
+    editando() ? 'Editar «' + editando()!.nombre + '»' : 'Agregar a «' + nombres[catalogo()] + '»'
+  "
+  [abierto]="dialogo() === 'formulario'"
+  (cierra)="cerrar()"
+>
+  <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+    <app-campo idCampo="item-nombre" etiqueta="Nombre" [control]="form.controls.nombre">
+      <input appCampoControl type="text" formControlName="nombre" maxlength="150" />
+    </app-campo>
+    @if (pideCodigo()) {
+      <app-campo
+        idCampo="item-codigo"
+        etiqueta="Sigla"
+        ayuda="Letras y números, hasta 10 caracteres. Ejemplo: CC. No se puede cambiar después."
+        [control]="form.controls.codigo"
+        [mensajes]="{ pattern: 'use solo letras y números, hasta 10 caracteres' }"
+      >
+        <input appCampoControl type="text" formControlName="codigo" maxlength="10" />
+      </app-campo>
+    }
+    @if (esBarrio()) {
+      <app-campo idCampo="item-localidad" etiqueta="Localidad" [control]="form.controls.padreId">
+        <select appCampoControl formControlName="padreId">
+          <option [ngValue]="null" disabled>Seleccione una localidad</option>
+          @for (l of localidades(); track l.id) {
+            <option [ngValue]="l.id">{{ l.nombre }}</option>
+          }
+        </select>
+      </app-campo>
+    }
+    <app-campo
+      idCampo="item-orden"
+      etiqueta="Orden"
+      ayuda="Posición en el desplegable (0 = primero)."
+      [control]="form.controls.orden"
+    >
+      <input appCampoControl type="number" formControlName="orden" min="0" max="100000" />
+    </app-campo>
+    @if (errorDialogo()) {
+      <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
+    }
+    <div class="acciones">
+      <button type="submit" class="boton" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando…' : 'Guardar' }}
+      </button>
+      <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>
+    </div>
+  </form>
+</app-dialogo>
+
+<!-- Historial -->
+<app-dialogo
+  [titulo]="'Historial de «' + (editando()?.nombre ?? '') + '»'"
+  [abierto]="dialogo() === 'historial'"
+  (cierra)="cerrar()"
+>
+  @if (errorDialogo()) {
+    <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
+  }
+  <ol class="historial">
+    @for (v of versiones(); track v.version) {
+      <li>
+        <strong>Versión {{ v.version }}</strong>
+        <span
+          >{{ v.creadoAt | date: 'dd/MM/yyyy HH:mm' : '-0500' }} ·
+          {{ v.usuario ?? 'Sistema' }}</span
+        >
+        <small>{{ resumenVersion(v) }}</small>
+      </li>
+    }
+  </ol>
+  <div class="acciones">
+    <button type="button" class="boton secundario" (click)="cerrar()">Cerrar</button>
+  </div>
+</app-dialogo>

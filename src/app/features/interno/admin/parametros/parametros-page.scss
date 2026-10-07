@@ -1,0 +1,29 @@
+.intro {
+  margin: 0 0 16px;
+  color: var(--color-muted);
+}
+
+h2 {
+  margin-top: 24px;
+}
+
+.valor {
+  margin-right: 8px;
+  font-size: 1.1rem;
+}
+
+.historial {
+  margin: 0 0 16px;
+  padding-left: 1.2rem;
+
+  li {
+    display: flex;
+    flex-direction: column;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  small {
+    color: var(--color-muted);
+  }
+}

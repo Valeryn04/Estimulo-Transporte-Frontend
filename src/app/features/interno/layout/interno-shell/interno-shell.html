@@ -1,0 +1,82 @@
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+
+<header class="barra">
+  <button
+    type="button"
+    class="hamburguesa"
+    aria-controls="menu-lateral"
+    [attr.aria-expanded]="menuAbierto()"
+    (click)="alternarMenu()"
+  >
+    <app-icono nombre="menu" />
+    <span class="solo-lectores">{{ menuAbierto() ? 'Ocultar el menú' : 'Mostrar el menú' }}</span>
+  </button>
+  <div class="marca">
+    <a
+      class="inicio-enlace"
+      routerLink="/interno"
+      aria-label="Alcaldía de Barranquilla, Gerencia de Desarrollo Social. Ir al inicio del portal interno"
+    >
+      <app-lockup-dependencia fondo="oscuro" />
+    </a>
+    <span class="sistema">Estímulo Social de Transporte<br />Portal interno</span>
+  </div>
+  <div class="acciones-barra">
+    <app-menu-usuario (cerrarSesion)="cerrarSesion()" />
+  </div>
+</header>
+
+<div class="cuerpo">
+  @if (esMovil() && menuAbierto()) {
+    <div class="velo" aria-hidden="true" (click)="cerrarMenu()"></div>
+  }
+  <nav
+    id="menu-lateral"
+    class="menu"
+    [class.abierto]="menuAbierto()"
+    [attr.inert]="menuAbierto() ? null : ''"
+    aria-label="Menú del portal interno"
+  >
+    <button type="button" class="cerrar-menu" (click)="cerrarMenu()">
+      <app-icono nombre="cerrar" />
+      <span class="solo-lectores">Cerrar el menú</span>
+    </button>
+    <a routerLink="/interno" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }"
+      >Inicio</a
+    >
+
+    @if (sesion.tiene(PERMISO.usuarios)) {
+      <p class="grupo">Seguridad y accesos</p>
+      <a routerLink="/interno/admin/usuarios" routerLinkActive="activo">Usuarios</a>
+      <a routerLink="/interno/admin/roles" routerLinkActive="activo">Roles y permisos</a>
+    }
+
+    @if (sesion.tieneAlguno(PERMISO.catalogos, PERMISO.parametros)) {
+      <p class="grupo">Configuración del programa</p>
+    }
+    @if (sesion.tiene(PERMISO.catalogos)) {
+      <a routerLink="/interno/admin/catalogos" routerLinkActive="activo">Listas del formulario</a>
+      <a routerLink="/interno/admin/documentos" routerLinkActive="activo">Documentos exigidos</a>
+    }
+    @if (sesion.tiene(PERMISO.parametros)) {
+      <a routerLink="/interno/admin/parametros" routerLinkActive="activo">Parámetros y plazos</a>
+      <a routerLink="/interno/admin/vigencias" routerLinkActive="activo">Vigencias y cupos</a>
+    }
+
+    @if (sesion.tiene(PERMISO.parametros) || sesion.tiene(PERMISO.plantillas)) {
+      <p class="grupo">Comunicaciones y datos personales</p>
+    }
+    @if (sesion.tiene(PERMISO.plantillas)) {
+      <a routerLink="/interno/admin/plantillas" routerLinkActive="activo">Plantillas de correo</a>
+    }
+    @if (sesion.tiene(PERMISO.parametros)) {
+      <a routerLink="/interno/admin/autorizacion" routerLinkActive="activo"
+        >Autorización de datos personales</a
+      >
+    }
+  </nav>
+
+  <main id="contenido" tabindex="-1" class="contenido">
+    <router-outlet />
+  </main>
+</div>

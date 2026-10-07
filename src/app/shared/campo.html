@@ -1,0 +1,36 @@
+<!-- Un solo <ng-content>: si estuviera dentro de cada rama, Angular solo proyectaría en la última. -->
+<ng-template #cuerpo><ng-content /></ng-template>
+@if (tipo() === 'grupo') {
+  <fieldset class="campo" [attr.aria-describedby]="descripcion()">
+    <legend>
+      {{ etiqueta() }}
+      @if (obligatorio()) {
+        <span class="obl" aria-hidden="true">*</span>
+      }
+    </legend>
+    @if (ayuda()) {
+      <p class="ayuda" [id]="idCampo() + '-ayuda'">{{ ayuda() }}</p>
+    }
+    <ng-container [ngTemplateOutlet]="cuerpo" />
+    @if (mostrarError()) {
+      <p class="error" [id]="idCampo() + '-error'" role="alert">{{ mensajeError() }}</p>
+    }
+  </fieldset>
+} @else {
+  <div class="campo">
+    <label [attr.for]="idCampo()">
+      {{ etiqueta() }}
+      @if (obligatorio()) {
+        <span class="obl" aria-hidden="true">*</span>
+        <span class="solo-lectores">(obligatorio)</span>
+      }
+    </label>
+    @if (ayuda()) {
+      <p class="ayuda" [id]="idCampo() + '-ayuda'">{{ ayuda() }}</p>
+    }
+    <ng-container [ngTemplateOutlet]="cuerpo" />
+    @if (mostrarError()) {
+      <p class="error" [id]="idCampo() + '-error'" role="alert">{{ mensajeError() }}</p>
+    }
+  </div>
+}

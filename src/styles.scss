@@ -1,0 +1,480 @@
+@use '@fontsource-variable/nunito';
+@use 'app/shared/estilos/tema-alcaldia' as tema;
+
+// Tipografía de la Alcaldía (portal interno): Volkswagen Serial, la del Manual de Identidad Visual. Solo se
+// dispone del peso Bold, que se usa también para los títulos más pesados (800 y 900) sin negrita sintética.
+// Si se obtienen más pesos (Regular, Heavy…), se agregan aquí con su propio `font-weight`.
+@font-face {
+  font-family: 'Volkswagen Serial';
+  font-style: normal;
+  font-weight: 600 900;
+  font-display: swap;
+  src: url('/fuentes/volkswagen-serial-bold.woff2') format('woff2');
+}
+
+// Identidad visual de la Alcaldía de Barranquilla (Manual de Identidad Visual 2025) en todo el sitio: colores,
+// tipografía y logos. Los tokens que no define el manual (errores, avisos) cumplen contraste WCAG 2.1 AA.
+:root {
+  --govco-rojo: #a80521;
+  --color-text: #142334;
+  --color-muted: #4b5563;
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-error: var(--govco-rojo);
+  --color-ok: var(--alc-verde-texto);
+  --radius: 8px;
+  @include tema.tema-alcaldia;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1rem;
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.55;
+}
+
+h1,
+h2,
+h3 {
+  // En el portal interno `--fuente-titulo` trae la tipografía de la Alcaldía; en el ciudadano no existe y hereda.
+  font-family: var(--fuente-titulo, inherit);
+  font-weight: var(--peso-titulo, bold);
+  color: var(--govco-azul-oscuro);
+  line-height: 1.25;
+  margin: 0 0 12px;
+}
+
+h1 {
+  font-size: clamp(1.6rem, 4vw, 2.1rem);
+}
+
+h2 {
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  color: var(--color-titulo-2, var(--govco-azul-oscuro));
+}
+
+a {
+  color: var(--govco-azul);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-foco, var(--govco-amarillo));
+  outline-offset: 2px;
+}
+
+// ---- Controles de formulario (compartidos por el portal ciudadano y el interno) ----
+input[type='text'],
+input[type='email'],
+input[type='tel'],
+input[type='date'],
+input[type='time'],
+input[type='month'],
+input[type='password'],
+input[type='search'],
+input[type='number'],
+select,
+textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--color-text);
+  background: #fff;
+  border: 2px solid #6b7280;
+  border-radius: var(--radius);
+
+  &:hover {
+    border-color: var(--govco-azul);
+  }
+
+  &[aria-invalid='true'] {
+    border-color: var(--color-error);
+    background: #fff7f8;
+  }
+}
+
+textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  accent-color: var(--govco-azul);
+  flex: none;
+}
+
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 10px 22px;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  color: #fff;
+  background: var(--govco-azul);
+  border: 2px solid var(--govco-azul);
+  border-radius: var(--radius);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--govco-azul-oscuro);
+    border-color: var(--govco-azul-oscuro);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  &.secundario {
+    color: var(--govco-azul);
+    background: #fff;
+  }
+
+  &.secundario:hover:not(:disabled) {
+    color: #fff;
+  }
+
+  &.peligro {
+    background: var(--color-error);
+    border-color: var(--color-error);
+  }
+}
+
+.tarjeta {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  padding: clamp(16px, 4vw, 28px);
+}
+
+.aviso {
+  display: flex;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  border-left: 6px solid var(--govco-azul);
+  background: var(--govco-azul-claro);
+
+  &.error {
+    border-left-color: var(--color-error);
+    background: #fdecef;
+  }
+
+  &.exito {
+    border-left-color: var(--color-ok);
+    background: #e6f5ef;
+  }
+
+  &.advertencia {
+    border-left-color: var(--govco-amarillo);
+    background: #fff5dc;
+  }
+}
+
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+// ---- Disposición de formularios ----
+.rejilla {
+  display: grid;
+  gap: 0 24px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+}
+
+.opcion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 28px;
+}
+
+.opciones.vertical {
+  flex-direction: column;
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.tabla-resumen {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    text-align: left;
+    vertical-align: top;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  th {
+    width: 38%;
+    font-weight: 600;
+    color: var(--color-muted);
+  }
+}
+
+// ---- Botón de acción con solo icono (tablas y barras). El nombre va en un `.solo-lectores` dentro. ----
+.accion-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  font: inherit;
+  color: var(--govco-azul-oscuro);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  text-decoration: none;
+  cursor: pointer;
+
+  app-icono {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--govco-azul-claro);
+    border-color: var(--color-line);
+  }
+
+  &.peligro {
+    color: var(--color-error);
+
+    &:hover:not(:disabled) {
+      background: #fdecef;
+      border-color: var(--color-error);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+// Los iconos de una fila de tabla van juntos en una sola línea.
+.grupo-acciones {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 2px;
+}
+
+// Contenedores con desplazamiento horizontal: deben ser el bloque de referencia de los elementos con posición
+// absoluta que llevan dentro (por ejemplo el texto oculto `.solo-lectores`); si no, esos elementos sobresalen
+// de la tabla y la página entera gana una barra de desplazamiento horizontal.
+.tabla-contenedor,
+.tabla-scroll {
+  position: relative;
+}
+
+// Pantallas angostas: ningún texto largo (correos, nombres, radicados) ni campo de una rejilla debe empujar el
+// contenido fuera de la pantalla.
+.rejilla > * {
+  min-width: 0;
+}
+
+main :is(p, li, dd, dt, small, label, h1, h2, h3, .aviso) {
+  overflow-wrap: anywhere;
+}
+
+// ---- Pantallas de administración: encabezado, filtros, tablas y etiquetas (compartidas) ----
+.encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  h1 {
+    margin: 0;
+  }
+}
+
+.filtros {
+  margin-bottom: 16px;
+}
+
+.campo-simple {
+  margin-bottom: 16px;
+
+  label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+}
+
+.total {
+  margin: 0 0 8px;
+  color: var(--color-muted);
+}
+
+.tabla-contenedor {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+
+  th,
+  td {
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  thead th {
+    background: var(--govco-azul-claro);
+    font-size: 0.85rem;
+    color: var(--alc-azul);
+  }
+
+  tbody th {
+    font-weight: 600;
+  }
+
+  small {
+    display: block;
+    font-weight: 400;
+    color: var(--color-muted);
+  }
+
+  tr.inactivo {
+    background: #fafafa;
+    color: var(--color-muted);
+  }
+
+  .num {
+    text-align: right;
+  }
+}
+
+.etiqueta {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.85rem;
+
+  &.ok {
+    background: #e6f5ef;
+    color: #065f46;
+  }
+
+  &.mal {
+    background: #fdecef;
+    color: var(--color-error);
+  }
+
+  &.aviso-pendiente {
+    background: #fff5dc;
+    color: #7a4b00;
+  }
+}
+
+.acciones-fila {
+  white-space: nowrap;
+}
+
+.paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.insignia {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--govco-azul-claro);
+  color: var(--alc-azul);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.sub-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+// Al imprimir el comprobante solo se deja el contenido.
+@media print {
+  .cabecera,
+  .saltar {
+    display: none !important;
+  }
+}
+
+// Aclaración que acompaña a una fila de campos (por ejemplo, cómo escribir el número de identificación).
+.nota-campo {
+  margin: -8px 0 16px;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+}
+
+// El elemento raíz mide lo que mide el contenido: así el portal puede informar su alto cuando está incrustado en otra
+// página (un elemento en línea no se puede medir ni observar).
+app-root {
+  display: block;
+}

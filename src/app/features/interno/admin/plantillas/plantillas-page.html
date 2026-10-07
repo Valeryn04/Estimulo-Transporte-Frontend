@@ -1,0 +1,64 @@
+<div class="encabezado">
+  <h1>Plantillas de correo</h1>
+</div>
+
+<p class="intro">
+  Son los mensajes automáticos que recibe el ciudadano. Puede cambiar el asunto y el texto usando
+  variables como {{ '{{nombre}}' }} o {{ '{{radicado}}' }}, con vista previa antes de guardar. Cada
+  cambio crea una versión nueva y cada correo enviado conserva el texto exacto con el que salió.
+</p>
+
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+
+@if (cargando()) {
+  <p role="status">Cargando…</p>
+} @else {
+  <div
+    class="tabla-contenedor"
+    tabindex="0"
+    role="region"
+    aria-label="Tabla de plantillas de correo"
+  >
+    <table class="tabla">
+      <caption class="solo-lectores">
+        Plantillas de correo
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Plantilla</th>
+          <th scope="col">Versión vigente</th>
+          <th scope="col">Última modificación</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of plantillas(); track p.codigo) {
+          <tr>
+            <th scope="row">
+              {{ p.nombre }}
+              <small>{{ p.descripcion }}</small>
+            </th>
+            <td>{{ p.version }}</td>
+            <td>{{ p.actualizadaAt | date: 'dd/MM/yyyy HH:mm' : '-0500' }}</td>
+            <td class="acciones-fila">
+              <a
+                class="accion-icono"
+                [routerLink]="['/interno/admin/plantillas', p.codigo]"
+                [title]="'Editar la plantilla ' + p.nombre"
+              >
+                <app-icono nombre="editar" />
+                <span class="solo-lectores">Editar la plantilla {{ p.nombre }}</span>
+              </a>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4">No hay plantillas.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

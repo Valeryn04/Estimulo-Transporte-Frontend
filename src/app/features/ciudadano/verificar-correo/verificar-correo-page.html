@@ -1,0 +1,52 @@
+<section class="tarjeta" aria-live="polite">
+  @switch (resultado()) {
+    @case ('verificando') {
+      <h1>Verificando su correo…</h1>
+      <p role="status">Un momento, por favor.</p>
+    }
+    @case ('verificado') {
+      <h1>Correo verificado</h1>
+      <p class="aviso exito" role="status">
+        <span>Su correo quedó verificado y su preinscripción está registrada.</span>
+      </p>
+      <p>
+        Le enviamos un correo con el enlace para completar la caracterización y cargar los
+        documentos, y con el enlace para consultar el estado de su solicitud.
+      </p>
+      <p class="aviso" role="note">
+        <span>
+          <strong>Importante:</strong> la preinscripción no equivale a la aprobación del beneficio.
+        </span>
+      </p>
+    }
+    @case ('ya-verificado') {
+      <h1>Este correo ya estaba verificado</h1>
+      <p>
+        Su preinscripción ya está registrada. Revise el correo que le enviamos con el enlace para
+        completar la caracterización.
+      </p>
+    }
+    @case ('vencido') {
+      <h1>El enlace venció</h1>
+      <p class="aviso advertencia" role="alert">
+        <span>El enlace de verificación ya no es válido porque pasó su tiempo de vigencia.</span>
+      </p>
+      <p><a class="boton" routerLink="/reenviar-verificacion">Recibir un enlace nuevo</a></p>
+    }
+    @case ('invalido') {
+      <h1>El enlace no es válido</h1>
+      <p class="aviso error" role="alert">
+        <span>Revise que el enlace esté completo, tal como llegó en el correo.</span>
+      </p>
+      <p><a class="boton" routerLink="/reenviar-verificacion">Recibir un enlace nuevo</a></p>
+    }
+    @case ('error') {
+      <h1>No pudimos verificar su correo</h1>
+      <p class="aviso error" role="alert">
+        <span>{{ mensaje() }}</span>
+      </p>
+      <p>Intente de nuevo en unos minutos.</p>
+    }
+  }
+  <p><a routerLink="/">Volver al inicio</a></p>
+</section>

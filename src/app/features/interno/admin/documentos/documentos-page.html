@@ -1,0 +1,158 @@
+<div class="encabezado">
+  <h1>Documentos exigidos</h1>
+  <button type="button" class="boton" (click)="abrirNuevo()">Agregar documento</button>
+</div>
+
+<p class="intro">
+  Son los soportes que el ciudadano debe cargar al caracterizar su solicitud. El cuidador solo debe
+  cargar los suyos cuando solicita el servicio para el cuidador. Los formatos y el tamaño máximo se
+  definen en «Parámetros».
+</p>
+
+@if (mensaje()) {
+  <p class="aviso exito" role="status">{{ mensaje() }}</p>
+}
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+
+@if (cargando()) {
+  <p role="status">Cargando…</p>
+} @else {
+  <div
+    class="tabla-contenedor"
+    tabindex="0"
+    role="region"
+    aria-label="Tabla de documentos exigidos"
+  >
+    <table class="tabla">
+      <caption class="solo-lectores">
+        Documentos exigidos
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Documento</th>
+          <th scope="col">Aplica a</th>
+          <th scope="col">Exigencia</th>
+          <th scope="col">Modelo descargable</th>
+          <th scope="col" class="num">Orden</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (d of documentos(); track d.id) {
+          <tr [class.inactivo]="!d.activo">
+            <th scope="row">
+              {{ d.nombre }}
+              @if (d.descripcion) {
+                <small>{{ d.descripcion }}</small>
+              }
+            </th>
+            <td>{{ aplicaA[d.aplicaA] }}</td>
+            <td>{{ d.obligatorio ? 'Obligatorio' : 'Opcional' }}</td>
+            <td class="modelo">
+              @if (d.modelo; as m) {
+                <span class="nombre-modelo">{{ m.nombre }}</span>
+                <small>{{ m.formato.toUpperCase() }} · {{ tamano(m.tamanoBytes) }}</small>
+              } @else {
+                <small>Sin modelo</small>
+              }
+              <label class="boton secundario chico">
+                {{ d.modelo ? 'Reemplazar' : 'Cargar modelo' }}
+                <input
+                  type="file"
+                  class="oculto"
+                  accept=".pdf,.docx,.odt"
+                  [attr.aria-label]="
+                    (d.modelo ? 'Reemplazar el modelo de ' : 'Cargar el modelo de ') + d.nombre
+                  "
+                  (change)="cargarModelo(d, $event)"
+                />
+              </label>
+            </td>
+            <td class="num">{{ d.orden }}</td>
+            <td>
+              <span class="etiqueta" [class.ok]="d.activo" [class.mal]="!d.activo">
+                {{ d.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+              <small>Versión {{ d.version }}</small>
+            </td>
+            <td class="acciones-fila">
+              <span class="grupo-acciones">
+                <button
+                  type="button"
+                  class="accion-icono"
+                  [title]="'Editar ' + d.nombre"
+                  (click)="abrirEditar(d)"
+                >
+                  <app-icono nombre="editar" />
+                  <span class="solo-lectores">Editar {{ d.nombre }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="accion-icono"
+                  [class.peligro]="d.activo"
+                  [title]="(d.activo ? 'Desactivar ' : 'Activar ') + d.nombre"
+                  (click)="cambiarActivo(d)"
+                >
+                  <app-icono [nombre]="d.activo ? 'apagar' : 'check'" />
+                  <span class="solo-lectores"
+                    >{{ d.activo ? 'Desactivar' : 'Activar' }} {{ d.nombre }}</span
+                  >
+                </button>
+              </span>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6">Todavía no hay documentos exigidos.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+<app-dialogo
+  [titulo]="editando() ? 'Editar documento' : 'Agregar documento'"
+  [abierto]="abierto()"
+  (cierra)="cerrar()"
+>
+  <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+    <app-campo idCampo="doc-nombre" etiqueta="Nombre" [control]="form.controls.nombre">
+      <input appCampoControl type="text" formControlName="nombre" maxlength="150" />
+    </app-campo>
+    <app-campo
+      idCampo="doc-descripcion"
+      etiqueta="Descripción"
+      ayuda="Se muestra al ciudadano para que sepa qué debe cargar."
+      [control]="form.controls.descripcion"
+    >
+      <textarea appCampoControl formControlName="descripcion" rows="3" maxlength="500"></textarea>
+    </app-campo>
+    <app-campo idCampo="doc-aplica" etiqueta="Aplica a" [control]="form.controls.aplicaA">
+      <select appCampoControl formControlName="aplicaA">
+        @for (o of opciones; track o) {
+          <option [value]="o">{{ aplicaA[o] }}</option>
+        }
+      </select>
+    </app-campo>
+    <label class="opcion">
+      <input type="checkbox" formControlName="obligatorio" />
+      <span>Es obligatorio para radicar la solicitud</span>
+    </label>
+    <app-campo idCampo="doc-orden" etiqueta="Orden" [control]="form.controls.orden">
+      <input appCampoControl type="number" formControlName="orden" min="0" max="100000" />
+    </app-campo>
+    @if (errorDialogo()) {
+      <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
+    }
+    <div class="acciones">
+      <button type="submit" class="boton" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando…' : 'Guardar' }}
+      </button>
+      <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>
+    </div>
+  </form>
+</app-dialogo>

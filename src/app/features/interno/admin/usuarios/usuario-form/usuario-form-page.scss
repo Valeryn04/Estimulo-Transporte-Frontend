@@ -1,0 +1,15 @@
+small {
+  color: var(--color-muted);
+  font-weight: 400;
+}
+
+.detalle-rol {
+  margin: -8px 0 20px;
+  padding: 10px 14px;
+  background: var(--alc-gris);
+  border-radius: var(--radius);
+
+  small {
+    color: var(--color-muted);
+  }
+}

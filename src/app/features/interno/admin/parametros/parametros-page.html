@@ -1,0 +1,174 @@
+<div class="encabezado">
+  <h1>Parámetros y plazos</h1>
+</div>
+
+<p class="intro">
+  Cada cambio crea una versión nueva con su fecha de vigencia, quién la aprobó y el motivo; no
+  requiere intervención técnica. Los valores marcados «Por confirmar» son iniciales y deben ser
+  definidos por la Gerencia de Desarrollo Social.
+</p>
+
+@if (mensaje()) {
+  <p class="aviso exito" role="status">{{ mensaje() }}</p>
+}
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+
+@if (cargando()) {
+  <p role="status">Cargando…</p>
+} @else {
+  @for (g of grupos(); track g.nombre) {
+    <h2>{{ g.nombre }}</h2>
+    <div
+      class="tabla-contenedor"
+      tabindex="0"
+      role="region"
+      [attr.aria-label]="'Parámetros de ' + g.nombre"
+    >
+      <table class="tabla">
+        <caption class="solo-lectores">
+          Parámetros:
+          {{
+            g.nombre
+          }}
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Parámetro</th>
+            <th scope="col">Valor vigente</th>
+            <th scope="col">Vigente desde</th>
+            <th scope="col">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of g.items; track p.clave) {
+            <tr>
+              <th scope="row">
+                {{ p.descripcion }}
+                <small>{{ p.clave }} · {{ rango(p) }}</small>
+              </th>
+              <td>
+                <strong class="valor">{{ p.vigente.valor }}</strong>
+                @if (p.pendienteDefinicion) {
+                  <span class="etiqueta aviso-pendiente">Por confirmar</span>
+                }
+                @if (p.programada; as prog) {
+                  <small
+                    >Programado: <strong>{{ prog.valor }}</strong> desde
+                    {{ prog.vigenteDesde | date: 'dd/MM/yyyy HH:mm' : '-0500' }}</small
+                  >
+                }
+              </td>
+              <td>
+                {{ p.vigente.vigenteDesde | date: 'dd/MM/yyyy' : '-0500' }}
+                <small>Aprobó: {{ p.vigente.aprobadoPor ?? 'Sistema (valor inicial)' }}</small>
+              </td>
+              <td class="acciones-fila">
+                <span class="grupo-acciones">
+                  <button
+                    type="button"
+                    class="accion-icono"
+                    [title]="'Cambiar el valor de ' + p.clave"
+                    (click)="abrirCambio(p)"
+                  >
+                    <app-icono nombre="editar" />
+                    <span class="solo-lectores">Cambiar el valor de {{ p.clave }}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="accion-icono"
+                    [title]="'Historial de ' + p.clave"
+                    (click)="abrirHistorial(p)"
+                  >
+                    <app-icono nombre="descargar" />
+                    <span class="solo-lectores">Historial de versiones de {{ p.clave }}</span>
+                  </button>
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}
+
+<!-- Cambiar el valor (crea una versión) -->
+<app-dialogo
+  [titulo]="'Cambiar «' + (objetivo()?.clave ?? '') + '»'"
+  [abierto]="modo() === 'cambio'"
+  (cierra)="cerrar()"
+>
+  @if (objetivo(); as p) {
+    <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+      <p>{{ p.descripcion }}</p>
+      <app-campo
+        idCampo="par-valor"
+        etiqueta="Valor nuevo"
+        [ayuda]="rango(p)"
+        [control]="form.controls.valor"
+      >
+        <input appCampoControl type="text" formControlName="valor" maxlength="500" />
+      </app-campo>
+      <app-campo
+        idCampo="par-desde"
+        etiqueta="Vigente desde"
+        ayuda="Déjelo vacío para que rija desde ahora, o elija una fecha y hora futuras."
+        [control]="form.controls.vigenteDesde"
+      >
+        <input appCampoControl type="datetime-local" formControlName="vigenteDesde" />
+      </app-campo>
+      <app-campo
+        idCampo="par-motivo"
+        etiqueta="Motivo del cambio"
+        ayuda="Queda registrado junto con su nombre como aprobador."
+        [control]="form.controls.justificacion"
+      >
+        <textarea
+          appCampoControl
+          formControlName="justificacion"
+          rows="3"
+          maxlength="500"
+        ></textarea>
+      </app-campo>
+      @if (errorDialogo()) {
+        <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
+      }
+      <div class="acciones">
+        <button type="submit" class="boton" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando…' : 'Guardar nueva versión' }}
+        </button>
+        <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>
+      </div>
+    </form>
+  }
+</app-dialogo>
+
+<!-- Historial -->
+<app-dialogo
+  [titulo]="'Historial de «' + (objetivo()?.clave ?? '') + '»'"
+  [abierto]="modo() === 'historial'"
+  (cierra)="cerrar()"
+>
+  @if (errorDialogo()) {
+    <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
+  }
+  <ol class="historial">
+    @for (v of historial(); track v.id) {
+      <li>
+        <strong>{{ v.valor }}</strong>
+        <span
+          >Desde {{ v.vigenteDesde | date: 'dd/MM/yyyy HH:mm' : '-0500' }} ·
+          {{ v.aprobadoPor ?? 'Sistema' }}</span
+        >
+        @if (v.justificacion) {
+          <small>{{ v.justificacion }}</small>
+        }
+      </li>
+    }
+  </ol>
+  <div class="acciones">
+    <button type="button" class="boton secundario" (click)="cerrar()">Cerrar</button>
+  </div>
+</app-dialogo>

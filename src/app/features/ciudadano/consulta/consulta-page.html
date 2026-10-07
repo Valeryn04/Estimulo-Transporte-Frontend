@@ -1,0 +1,255 @@
+@switch (paso()) {
+  @case ('cargando') {
+    <h1>Consultar el estado de mi solicitud</h1>
+    <p role="status">Un momento, por favor…</p>
+  }
+
+  @case ('identificar') {
+    <h1>Consultar el estado de mi solicitud</h1>
+    <p class="intro">
+      Para proteger sus datos, le enviaremos un <strong>código de un solo uso</strong> al correo
+      electrónico que registró en la preinscripción. Indique su solicitud con la identificación de
+      la persona con discapacidad o con su número de radicado.
+    </p>
+
+    @if (error()) {
+      <p class="aviso error" role="alert">
+        <span>{{ error() }}</span>
+      </p>
+    }
+
+    <div class="modos" role="group" aria-label="Cómo desea indicar su solicitud">
+      <button
+        type="button"
+        class="modo"
+        [class.activo]="modo() === 'documento'"
+        [attr.aria-pressed]="modo() === 'documento'"
+        (click)="cambiarModo('documento')"
+      >
+        Con mi documento de identidad
+      </button>
+      <button
+        type="button"
+        class="modo"
+        [class.activo]="modo() === 'radicado'"
+        [attr.aria-pressed]="modo() === 'radicado'"
+        (click)="cambiarModo('radicado')"
+      >
+        Con mi número de radicado
+      </button>
+    </div>
+
+    @if (modo() === 'documento') {
+      <form [formGroup]="identificacion" (ngSubmit)="pedirCodigo()" novalidate>
+        <div class="rejilla">
+          <app-campo
+            idCampo="co-tipo"
+            etiqueta="Tipo de identificación"
+            [control]="identificacion.controls.tipo"
+            [mensajes]="{ required: 'elija una opción de la lista' }"
+          >
+            <select appCampoControl formControlName="tipo">
+              <option [ngValue]="null" disabled>Seleccione</option>
+              @for (t of tipos(); track t.id) {
+                <option [ngValue]="t.id">{{ t.codigo }} – {{ t.nombre }}</option>
+              }
+            </select>
+          </app-campo>
+          <app-campo
+            idCampo="co-numero"
+            etiqueta="Número de identificación"
+            [control]="identificacion.controls.numero"
+          >
+            <input
+              appCampoControl
+              type="text"
+              formControlName="numero"
+              autocomplete="off"
+              [attr.inputmode]="modoTeclado()"
+              maxlength="25"
+            />
+          </app-campo>
+        </div>
+        <p class="nota-campo">Escriba el número sin puntos ni espacios.</p>
+        <div class="acciones">
+          <button type="submit" class="boton" [disabled]="trabajando()">
+            {{ trabajando() ? 'Enviando…' : 'Enviar código a mi correo' }}
+          </button>
+        </div>
+      </form>
+    } @else {
+      <form [formGroup]="radicadoForm" (ngSubmit)="pedirCodigo()" novalidate>
+        <app-campo
+          idCampo="co-radicado"
+          etiqueta="Número de radicado"
+          ayuda="Lo encuentra en el correo que le enviamos al enviar su solicitud. Por ejemplo: EST-2026-000123."
+          [control]="radicadoForm.controls.radicado"
+          [mensajes]="{
+            pattern: 'escríbalo como aparece en su correo, por ejemplo EST-2026-000123',
+          }"
+        >
+          <input
+            appCampoControl
+            type="text"
+            formControlName="radicado"
+            autocomplete="off"
+            autocapitalize="characters"
+            maxlength="20"
+          />
+        </app-campo>
+        <div class="acciones">
+          <button type="submit" class="boton" [disabled]="trabajando()">
+            {{ trabajando() ? 'Enviando…' : 'Enviar código a mi correo' }}
+          </button>
+        </div>
+      </form>
+    }
+
+    <p class="ayuda-pie">
+      También puede consultar desde el enlace que le llegó por correo después de verificarlo. ¿Aún
+      no verificó su correo?
+      <a routerLink="/reenviar-verificacion">Reciba el enlace de verificación</a>.
+    </p>
+  }
+
+  @case ('codigo') {
+    <h1>Escriba el código que le enviamos</h1>
+    <p class="aviso exito" role="status">
+      <span>{{ aviso() }}</span>
+    </p>
+    <p>
+      Revise su correo, incluida la carpeta de correo no deseado. El código tiene 6 dígitos, vale
+      unos minutos y solo se puede usar una vez.
+    </p>
+
+    @if (error()) {
+      <p class="aviso error" role="alert">
+        <span>{{ error() }}</span>
+      </p>
+    }
+
+    <form [formGroup]="codigoForm" (ngSubmit)="validarCodigo()" novalidate>
+      <app-campo
+        idCampo="co-codigo"
+        etiqueta="Código de 6 dígitos"
+        [control]="codigoForm.controls.codigo"
+        [mensajes]="{ pattern: 'escriba los 6 dígitos del código' }"
+      >
+        <input
+          appCampoControl
+          type="text"
+          formControlName="codigo"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          maxlength="6"
+        />
+      </app-campo>
+      <div class="acciones">
+        <button type="submit" class="boton" [disabled]="trabajando()">
+          {{ trabajando() ? 'Validando…' : 'Consultar' }}
+        </button>
+        <button type="button" class="boton secundario" (click)="volver()">
+          <app-icono nombre="atras" />
+          Pedir otro código o cambiar la identificación
+        </button>
+      </div>
+    </form>
+  }
+
+  @case ('resultado') {
+    @if (estado(); as e) {
+      <h1 #tituloEl tabindex="-1">Estado de su solicitud</h1>
+
+      <section class="tarjeta resumen-solicitud" aria-label="Datos de la solicitud">
+        <dl>
+          <div>
+            <dt>Persona con discapacidad</dt>
+            <dd>{{ e.personaConDiscapacidad }}</dd>
+          </div>
+          <div>
+            <dt>Vigencia</dt>
+            <dd>{{ e.vigencia }}</dd>
+          </div>
+          <div>
+            <dt>Correo registrado</dt>
+            <dd>{{ e.correo }}</dd>
+          </div>
+          @if (e.radicado) {
+            <div>
+              <dt>Número de radicado</dt>
+              <dd>{{ e.radicado }}</dd>
+            </div>
+            <div>
+              <dt>Radicación</dt>
+              <dd>{{ e.fechaRadicacion | date: 'dd/MM/yyyy HH:mm' : '-0500' }}</dd>
+            </div>
+          }
+          <div>
+            <dt>Preinscripción</dt>
+            <dd>{{ e.fechaPreinscripcion | date: 'dd/MM/yyyy HH:mm' : '-0500' }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="tarjeta" aria-labelledby="titulo-estado">
+        <h2 id="titulo-estado">
+          {{ e.etapa }}: <span class="etiqueta ok">{{ e.estado.nombre }}</span>
+        </h2>
+        <h3>¿Qué significa?</h3>
+        <p>{{ e.explicacion }}</p>
+        <h3>Siguiente paso</h3>
+        <p>{{ e.siguientePaso }}</p>
+      </section>
+
+      <p class="aviso" role="note">
+        <span>{{ e.aviso }}</span>
+      </p>
+
+      <section aria-labelledby="titulo-comunicaciones">
+        <h2 id="titulo-comunicaciones">Comunicaciones enviadas a su correo</h2>
+        @if (e.comunicaciones.length === 0) {
+          <p>Todavía no le hemos enviado comunicaciones.</p>
+        } @else {
+          <div
+            class="tabla-contenedor"
+            tabindex="0"
+            role="region"
+            aria-label="Tabla de comunicaciones enviadas"
+          >
+            <table class="tabla">
+              <caption class="solo-lectores">
+                Comunicaciones enviadas
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Comunicación</th>
+                  <th scope="col">Fecha</th>
+                  <th scope="col">Estado del envío</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (c of e.comunicaciones; track c.id) {
+                  <tr>
+                    <th scope="row">
+                      {{ c.nombre }}
+                      <small>{{ c.asunto }}</small>
+                    </th>
+                    <td>{{ c.enviadoAt | date: 'dd/MM/yyyy HH:mm' : '-0500' }}</td>
+                    <td>{{ c.entrega }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+
+      <div class="acciones">
+        @if (e.estado.codigo === 'CORREO_VERIFICADO') {
+          <a class="boton" routerLink="/caracterizacion">Completar la caracterización</a>
+        }
+        <button type="button" class="boton secundario" (click)="salir()">Cerrar la consulta</button>
+      </div>
+    }
+  }
+}

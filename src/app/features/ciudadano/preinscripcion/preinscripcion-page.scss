@@ -1,0 +1,70 @@
+.intro {
+  margin: 0 0 20px;
+}
+
+.seccion {
+  margin: 0 0 24px;
+  padding: 16px clamp(12px, 3vw, 24px) 8px;
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  background: #fff;
+
+  legend,
+  h2 {
+    padding: 0 6px;
+    font-family: var(--fuente-titulo);
+    font-weight: var(--peso-titulo);
+    font-size: 1.2rem;
+    color: var(--alc-azul);
+  }
+
+  h2 {
+    margin: 0 0 4px;
+    padding: 0;
+  }
+}
+
+.por-que {
+  margin: 0 0 12px;
+  color: var(--color-muted);
+}
+
+.resumen {
+  margin-bottom: 20px;
+
+  h2 {
+    margin: 0 0 6px;
+    font-size: 1.1rem;
+    color: var(--color-error);
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 1.2rem;
+  }
+
+  a {
+    color: var(--color-error);
+    font-weight: 600;
+  }
+}
+
+.texto-autorizacion {
+  max-height: 14rem;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  background: var(--alc-gris);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+}
+
+// Campo trampa: fuera de la vista y del orden de tabulación, sin usar display:none (los robots lo detectarían).
+.trampa {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}

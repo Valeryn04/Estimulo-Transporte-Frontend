@@ -1,0 +1,16 @@
+dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  padding: 24px;
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+
+  &::backdrop {
+    background: rgba(14, 32, 94, 0.55);
+  }
+}
+
+h2 {
+  margin-top: 0;
+}

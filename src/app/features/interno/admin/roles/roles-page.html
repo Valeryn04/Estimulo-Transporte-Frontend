@@ -1,0 +1,167 @@
+<div class="encabezado">
+  <h1>Roles y permisos</h1>
+  <button type="button" class="boton" (click)="abrirNuevo()">Crear rol</button>
+</div>
+
+<p class="intro">
+  Cada usuario tiene <strong>un solo rol</strong>, y sus permisos son los de ese rol. Los roles del
+  sistema vienen del documento del programa y no se eliminan; puede crear roles propios y elegir qué
+  puede hacer cada uno. Si cambia los permisos de un rol, el cambio rige de inmediato para quienes
+  lo tienen.
+</p>
+
+@if (mensaje()) {
+  <p class="aviso exito" role="status">{{ mensaje() }}</p>
+}
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+
+@if (cargando()) {
+  <p role="status">Cargando…</p>
+} @else {
+  <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Tabla de roles">
+    <table class="tabla">
+      <caption class="solo-lectores">
+        Roles y permisos
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Rol</th>
+          <th scope="col">Permisos en el portal</th>
+          <th scope="col" class="num">Usuarios</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of roles(); track r.id) {
+          <tr>
+            <th scope="row">
+              {{ r.nombre }}
+              <span class="etiqueta" [class.ok]="!r.sistema">
+                {{ r.sistema ? 'Del sistema' : 'Propio' }}
+              </span>
+              <small>{{ r.descripcion }}</small>
+            </th>
+            <td class="permisos">{{ resumenPermisos(r) }}</td>
+            <td class="num">{{ r.usuarios }}</td>
+            <td class="acciones-fila">
+              <span class="grupo-acciones">
+                <button
+                  type="button"
+                  class="accion-icono"
+                  [title]="(r.codigo === 'ADMINISTRADOR' ? 'Ver ' : 'Editar ') + r.nombre"
+                  (click)="abrirEditar(r)"
+                >
+                  <app-icono nombre="editar" />
+                  <span class="solo-lectores"
+                    >{{ r.codigo === 'ADMINISTRADOR' ? 'Ver' : 'Editar' }} {{ r.nombre }}</span
+                  >
+                </button>
+                @if (!r.sistema) {
+                  <button
+                    type="button"
+                    class="accion-icono peligro"
+                    [title]="'Eliminar ' + r.nombre"
+                    (click)="pedirEliminar(r)"
+                  >
+                    <app-icono nombre="papelera" />
+                    <span class="solo-lectores">Eliminar {{ r.nombre }}</span>
+                  </button>
+                }
+              </span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+<app-dialogo
+  [titulo]="soloLectura() ? 'Rol de administrador' : editando() ? 'Editar rol' : 'Crear rol'"
+  [abierto]="abierto()"
+  (cierra)="cerrar()"
+>
+  <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+    @if (soloLectura()) {
+      <p class="aviso" role="note">
+        <span
+          >El rol de administrador siempre tiene todos los permisos y no se puede modificar: así el
+          sistema nunca queda sin quién lo administre.</span
+        >
+      </p>
+    }
+    <app-campo
+      idCampo="rol-nombre"
+      etiqueta="Nombre del rol"
+      [ayuda]="nombreFijo() ? 'El nombre de un rol del sistema no se puede cambiar.' : ''"
+      [control]="form.controls.nombre"
+    >
+      <input appCampoControl type="text" formControlName="nombre" maxlength="60" />
+    </app-campo>
+    <app-campo
+      idCampo="rol-descripcion"
+      etiqueta="Descripción"
+      ayuda="Qué hace quien tiene este rol."
+      [control]="form.controls.descripcion"
+    >
+      <textarea appCampoControl formControlName="descripcion" rows="3" maxlength="250"></textarea>
+    </app-campo>
+
+    <fieldset class="permisos-rol">
+      <legend>Permisos</legend>
+      @if (grupos().length === 0) {
+        <p class="nota">No hay permisos para elegir todavía.</p>
+      }
+      @for (g of grupos(); track g.modulo) {
+        <div class="modulo">
+          <p class="titulo-modulo">{{ g.modulo }}</p>
+          @for (p of g.permisos; track p.codigo) {
+            <label class="opcion">
+              <input
+                type="checkbox"
+                [checked]="soloLectura() || marcado(p.codigo)"
+                [disabled]="soloLectura()"
+                (change)="alternar(p.codigo, $any($event.target).checked)"
+              />
+              <span>{{ p.descripcion }}</span>
+            </label>
+          }
+        </div>
+      }
+    </fieldset>
+
+    @if (errorDialogo()) {
+      <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
+    }
+    <div class="acciones">
+      @if (!soloLectura()) {
+        <button type="submit" class="boton" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando…' : 'Guardar' }}
+        </button>
+      }
+      <button type="button" class="boton secundario" (click)="cerrar()">
+        {{ soloLectura() ? 'Cerrar' : 'Cancelar' }}
+      </button>
+    </div>
+  </form>
+</app-dialogo>
+
+<app-dialogo titulo="Eliminar rol" [abierto]="aEliminar() !== null" (cierra)="cancelarEliminar()">
+  @if (aEliminar(); as r) {
+    <p>
+      ¿Eliminar el rol <strong>{{ r.nombre }}</strong
+      >? Solo se puede eliminar si ningún usuario lo tiene.
+    </p>
+    @if (errorEliminar()) {
+      <p class="aviso error" role="alert">{{ errorEliminar() }}</p>
+    }
+    <div class="acciones">
+      <button type="button" class="boton peligro" [disabled]="eliminando()" (click)="eliminar()">
+        {{ eliminando() ? 'Eliminando…' : 'Sí, eliminar' }}
+      </button>
+      <button type="button" class="boton secundario" (click)="cancelarEliminar()">Cancelar</button>
+    </div>
+  }
+</app-dialogo>

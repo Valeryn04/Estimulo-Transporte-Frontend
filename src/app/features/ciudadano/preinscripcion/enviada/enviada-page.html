@@ -1,0 +1,41 @@
+<section class="tarjeta" aria-labelledby="titulo-enviada">
+  <h1 id="titulo-enviada" tabindex="-1">Recibimos su preinscripción</h1>
+  <p class="aviso exito" role="status">
+    <span>
+      @if (correo) {
+        Enviamos un correo a <strong>{{ correo }}</strong> con un enlace para verificar su
+        dirección.
+      } @else {
+        Enviamos un correo al correo registrado con un enlace para verificar su dirección.
+      }
+    </span>
+  </p>
+
+  <h2>¿Qué sigue?</h2>
+  <ol>
+    <li>
+      Abra el correo y pulse el enlace de verificación
+      @if (horas) {
+        (vale por {{ horas }} horas)
+      }
+      .
+    </li>
+    <li>
+      Al verificar, le enviaremos otro correo con el enlace para completar la caracterización y
+      cargar los documentos.
+    </li>
+  </ol>
+  <p>
+    Si no ve el correo, revise la carpeta de correo no deseado.
+    <a routerLink="/reenviar-verificacion">Pedir que lo enviemos de nuevo</a>.
+  </p>
+
+  <p class="aviso" role="note">
+    <span>
+      <strong>Importante:</strong> la preinscripción no equivale a la aprobación del beneficio. La
+      asignación depende de la verificación de requisitos, la disponibilidad presupuestal y los
+      criterios de priorización vigentes.
+    </span>
+  </p>
+  <p><a routerLink="/">Volver al inicio</a></p>
+</section>

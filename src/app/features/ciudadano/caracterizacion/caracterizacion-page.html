@@ -1,0 +1,807 @@
+@switch (paso()) {
+  @case ('cargando') {
+    <h1>Caracterización</h1>
+    <p role="status">Un momento, por favor…</p>
+  }
+
+  @case ('acceso') {
+    <h1>Complete su caracterización</h1>
+    @if (error()) {
+      <p class="aviso error" role="alert">
+        <span>{{ error() }}</span>
+      </p>
+    }
+    <p class="intro">
+      Para proteger sus datos, este formulario solo se abre con el
+      <strong>enlace seguro</strong> que le enviamos al correo cuando verificó su preinscripción, o
+      después de validar su identidad con un código de un solo uso.
+    </p>
+    <div class="acciones">
+      <a class="boton" routerLink="/consulta">Entrar con mi documento y un código</a>
+      <a class="boton secundario" routerLink="/reenviar-verificacion"
+        >No verifiqué mi correo todavía</a
+      >
+    </div>
+  }
+
+  @case ('error') {
+    <h1>Caracterización</h1>
+    <p class="aviso error" role="alert">
+      <span>{{ error() }}</span>
+    </p>
+    <div class="acciones">
+      <button type="button" class="boton" (click)="cargar()">Intentar de nuevo</button>
+    </div>
+  }
+
+  @case ('formulario') {
+    @if (c(); as datos) {
+      <h1 #tituloEl tabindex="-1">Caracterización de la persona con discapacidad</h1>
+
+      <p class="aviso" role="note">
+        <span>
+          <strong>Importante:</strong> completar este formulario no equivale a la aprobación del
+          beneficio. La asignación depende de la verificación de requisitos, la disponibilidad
+          presupuestal y los criterios de priorización vigentes.
+        </span>
+      </p>
+
+      <section class="tarjeta identificacion" aria-label="Datos de la solicitud">
+        <dl>
+          <div>
+            <dt>Persona con discapacidad</dt>
+            <dd>{{ datos.pcd.nombre }}</dd>
+          </div>
+          <div>
+            <dt>Identificación</dt>
+            <dd>{{ datos.pcd.tipoIdentificacion.codigo }} {{ datos.pcd.numero }}</dd>
+          </div>
+          <div>
+            <dt>Vigencia</dt>
+            <dd>{{ datos.solicitud.vigencia }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      @if (!editable()) {
+        <p class="aviso advertencia" role="alert">
+          <span>
+            Esta solicitud ya no admite cambios desde este formulario. Puede ver su estado en la
+            <a routerLink="/consulta">consulta de solicitud</a>.
+          </span>
+        </p>
+      }
+
+      @if (conflicto()) {
+        <div class="aviso error" role="alert">
+          <span>
+            {{ mensajeGuardado() }}
+            <button type="button" class="boton secundario" (click)="cargar()">
+              Recargar lo último guardado
+            </button>
+          </span>
+        </div>
+      }
+      @if (sesionVencida()) {
+        <p class="aviso error" role="alert">
+          <span>
+            {{ mensajeGuardado() }}
+            <a routerLink="/consulta">Validar mi identidad de nuevo</a>
+          </span>
+        </p>
+      }
+
+      @if (avance(); as a) {
+        <section class="avance" aria-label="Avance del formulario">
+          <div
+            class="barra"
+            role="progressbar"
+            aria-label="Datos obligatorios diligenciados"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            [attr.aria-valuenow]="a.porcentaje"
+          >
+            <span [style.width.%]="a.porcentaje"></span>
+          </div>
+          <p class="avance-texto">
+            Avance: <strong>{{ a.porcentaje }} %</strong>
+            <span class="detalle">
+              ({{ a.completados }} de {{ a.requeridos }} datos obligatorios)</span
+            >
+          </p>
+          <p class="guardado" [class.error]="estadoGuardado() === 'error'" role="status">
+            @switch (estadoGuardado()) {
+              @case ('pendiente') {
+                Hay cambios sin guardar…
+              }
+              @case ('guardando') {
+                Guardando…
+              }
+              @case ('guardado') {
+                Avance guardado{{
+                  guardadoAt() ? ' a las ' + (guardadoAt() | date: 'HH:mm' : '-0500') : ''
+                }}. Puede cerrar y retomar después desde el enlace de su correo.
+              }
+              @case ('error') {
+                {{ mensajeGuardado() }}
+              }
+              @default {
+                Sus respuestas se guardan solas mientras escribe.
+              }
+            }
+          </p>
+        </section>
+      }
+
+      <div class="distribucion">
+        <nav class="pasos" aria-label="Secciones del formulario">
+          <ol>
+            @for (p of pasos(); track p; let i = $index) {
+              <li>
+                <button
+                  type="button"
+                  class="paso"
+                  [class.activo]="p === seccion()"
+                  [attr.aria-current]="p === seccion() ? 'step' : null"
+                  (click)="ir(p)"
+                >
+                  <span class="num" [attr.data-estado]="estadoDe(p)" aria-hidden="true">
+                    @if (estadoDe(p) === 'completa') {
+                      ✓
+                    } @else {
+                      {{ i + 1 }}
+                    }
+                  </span>
+                  <span class="nombre">
+                    {{ NOMBRE_SECCION[p] }}
+                    @if (estadoDe(p) === 'completa') {
+                      <span class="solo-lectores">(completa)</span>
+                    } @else if (faltanDe(p) > 0) {
+                      <span class="solo-lectores">({{ textoFaltan(p) }})</span>
+                    }
+                  </span>
+                </button>
+              </li>
+            }
+          </ol>
+        </nav>
+
+        <form class="panel" [formGroup]="form" (ngSubmit)="siguiente()" novalidate>
+          <fieldset class="seccion" [disabled]="!editable()">
+            <legend>{{ NOMBRE_SECCION[seccion()] }}</legend>
+            <p class="por-que">{{ POR_QUE_DE(seccion()) }}</p>
+
+            @switch (seccion()) {
+              @case ('datos-personales') {
+                <app-campo
+                  idCampo="car-pcdNombre"
+                  etiqueta="Nombre completo"
+                  ayuda="Como aparece en su documento de identidad. Puede corregirlo si hay un error."
+                  [control]="form.controls.pcdNombre"
+                  [mensajes]="{ nombre: MENSAJES.nombre }"
+                >
+                  <input
+                    appCampoControl
+                    type="text"
+                    formControlName="pcdNombre"
+                    autocomplete="off"
+                    maxlength="150"
+                  />
+                </app-campo>
+                <dl class="fijos">
+                  <div>
+                    <dt>Tipo de identificación</dt>
+                    <dd>{{ datos.pcd.tipoIdentificacion.nombre }}</dd>
+                  </div>
+                  <div>
+                    <dt>Número de identificación</dt>
+                    <dd>{{ datos.pcd.numero }}</dd>
+                  </div>
+                  <div>
+                    <dt>Correo electrónico</dt>
+                    <dd>{{ datos.pcd.correo }}</dd>
+                  </div>
+                </dl>
+                <p class="nota">
+                  Estos datos vienen de su preinscripción y no se pueden cambiar aquí.
+                </p>
+                <div class="rejilla">
+                  <app-campo
+                    idCampo="car-generoId"
+                    etiqueta="Género"
+                    [control]="form.controls.generoId"
+                    [mensajes]="{ required: 'elija una opción de la lista' }"
+                  >
+                    <select appCampoControl formControlName="generoId">
+                      <option [ngValue]="null" disabled>Seleccione</option>
+                      @for (o of datos.catalogos.generos; track o.id) {
+                        <option [ngValue]="o.id">{{ o.nombre }}</option>
+                      }
+                    </select>
+                  </app-campo>
+                  <app-campo
+                    idCampo="car-fechaNacimiento"
+                    etiqueta="Fecha de nacimiento"
+                    [control]="form.controls.fechaNacimiento"
+                    [mensajes]="{
+                      fechaFutura: MENSAJES.fechaFutura,
+                      fechaInvalida: MENSAJES.fechaInvalida,
+                    }"
+                  >
+                    <input
+                      appCampoControl
+                      type="date"
+                      formControlName="fechaNacimiento"
+                      min="1900-01-01"
+                      [max]="hoy"
+                      autocomplete="bday"
+                    />
+                  </app-campo>
+                </div>
+                <div class="rejilla">
+                  <app-campo
+                    idCampo="car-celular"
+                    etiqueta="Celular"
+                    ayuda="10 dígitos, por ejemplo 300 123 4567."
+                    [control]="form.controls.celular"
+                    [mensajes]="{ celular: MENSAJES.celular }"
+                  >
+                    <input
+                      appCampoControl
+                      type="tel"
+                      formControlName="celular"
+                      inputmode="tel"
+                      autocomplete="tel-national"
+                      maxlength="20"
+                    />
+                  </app-campo>
+                  <app-campo
+                    idCampo="car-telefonoFijo"
+                    etiqueta="Teléfono fijo"
+                    ayuda="Opcional. 7 dígitos, o 10 con el indicativo 60."
+                    [control]="form.controls.telefonoFijo"
+                    [mensajes]="{ fijo: MENSAJES.fijo }"
+                  >
+                    <input
+                      appCampoControl
+                      type="tel"
+                      formControlName="telefonoFijo"
+                      inputmode="tel"
+                      autocomplete="off"
+                      maxlength="20"
+                    />
+                  </app-campo>
+                </div>
+                <app-campo
+                  idCampo="car-estadoCivilId"
+                  etiqueta="Estado civil"
+                  [control]="form.controls.estadoCivilId"
+                >
+                  <select appCampoControl formControlName="estadoCivilId">
+                    <option [ngValue]="null">Seleccione</option>
+                    @for (o of datos.catalogos.estadosCiviles; track o.id) {
+                      <option [ngValue]="o.id">{{ o.nombre }}</option>
+                    }
+                  </select>
+                </app-campo>
+              }
+
+              @case ('situacion') {
+                <app-campo
+                  idCampo="car-tieneHijos"
+                  tipo="grupo"
+                  etiqueta="¿Tiene hijos?"
+                  [control]="form.controls.tieneHijos"
+                  [mensajes]="{ required: MENSAJES.respuesta }"
+                >
+                  <div class="opciones">
+                    <label class="opcion">
+                      <input type="radio" formControlName="tieneHijos" [value]="true" /> Sí
+                    </label>
+                    <label class="opcion">
+                      <input type="radio" formControlName="tieneHijos" [value]="false" /> No
+                    </label>
+                  </div>
+                </app-campo>
+                @if (tieneHijos() === true) {
+                  <app-campo
+                    idCampo="car-hijosCantidad"
+                    etiqueta="¿Cuántos hijos tiene?"
+                    [control]="form.controls.hijosCantidad"
+                    [mensajes]="{
+                      min: 'escriba un número entre 1 y 20',
+                      max: 'escriba un número entre 1 y 20',
+                    }"
+                  >
+                    <input
+                      appCampoControl
+                      type="number"
+                      formControlName="hijosCantidad"
+                      inputmode="numeric"
+                      min="1"
+                      [max]="MAX_HIJOS"
+                      step="1"
+                    />
+                  </app-campo>
+                  @if (edades().length > 0) {
+                    <fieldset class="edades">
+                      <legend>Edad de cada hijo (en años)</legend>
+                      <div class="rejilla-edades">
+                        @for (e of edades().controls; track $index) {
+                          <app-campo
+                            [idCampo]="'car-hijo-' + $index"
+                            [etiqueta]="'Hijo ' + ($index + 1)"
+                            [control]="e"
+                            [mensajes]="{
+                              min: 'escriba un valor entre 0 y 100',
+                              max: 'escriba un valor entre 0 y 100',
+                            }"
+                          >
+                            <input
+                              appCampoControl
+                              type="number"
+                              [formControl]="e"
+                              inputmode="numeric"
+                              min="0"
+                              max="100"
+                              step="1"
+                            />
+                          </app-campo>
+                        }
+                      </div>
+                    </fieldset>
+                  }
+                }
+                <div class="rejilla">
+                  <app-campo
+                    idCampo="car-etniaId"
+                    etiqueta="Etnia"
+                    ayuda="Es un dato sensible: se guarda cifrado."
+                    [control]="form.controls.etniaId"
+                  >
+                    <select appCampoControl formControlName="etniaId">
+                      <option [ngValue]="null">Seleccione</option>
+                      @for (o of datos.catalogos.etnias; track o.id) {
+                        <option [ngValue]="o.id">{{ o.nombre }}</option>
+                      }
+                    </select>
+                  </app-campo>
+                  <app-campo
+                    idCampo="car-escolaridadId"
+                    etiqueta="Nivel de escolaridad"
+                    [control]="form.controls.escolaridadId"
+                  >
+                    <select appCampoControl formControlName="escolaridadId">
+                      <option [ngValue]="null">Seleccione</option>
+                      @for (o of datos.catalogos.escolaridades; track o.id) {
+                        <option [ngValue]="o.id">{{ o.nombre }}</option>
+                      }
+                    </select>
+                  </app-campo>
+                </div>
+                <app-campo
+                  idCampo="car-ocupacionId"
+                  etiqueta="Ocupación"
+                  [control]="form.controls.ocupacionId"
+                  [mensajes]="{ required: 'elija una opción de la lista' }"
+                >
+                  <select appCampoControl formControlName="ocupacionId">
+                    <option [ngValue]="null" disabled>Seleccione</option>
+                    @for (o of datos.catalogos.ocupaciones; track o.id) {
+                      <option [ngValue]="o.id">{{ o.nombre }}</option>
+                    }
+                  </select>
+                </app-campo>
+              }
+
+              @case ('salud-apoyos') {
+                <app-campo
+                  idCampo="car-epsId"
+                  etiqueta="EPS"
+                  [control]="form.controls.epsId"
+                  [mensajes]="{ required: 'elija una opción de la lista' }"
+                >
+                  <select appCampoControl formControlName="epsId">
+                    <option [ngValue]="null" disabled>Seleccione</option>
+                    @for (o of datos.catalogos.eps; track o.id) {
+                      <option [ngValue]="o.id">{{ o.nombre }}</option>
+                    }
+                  </select>
+                </app-campo>
+                <app-campo
+                  idCampo="car-embarazo"
+                  tipo="grupo"
+                  etiqueta="Estado de embarazo"
+                  [control]="form.controls.embarazo"
+                  [mensajes]="{ required: 'elija una opción' }"
+                >
+                  <div class="opciones">
+                    <label class="opcion">
+                      <input type="radio" formControlName="embarazo" value="NO" /> No
+                    </label>
+                    <label class="opcion">
+                      <input type="radio" formControlName="embarazo" value="SI" /> Sí
+                    </label>
+                    <label class="opcion">
+                      <input type="radio" formControlName="embarazo" value="NO_APLICA" /> No aplica
+                    </label>
+                  </div>
+                </app-campo>
+                @if (embarazo() === 'SI') {
+                  <app-campo
+                    idCampo="car-semanasGestacion"
+                    etiqueta="Tiempo de gestación (semanas)"
+                    [control]="form.controls.semanasGestacion"
+                    [mensajes]="{
+                      min: 'escriba entre 1 y 42 semanas',
+                      max: 'escriba entre 1 y 42 semanas',
+                    }"
+                  >
+                    <input
+                      appCampoControl
+                      type="number"
+                      formControlName="semanasGestacion"
+                      inputmode="numeric"
+                      min="1"
+                      max="42"
+                      step="1"
+                    />
+                  </app-campo>
+                }
+                <app-campo
+                  idCampo="car-recibeSubsidios"
+                  tipo="grupo"
+                  etiqueta="¿Recibe rentas, subsidios o beneficios de otras entidades públicas del Distrito?"
+                  [control]="form.controls.recibeSubsidios"
+                  [mensajes]="{ required: MENSAJES.respuesta }"
+                >
+                  <div class="opciones">
+                    <label class="opcion">
+                      <input type="radio" formControlName="recibeSubsidios" [value]="true" /> Sí
+                    </label>
+                    <label class="opcion">
+                      <input type="radio" formControlName="recibeSubsidios" [value]="false" /> No
+                    </label>
+                  </div>
+                </app-campo>
+                @if (recibeSubsidios() === true) {
+                  <app-campo
+                    idCampo="car-subsidioCual"
+                    etiqueta="¿Cuál?"
+                    ayuda="Escriba el nombre del subsidio, renta o beneficio."
+                    [control]="form.controls.subsidioCual"
+                  >
+                    <input
+                      appCampoControl
+                      type="text"
+                      formControlName="subsidioCual"
+                      autocomplete="off"
+                      maxlength="200"
+                    />
+                  </app-campo>
+                }
+              }
+
+              @case ('transporte') {
+                <div class="rejilla">
+                  <app-campo
+                    idCampo="car-tipoTransporteId"
+                    etiqueta="Tipo de transporte"
+                    [control]="form.controls.tipoTransporteId"
+                  >
+                    <select appCampoControl formControlName="tipoTransporteId">
+                      <option [ngValue]="null">Seleccione</option>
+                      @for (o of datos.catalogos.tiposTransporte; track o.id) {
+                        <option [ngValue]="o.id">{{ o.nombre }}</option>
+                      }
+                    </select>
+                  </app-campo>
+                </div>
+                <app-campo
+                  idCampo="car-justificacionTransporte"
+                  etiqueta="Justificación territorial o de movilidad"
+                  ayuda="Cuéntenos por qué necesita este tipo de transporte (por ejemplo, dónde vive o cómo se desplaza)."
+                  [control]="form.controls.justificacionTransporte"
+                >
+                  <textarea
+                    appCampoControl
+                    formControlName="justificacionTransporte"
+                    rows="4"
+                    maxlength="500"
+                  ></textarea>
+                </app-campo>
+                <app-campo
+                  idCampo="car-requiereCuidador"
+                  tipo="grupo"
+                  etiqueta="¿Requiere el servicio también para su cuidador o asistente personal?"
+                  ayuda="Si responde que sí, le pediremos los datos del cuidador y sus documentos."
+                  [control]="form.controls.requiereCuidador"
+                  [mensajes]="{ required: MENSAJES.respuesta }"
+                >
+                  <div class="opciones">
+                    <label class="opcion">
+                      <input type="radio" formControlName="requiereCuidador" [value]="true" /> Sí
+                    </label>
+                    <label class="opcion">
+                      <input type="radio" formControlName="requiereCuidador" [value]="false" /> No
+                    </label>
+                  </div>
+                </app-campo>
+              }
+
+              @case ('cuidador') {
+                @if (datos.cuidador.nombreEditable) {
+                  <app-campo
+                    idCampo="car-cuidadorNombre"
+                    etiqueta="Nombre completo del cuidador"
+                    ayuda="Puede corregirlo si hay un error."
+                    [control]="form.controls.cuidadorNombre"
+                    [mensajes]="{ nombre: MENSAJES.nombre }"
+                  >
+                    <input
+                      appCampoControl
+                      type="text"
+                      formControlName="cuidadorNombre"
+                      autocomplete="off"
+                      maxlength="150"
+                    />
+                  </app-campo>
+                }
+                <dl class="fijos">
+                  @if (!datos.cuidador.nombreEditable) {
+                    <div>
+                      <dt>Nombre completo</dt>
+                      <dd>{{ datos.cuidador.nombre }}</dd>
+                    </div>
+                  }
+                  <div>
+                    <dt>Tipo de identificación</dt>
+                    <dd>{{ datos.cuidador.tipoIdentificacion.nombre }}</dd>
+                  </div>
+                  <div>
+                    <dt>Número de identificación</dt>
+                    <dd>{{ datos.cuidador.numero }}</dd>
+                  </div>
+                </dl>
+                <p class="nota">
+                  Estos datos vienen de su preinscripción y no se pueden cambiar aquí. Si hay un
+                  error en el documento del cuidador, comuníquese con la Gerencia de Desarrollo
+                  Social.
+                </p>
+                <div class="rejilla">
+                  <app-campo
+                    idCampo="car-cuidadorGeneroId"
+                    etiqueta="Género del cuidador"
+                    [control]="form.controls.cuidadorGeneroId"
+                    [mensajes]="{ required: 'elija una opción de la lista' }"
+                  >
+                    <select appCampoControl formControlName="cuidadorGeneroId">
+                      <option [ngValue]="null" disabled>Seleccione</option>
+                      @for (o of datos.catalogos.generos; track o.id) {
+                        <option [ngValue]="o.id">{{ o.nombre }}</option>
+                      }
+                    </select>
+                  </app-campo>
+                  <app-campo
+                    idCampo="car-cuidadorCorreo"
+                    etiqueta="Correo electrónico del cuidador"
+                    [control]="form.controls.cuidadorCorreo"
+                    [mensajes]="{ correo: MENSAJES.correo }"
+                  >
+                    <input
+                      appCampoControl
+                      type="email"
+                      formControlName="cuidadorCorreo"
+                      autocomplete="off"
+                      maxlength="150"
+                    />
+                  </app-campo>
+                </div>
+                <div class="rejilla">
+                  <app-campo
+                    idCampo="car-cuidadorCelular"
+                    etiqueta="Celular del cuidador"
+                    ayuda="10 dígitos, por ejemplo 310 987 6543."
+                    [control]="form.controls.cuidadorCelular"
+                    [mensajes]="{ celular: MENSAJES.celular }"
+                  >
+                    <input
+                      appCampoControl
+                      type="tel"
+                      formControlName="cuidadorCelular"
+                      inputmode="tel"
+                      autocomplete="off"
+                      maxlength="20"
+                    />
+                  </app-campo>
+                  <app-campo
+                    idCampo="car-cuidadorTelefonoFijo"
+                    etiqueta="Teléfono fijo del cuidador"
+                    ayuda="Opcional. 7 dígitos, o 10 con el indicativo 60."
+                    [control]="form.controls.cuidadorTelefonoFijo"
+                    [mensajes]="{ fijo: MENSAJES.fijo }"
+                  >
+                    <input
+                      appCampoControl
+                      type="tel"
+                      formControlName="cuidadorTelefonoFijo"
+                      inputmode="tel"
+                      autocomplete="off"
+                      maxlength="20"
+                    />
+                  </app-campo>
+                </div>
+              }
+
+              @case ('documentos') {
+                <app-documentos-panel
+                  [editable]="editable()"
+                  (actualizado)="alActualizarDocumentos($event)"
+                />
+              }
+
+              @case ('revision') {
+                @if (cargandoRevision() && !revision()) {
+                  <p role="status">Revisando su solicitud…</p>
+                }
+                @if (errorEnvio()) {
+                  <p class="aviso error" role="alert">
+                    <span>{{ errorEnvio() }}</span>
+                  </p>
+                }
+                @if (revision(); as r) {
+                  @if (r.completo) {
+                    <p class="aviso exito" role="status">
+                      <span>
+                        <strong>Su solicitud está completa.</strong> Puede enviarla ahora. Al
+                        enviarla se genera su número de radicado y ya no podrá cambiar los datos ni
+                        los documentos.
+                      </span>
+                    </p>
+                  } @else {
+                    <p class="aviso advertencia" role="status">
+                      <span>
+                        Todavía faltan datos o documentos para poder enviar. Puede completarlos
+                        ahora o retomar después desde el enlace de su correo: lo que ya cargó está
+                        guardado.
+                      </span>
+                    </p>
+                    @if (r.datos.length > 0) {
+                      <section class="faltantes">
+                        <h3>Datos pendientes</h3>
+                        <ul>
+                          @for (f of r.datos; track f.campo) {
+                            <li>
+                              {{ f.mensaje }}
+                              <button type="button" class="enlace" (click)="irA(f.seccion)">
+                                Completar
+                              </button>
+                            </li>
+                          }
+                        </ul>
+                      </section>
+                    }
+                    @if (r.documentos.length > 0) {
+                      <section class="faltantes">
+                        <h3>Documentos pendientes</h3>
+                        <ul>
+                          @for (f of r.documentos; track f.campo) {
+                            <li>{{ f.mensaje }}</li>
+                          }
+                        </ul>
+                        <button type="button" class="boton secundario" (click)="ir('documentos')">
+                          Ir a cargar los documentos
+                        </button>
+                      </section>
+                    }
+                  }
+                }
+              }
+            }
+          </fieldset>
+
+          <div class="acciones">
+            @if (indice() > 0) {
+              <button type="button" class="boton secundario" (click)="anterior()">
+                <app-icono nombre="atras" />
+                Anterior
+              </button>
+            }
+            @if (indice() < pasos().length - 1) {
+              <button type="submit" class="boton">
+                Siguiente
+                <app-icono nombre="adelante" />
+              </button>
+            }
+            @if (seccion() === 'revision' && editable()) {
+              <button
+                type="button"
+                class="boton enviar"
+                [disabled]="!revision()?.completo || enviando()"
+                (click)="pedirConfirmacion()"
+              >
+                Enviar mi solicitud
+              </button>
+            }
+            @if (editable()) {
+              <button type="button" class="boton secundario" (click)="guardarAhora()">
+                Guardar avance
+              </button>
+            }
+          </div>
+        </form>
+      </div>
+
+      <app-dialogo
+        titulo="¿Enviar su solicitud?"
+        [abierto]="confirmando()"
+        (cierra)="confirmando.set(false)"
+      >
+        <p>
+          Al enviar se genera su <strong>número de radicado</strong> y le enviaremos un correo con
+          el siguiente paso. Después de enviar <strong>no podrá cambiar</strong> los datos ni los
+          documentos.
+        </p>
+        <p>¿Revisó que todo esté correcto?</p>
+        <div class="acciones">
+          <button type="button" class="boton" [disabled]="enviando()" (click)="enviar()">
+            {{ enviando() ? 'Enviando…' : 'Sí, enviar mi solicitud' }}
+          </button>
+          <button type="button" class="boton secundario" (click)="confirmando.set(false)">
+            Volver a revisar
+          </button>
+        </div>
+      </app-dialogo>
+    }
+  }
+
+  @case ('radicada') {
+    @if (radicacion(); as r) {
+      <h1 #tituloEl tabindex="-1">Su solicitud fue radicada</h1>
+      <section class="tarjeta comprobante" aria-labelledby="titulo-radicado">
+        <p class="rotulo" id="titulo-radicado">Número de radicado</p>
+        <p class="numero">{{ r.radicado }}</p>
+        <dl>
+          <div>
+            <dt>Fecha y hora</dt>
+            <dd>{{ r.radicadaAt | date: 'dd/MM/yyyy HH:mm' : '-0500' }}</dd>
+          </div>
+          <div>
+            <dt>Estado</dt>
+            <dd>
+              <span class="etiqueta ok">{{ r.estado.nombre }}</span>
+            </dd>
+          </div>
+          @if (c(); as datos) {
+            <div>
+              <dt>Persona con discapacidad</dt>
+              <dd>{{ datos.pcd.nombre }}</dd>
+            </div>
+            <div>
+              <dt>Identificación</dt>
+              <dd>{{ datos.pcd.tipoIdentificacion.codigo }} {{ datos.pcd.numero }}</dd>
+            </div>
+          }
+        </dl>
+      </section>
+      <section class="tarjeta" aria-labelledby="titulo-siguiente">
+        <h2 id="titulo-siguiente">¿Qué sigue?</h2>
+        <p>{{ r.explicacion }}</p>
+        <p><strong>Siguiente paso:</strong> {{ r.siguientePaso }}</p>
+        <p>
+          Le enviamos un correo con el radicado y un enlace para consultar el estado en cualquier
+          momento. Guarde este número: lo puede usar para consultar su solicitud.
+        </p>
+      </section>
+      <p class="aviso" role="note">
+        <span>{{ r.aviso }}</span>
+      </p>
+      <div class="acciones no-imprimir">
+        <a class="boton" routerLink="/consulta">Consultar el estado de mi solicitud</a>
+        <button type="button" class="boton secundario" (click)="imprimir()">
+          Imprimir o guardar el comprobante
+        </button>
+      </div>
+    }
+  }
+}

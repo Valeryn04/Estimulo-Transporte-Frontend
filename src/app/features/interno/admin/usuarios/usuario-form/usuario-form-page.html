@@ -1,0 +1,98 @@
+<h1>{{ editando() ? 'Modificar usuario' : 'Nuevo usuario' }}</h1>
+
+@if (cargando()) {
+  <p role="status">Cargando…</p>
+} @else {
+  <form class="tarjeta" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+    <div class="rejilla">
+      <app-campo
+        idCampo="usuario"
+        etiqueta="Usuario"
+        [ayuda]="
+          editando()
+            ? 'El nombre de usuario no se puede cambiar.'
+            : '3 a 40 caracteres: letras minúsculas, números, punto, guion o guion bajo. Ejemplo: maria.lopez'
+        "
+        [control]="form.controls.usuario"
+        [mensajes]="{
+          pattern: 'use de 3 a 40 letras minúsculas, números, punto, guion o guion bajo',
+        }"
+      >
+        <input
+          appCampoControl
+          type="text"
+          formControlName="usuario"
+          autocomplete="off"
+          autocapitalize="none"
+        />
+      </app-campo>
+
+      <app-campo idCampo="nombres" etiqueta="Nombres y apellidos" [control]="form.controls.nombres">
+        <input appCampoControl type="text" formControlName="nombres" maxlength="150" />
+      </app-campo>
+    </div>
+
+    <app-campo
+      idCampo="correo"
+      etiqueta="Correo institucional"
+      ayuda="Cada cuenta es personal: el correo no puede repetirse en otro usuario."
+      [control]="form.controls.correo"
+    >
+      <input appCampoControl type="email" formControlName="correo" maxlength="150" />
+    </app-campo>
+
+    @if (!editando()) {
+      <app-campo
+        idCampo="password"
+        etiqueta="Contraseña temporal"
+        ayuda="La persona deberá cambiarla en su primer ingreso."
+        [control]="form.controls.password"
+        [mensajes]="{ politica: 'no cumple todos los requisitos de la lista' }"
+      >
+        <input appCampoControl type="text" formControlName="password" autocomplete="off" />
+      </app-campo>
+      <app-requisitos-password [password]="passwordTemporal()" [usuario]="usuarioEscrito()" />
+    }
+
+    <app-campo
+      idCampo="rolId"
+      etiqueta="Rol"
+      ayuda="Cada usuario tiene un solo rol. Los permisos del usuario son los de ese rol."
+      [control]="form.controls.rolId"
+      [mensajes]="{ required: 'elija un rol de la lista' }"
+    >
+      <select appCampoControl formControlName="rolId">
+        <option [ngValue]="null" disabled>Seleccione un rol</option>
+        @for (r of roles(); track r.id) {
+          <option [ngValue]="r.id">{{ r.nombre }}</option>
+        }
+      </select>
+    </app-campo>
+    @if (rolSeleccionado(); as r) {
+      <p class="detalle-rol" role="status">
+        <strong>{{ r.nombre }}.</strong> {{ r.descripcion }}
+        @if (r.permisos.length === 0) {
+          <br /><small>Este rol todavía no tiene permisos en el portal.</small>
+        }
+      </p>
+    }
+
+    @if (protegido()) {
+      <p class="aviso" role="note">
+        Es el administrador principal: no se puede bloquear ni dar de baja, y conserva siempre el
+        rol de administrador.
+      </p>
+    }
+
+    @if (error()) {
+      <p class="aviso error" role="alert">{{ error() }}</p>
+    }
+
+    <div class="acciones">
+      <button type="submit" class="boton" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando…' : 'Guardar' }}
+      </button>
+      <a class="boton secundario" routerLink="/interno/admin/usuarios">Cancelar</a>
+    </div>
+  </form>
+}

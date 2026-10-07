@@ -1,0 +1,37 @@
+// Identidad visual de la Alcaldía de Barranquilla para el portal interno (Manual de Identidad Visual 2025).
+// El portal ciudadano conserva la guía gov.co; este tema solo se aplica dentro del portal interno.
+//
+// Colores del manual: azul oscuro #142334, verde #279B48, amarillo #FFEA00 (más blanco y grises neutros).
+// Tipografía: títulos con Volkswagen Serial (la del manual; solo se dispone del peso Bold, declarado en
+// `src/styles.scss`) y textos con Arial. Si la fuente no carga, se usa Nunito, de trazo redondeado y peso similar.
+
+@mixin tema-alcaldia {
+  --alc-azul: #142334;
+  --alc-verde: #279b48;
+  --alc-amarillo: #ffea00;
+  --alc-gris: #f2f4f6;
+  // El verde de marca sobre blanco tiene contraste 3,4:1: sirve para títulos grandes y adornos. Para texto
+  // pequeño se usa esta tonalidad más oscura del mismo verde (contraste 5,6:1).
+  --alc-verde-texto: #1b7a37;
+
+  --govco-azul: var(--alc-azul);
+  --govco-azul-oscuro: var(--alc-azul);
+  --govco-azul-claro: #e6ebf0;
+  --govco-verde: var(--alc-verde-texto);
+  --govco-amarillo: var(--alc-amarillo);
+  --color-primary: var(--alc-azul);
+  --color-accent: var(--alc-verde);
+  --color-text: var(--alc-azul);
+  --color-line: #c8d0d8;
+  --color-foco: var(--alc-azul);
+  --color-titulo-2: var(--alc-verde);
+  --peso-titulo: 800;
+  --fuente-titulo: 'Volkswagen Serial', 'Nunito Variable', Nunito, Arial, sans-serif;
+
+  // Gráficas con los colores de la marca (series 1 y 2).
+  --viz-serie-1: var(--alc-verde);
+  --viz-serie-2: var(--alc-azul);
+
+  font-family: Arial, Helvetica, sans-serif;
+  color: var(--alc-azul);
+}

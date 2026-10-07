@@ -1,0 +1,61 @@
+<h1>Recibir de nuevo el enlace de verificación</h1>
+<p>
+  Escriba la identificación de la <strong>persona con discapacidad</strong> que se preinscribió y le
+  enviaremos otra vez el enlace al correo que registró. El enlace anterior dejará de servir.
+</p>
+
+@if (respuesta()) {
+  <p class="aviso exito" role="status">
+    <span>{{ respuesta() }}</span>
+  </p>
+  <p>
+    Revise también la carpeta de correo no deseado. Puede pedir un nuevo envío pasados unos minutos.
+  </p>
+  <p><a routerLink="/">Volver al inicio</a></p>
+} @else if (cargando()) {
+  <p role="status">Cargando…</p>
+} @else {
+  @if (error()) {
+    <p class="aviso error" role="alert">
+      <span>{{ error() }}</span>
+    </p>
+  }
+  <form [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+    <div class="rejilla">
+      <app-campo
+        idCampo="re-tipo"
+        etiqueta="Tipo de identificación"
+        [control]="form.controls.tipo"
+        [mensajes]="{ required: 'elija una opción de la lista' }"
+      >
+        <select appCampoControl formControlName="tipo">
+          <option [ngValue]="null" disabled>Seleccione</option>
+          @for (t of tipos(); track t.id) {
+            <option [ngValue]="t.id">{{ t.codigo }} – {{ t.nombre }}</option>
+          }
+        </select>
+      </app-campo>
+      <app-campo
+        idCampo="re-numero"
+        etiqueta="Número de identificación"
+        [control]="form.controls.numero"
+      >
+        <input
+          appCampoControl
+          type="text"
+          formControlName="numero"
+          autocomplete="off"
+          [attr.inputmode]="modo()"
+          maxlength="25"
+        />
+      </app-campo>
+    </div>
+    <p class="nota-campo">Escriba el número sin puntos ni espacios.</p>
+    <div class="acciones">
+      <button type="submit" class="boton" [disabled]="enviando()">
+        {{ enviando() ? 'Enviando…' : 'Enviar el enlace' }}
+      </button>
+      <a class="boton secundario" routerLink="/">Cancelar</a>
+    </div>
+  </form>
+}

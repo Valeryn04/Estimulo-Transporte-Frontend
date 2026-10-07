@@ -1,0 +1,37 @@
+<h1>Ingreso de funcionarios</h1>
+
+@if (sesion.motivoCierre()) {
+  <p class="aviso advertencia" role="status">{{ sesion.motivoCierre() }}</p>
+}
+
+<form [formGroup]="form" (ngSubmit)="ingresar()" novalidate>
+  <app-campo idCampo="usuario" etiqueta="Usuario" [control]="form.controls.usuario">
+    <input
+      appCampoControl
+      type="text"
+      formControlName="usuario"
+      autocomplete="username"
+      autocapitalize="none"
+      spellcheck="false"
+    />
+  </app-campo>
+
+  <app-campo idCampo="password" etiqueta="Contraseña" [control]="form.controls.password">
+    <input
+      appCampoControl
+      type="password"
+      formControlName="password"
+      autocomplete="current-password"
+    />
+  </app-campo>
+
+  @if (error()) {
+    <p class="aviso error" role="alert">{{ error() }}</p>
+  }
+
+  <div class="acciones">
+    <button type="submit" class="boton" [disabled]="cargando()">
+      {{ cargando() ? 'Ingresando…' : 'Ingresar' }}
+    </button>
+  </div>
+</form>

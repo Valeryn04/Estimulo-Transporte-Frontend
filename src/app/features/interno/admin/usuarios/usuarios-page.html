@@ -1,0 +1,270 @@
+<div class="encabezado">
+  <h1>Usuarios</h1>
+  <a class="boton" routerLink="/interno/admin/usuarios/nuevo">Nuevo usuario</a>
+</div>
+
+@if (mensaje()) {
+  <p class="aviso exito" role="status">{{ mensaje() }}</p>
+}
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+
+<form
+  class="tarjeta filtros"
+  [formGroup]="filtros"
+  (ngSubmit)="buscar()"
+  role="search"
+  aria-label="Filtrar usuarios"
+>
+  <div class="rejilla">
+    <div class="campo-simple">
+      <label for="q">Buscar por nombre, usuario o correo</label>
+      <input id="q" type="search" formControlName="q" />
+    </div>
+    <div class="campo-simple">
+      <label for="estado">Estado</label>
+      <select id="estado" formControlName="estado">
+        <option value="">Todos</option>
+        <option value="ACTIVO">Activos</option>
+        <option value="BLOQUEADO">Bloqueados</option>
+        <option value="BAJA">Dados de baja</option>
+      </select>
+    </div>
+    <div class="campo-simple">
+      <label for="rolId">Rol</label>
+      <select id="rolId" formControlName="rolId">
+        <option [ngValue]="null">Todos los roles</option>
+        @for (r of roles(); track r.id) {
+          <option [ngValue]="r.id">{{ r.nombre }}</option>
+        }
+      </select>
+    </div>
+  </div>
+  <div class="acciones">
+    <button type="submit" class="boton">Buscar</button>
+    <button type="button" class="boton secundario" (click)="limpiar()">Limpiar</button>
+  </div>
+</form>
+
+@if (cargando() && !datos()) {
+  <p role="status">Cargando usuarios…</p>
+} @else if (datos(); as d) {
+  <p class="total" role="status">{{ d.total }} usuario(s) encontrado(s).</p>
+  <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Tabla de usuarios">
+    <table class="tabla">
+      <caption class="solo-lectores">
+        Usuarios del portal interno
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Usuario</th>
+          <th scope="col">Nombre</th>
+          <th scope="col">Rol</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Último ingreso</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (u of d.items; track u.id) {
+          <tr [class.inactivo]="u.estado !== 'ACTIVO'">
+            <th scope="row">
+              {{ u.usuario }}
+              @if (u.protegido) {
+                <span class="insignia">Principal</span>
+              }
+              <small>{{ u.correo }}</small>
+            </th>
+            <td>{{ u.nombres }}</td>
+            <td>{{ rolTexto(u) }}</td>
+            <td>
+              <span
+                class="etiqueta"
+                [class.ok]="u.estado === 'ACTIVO'"
+                [class.mal]="u.estado !== 'ACTIVO'"
+              >
+                {{ etiquetaEstado[u.estado] }}
+              </span>
+              @if (u.bloqueoTemporalHasta) {
+                <small>Bloqueo temporal por intentos fallidos</small>
+              }
+              @if (u.debeCambiarPassword && u.estado !== 'BAJA') {
+                <small>Debe cambiar la contraseña</small>
+              }
+            </td>
+            <td>
+              {{
+                u.ultimoLoginAt ? (u.ultimoLoginAt | date: 'dd/MM/yyyy HH:mm' : '-0500') : 'Nunca'
+              }}
+            </td>
+            <td class="acciones-fila">
+              @if (u.estado !== 'BAJA') {
+                <span class="grupo-acciones">
+                  <a
+                    class="accion-icono"
+                    [routerLink]="['/interno/admin/usuarios', u.id, 'editar']"
+                    [title]="'Editar a ' + u.usuario"
+                  >
+                    <app-icono nombre="editar" />
+                    <span class="solo-lectores">Editar a {{ u.usuario }}</span>
+                  </a>
+                  <button
+                    type="button"
+                    class="accion-icono"
+                    [title]="'Contraseña temporal de ' + u.usuario"
+                    (click)="abrirPassword(u)"
+                  >
+                    <app-icono nombre="llave" />
+                    <span class="solo-lectores">Contraseña temporal de {{ u.usuario }}</span>
+                  </button>
+                  @if (u.protegido) {
+                    <button
+                      type="button"
+                      class="accion-icono"
+                      disabled
+                      title="El administrador principal no se puede bloquear ni dar de baja"
+                    >
+                      <app-icono nombre="candado" />
+                      <span class="solo-lectores"
+                        >{{ u.usuario }} es el administrador principal: no se puede bloquear ni dar
+                        de baja</span
+                      >
+                    </button>
+                  } @else {
+                    @if (u.estado === 'ACTIVO') {
+                      <button
+                        type="button"
+                        class="accion-icono peligro"
+                        [title]="'Bloquear a ' + u.usuario"
+                        (click)="abrirMotivo(u, 'bloquear')"
+                      >
+                        <app-icono nombre="usuarioX" />
+                        <span class="solo-lectores">Bloquear a {{ u.usuario }}</span>
+                      </button>
+                    } @else {
+                      <button
+                        type="button"
+                        class="accion-icono"
+                        [title]="'Desbloquear a ' + u.usuario"
+                        (click)="desbloquear(u)"
+                      >
+                        <app-icono nombre="usuarioCheck" />
+                        <span class="solo-lectores">Desbloquear a {{ u.usuario }}</span>
+                      </button>
+                    }
+                    <button
+                      type="button"
+                      class="accion-icono peligro"
+                      [title]="'Dar de baja a ' + u.usuario"
+                      (click)="abrirMotivo(u, 'baja')"
+                    >
+                      <app-icono nombre="papelera" />
+                      <span class="solo-lectores">Dar de baja a {{ u.usuario }}</span>
+                    </button>
+                  }
+                </span>
+              } @else {
+                <small>Sin acciones: la baja es definitiva</small>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6">No hay usuarios con esos filtros.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (totalPaginas() > 1) {
+    <nav class="paginacion" aria-label="Paginación de usuarios">
+      <button
+        type="button"
+        class="boton secundario"
+        [disabled]="pagina() <= 1"
+        (click)="buscar(pagina() - 1)"
+      >
+        Anterior
+      </button>
+      <span>Página {{ pagina() }} de {{ totalPaginas() }}</span>
+      <button
+        type="button"
+        class="boton secundario"
+        [disabled]="pagina() >= totalPaginas()"
+        (click)="buscar(pagina() + 1)"
+      >
+        Siguiente
+      </button>
+    </nav>
+  }
+}
+
+<!-- Bloquear o dar de baja: ambos exigen un motivo que queda en la bitácora -->
+<app-dialogo
+  [titulo]="(accion() === 'baja' ? 'Dar de baja a ' : 'Bloquear a ') + (objetivo()?.usuario ?? '')"
+  [abierto]="accion() === 'bloquear' || accion() === 'baja'"
+  (cierra)="cerrarDialogo()"
+>
+  <form [formGroup]="formMotivo" (ngSubmit)="confirmarMotivo()" novalidate>
+    @if (accion() === 'baja') {
+      <p class="aviso advertencia" role="note">
+        La baja es <strong>definitiva</strong>: el usuario no podrá ingresar y no se puede
+        reactivar. Su historial se conserva para la trazabilidad.
+      </p>
+    } @else {
+      <p>
+        El usuario no podrá ingresar y sus sesiones abiertas se cerrarán. Puede desbloquearlo
+        después.
+      </p>
+    }
+    <app-campo
+      idCampo="motivo"
+      etiqueta="Motivo"
+      ayuda="Explique la razón; queda registrada en la bitácora de auditoría."
+      [control]="formMotivo.controls.motivo"
+    >
+      <textarea appCampoControl formControlName="motivo" rows="3" maxlength="500"></textarea>
+    </app-campo>
+    @if (errorDialogo()) {
+      <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
+    }
+    <div class="acciones">
+      <button type="submit" class="boton peligro" [disabled]="trabajando()">
+        {{ accion() === 'baja' ? 'Dar de baja' : 'Bloquear usuario' }}
+      </button>
+      <button type="button" class="boton secundario" (click)="cerrarDialogo()">Cancelar</button>
+    </div>
+  </form>
+</app-dialogo>
+
+<!-- Contraseña temporal -->
+<app-dialogo
+  [titulo]="'Contraseña temporal para ' + (objetivo()?.usuario ?? '')"
+  [abierto]="accion() === 'password'"
+  (cierra)="cerrarDialogo()"
+>
+  <form [formGroup]="formPassword" (ngSubmit)="guardarPassword()" novalidate>
+    <p>La persona deberá cambiarla al ingresar. Cualquier sesión que tenga abierta se cerrará.</p>
+    <app-campo
+      idCampo="password-temporal"
+      etiqueta="Contraseña temporal"
+      [control]="formPassword.controls.password"
+      [mensajes]="{ politica: 'no cumple todos los requisitos de la lista' }"
+    >
+      <input appCampoControl type="text" formControlName="password" autocomplete="off" />
+    </app-campo>
+    <app-requisitos-password
+      [password]="passwordTemporal()"
+      [usuario]="objetivo()?.usuario ?? ''"
+    />
+    @if (errorDialogo()) {
+      <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
+    }
+    <div class="acciones">
+      <button type="submit" class="boton" [disabled]="trabajando()">Asignar contraseña</button>
+      <button type="button" class="boton secundario" (click)="cerrarDialogo()">Cancelar</button>
+    </div>
+  </form>
+</app-dialogo>

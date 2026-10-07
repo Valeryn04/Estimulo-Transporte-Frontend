@@ -1,0 +1,6 @@
+<dialog #d [attr.aria-labelledby]="idTitulo" (close)="alCerrar()">
+  <h2 [id]="idTitulo">{{ titulo() }}</h2>
+  @if (abierto()) {
+    <ng-content />
+  }
+</dialog>

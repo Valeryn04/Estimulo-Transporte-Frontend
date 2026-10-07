@@ -1,0 +1,64 @@
+.intro {
+  margin: 0 0 16px;
+  color: var(--color-muted);
+}
+
+.nota {
+  margin: 16px 0 0;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+}
+
+.permisos {
+  max-width: 28rem;
+  font-size: 0.9rem;
+}
+
+small {
+  display: block;
+  margin-top: 2px;
+  font-weight: 400;
+  color: var(--color-muted);
+}
+
+.etiqueta {
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.permisos-rol {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+
+  legend {
+    padding: 0 6px;
+    font-weight: 700;
+  }
+
+  .titulo-modulo {
+    margin: 8px 0 2px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+  }
+}
+
+.opcion {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 44px;
+  padding: 6px 0;
+  cursor: pointer;
+
+  input {
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    accent-color: var(--alc-verde);
+  }
+}
