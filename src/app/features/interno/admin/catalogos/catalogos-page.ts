@@ -15,6 +15,7 @@ import { Campo } from '../../../../shared/campo';
 import { CampoControl } from '../../../../shared/campo-control';
 import { Dialogo } from '../../../../shared/dialogo/dialogo';
 import { Icono } from '../../../../shared/icono/icono';
+import { OrdenLista } from '../../../../shared/orden-lista/orden-lista';
 import { aplicarErroresApi } from '../../../../shared/forms';
 import { ayudaPosicion } from '../../../../shared/posicion';
 import { Pagina } from '../modelos';
@@ -45,6 +46,7 @@ type Dialogo_ = 'ninguno' | 'formulario' | 'historial';
     CampoControl,
     Dialogo,
     Icono,
+    OrdenLista,
   ],
   templateUrl: './catalogos-page.html',
   styleUrl: './catalogos-page.scss',
@@ -94,25 +96,37 @@ export class CatalogosPage implements OnInit {
   });
 
   // ---- posición en la lista: cada elemento tiene la suya, nunca se repite
-  private readonly ordenEscrito = signal<number | null>(null);
+  protected readonly ordenEscrito = signal<number | null>(null);
+  protected readonly nombreEscrito = signal('');
+  /** Elementos del grupo donde va a quedar (la lista, o la localidad en los barrios), hasta 100. */
+  private readonly grupo = signal<ItemCatalogo[]>([]);
   private readonly totalGrupo = signal(0);
-  private readonly ocupante = signal<ItemCatalogo | null>(null);
   private revision = 0;
+  /** Los demás elementos del grupo, para mostrarlos en la lista donde se arrastra la posición. */
+  protected readonly otros = computed(() =>
+    this.grupo().filter((i) => i.id !== this.editando()?.id),
+  );
+  /** La lista visual solo sale cuando se conocen todos los elementos del grupo. */
+  protected readonly mostrarListaOrden = computed(
+    () => this.totalGrupo() > 0 && this.totalGrupo() <= this.grupo().length,
+  );
   protected readonly ayudaOrden = computed(() =>
     ayudaPosicion({
       posicion: this.ordenEscrito(),
       total: this.totalGrupo(),
       esNuevo: !this.editando(),
-      ocupante: this.ocupante(),
+      ocupante: this.grupo().find((i) => i.orden === this.ordenEscrito()) ?? null,
       propioId: this.editando()?.id,
     }),
   );
 
   constructor() {
-    this.form.controls.orden.valueChanges.pipe(takeUntilDestroyed()).subscribe((v) => {
-      this.ordenEscrito.set(v);
-      void this.revisarPosicion();
-    });
+    this.form.controls.orden.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((v) => this.ordenEscrito.set(v));
+    this.form.controls.nombre.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((v) => this.nombreEscrito.set(v));
     this.form.controls.padreId.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
       // Un barrio que cambia de localidad queda, por defecto, al final de la nueva.
       if (this.dialogo() === 'formulario') void this.sugerirFinal();
@@ -192,8 +206,9 @@ export class CatalogosPage implements OnInit {
     this.errorDialogo.set('');
     this.form.reset({ nombre: '', codigo: '', padreId: null, orden: null }, { emitEvent: false });
     this.ordenEscrito.set(null);
+    this.nombreEscrito.set('');
+    this.grupo.set([]);
     this.totalGrupo.set(0);
-    this.ocupante.set(null);
     this.form.controls.codigo.enable();
     this.form.controls.codigo.setValidators(
       this.pideCodigo() ? [Validators.required, Validators.pattern(/^[A-Za-z0-9_]{1,10}$/)] : [],
@@ -213,45 +228,42 @@ export class CatalogosPage implements OnInit {
       { emitEvent: false },
     );
     this.ordenEscrito.set(i.orden);
+    this.nombreEscrito.set(i.nombre);
     this.form.controls.codigo.disable();
     this.form.controls.codigo.setValidators([]);
     this.form.controls.padreId.setValidators(this.esBarrio() ? [Validators.required] : []);
     this.form.controls.padreId.updateValueAndValidity();
     this.dialogo.set('formulario');
-    void this.revisarPosicion();
+    void this.cargarGrupo();
   }
 
-  /** Cuántos elementos hay en el grupo (la lista, o la localidad en los barrios) y quién ocupa la posición escrita. */
-  private async revisarPosicion(): Promise<void> {
+  /** Trae los elementos del grupo donde va a quedar el elemento (la lista, o la localidad en los barrios). */
+  private async cargarGrupo(): Promise<void> {
     const actual = ++this.revision;
     const padreId = this.esBarrio() ? this.form.controls.padreId.value : null;
     if (this.esBarrio() && !padreId) {
+      this.grupo.set([]);
       this.totalGrupo.set(0);
-      this.ocupante.set(null);
       return;
     }
-    const posicion = this.form.controls.orden.value;
     try {
-      const filtro = { padreId: padreId ?? undefined, pagina: 1, tamano: 1 };
-      const [grupo, ocupa] = await Promise.all([
-        firstValueFrom(this.api.items(this.catalogo(), filtro)),
-        posicion !== null && posicion >= 1
-          ? firstValueFrom(this.api.items(this.catalogo(), { ...filtro, orden: posicion }))
-          : Promise.resolve(null),
-      ]);
+      const r = await firstValueFrom(
+        this.api.items(this.catalogo(), { padreId: padreId ?? undefined, pagina: 1, tamano: 100 }),
+      );
       if (actual !== this.revision) return;
-      this.totalGrupo.set(grupo.total);
-      this.ocupante.set(ocupa?.items[0] ?? null);
+      this.grupo.set(r.items);
+      this.totalGrupo.set(r.total);
     } catch {
       if (actual === this.revision) {
+        this.grupo.set([]);
         this.totalGrupo.set(0);
-        this.ocupante.set(null);
       }
     }
   }
 
   /** Propone la última posición: al crear, y cuando un barrio cambia de localidad. */
   private async sugerirFinal(): Promise<void> {
+    await this.cargarGrupo();
     const padreId = this.esBarrio() ? this.form.controls.padreId.value : null;
     const edicion = this.editando();
     if (edicion && padreId === edicion.padreId) {
@@ -259,14 +271,7 @@ export class CatalogosPage implements OnInit {
       return;
     }
     if (this.esBarrio() && !padreId) return;
-    try {
-      const grupo = await firstValueFrom(
-        this.api.items(this.catalogo(), { padreId: padreId ?? undefined, pagina: 1, tamano: 1 }),
-      );
-      this.form.controls.orden.setValue(grupo.total + 1);
-    } catch {
-      this.form.controls.orden.setValue(null);
-    }
+    this.form.controls.orden.setValue(this.totalGrupo() > 0 ? this.totalGrupo() + 1 : 1);
   }
 
   protected cerrar(): void {

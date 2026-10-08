@@ -173,6 +173,15 @@
       <input type="checkbox" formControlName="obligatorio" />
       <span>Es obligatorio para radicar la solicitud</span>
     </label>
+    @if (otros().length > 0) {
+      <p class="ayuda-orden">Arrastre el documento resaltado hasta el lugar donde debe quedar:</p>
+      <app-orden-lista
+        [elementos]="otros()"
+        [nombre]="nombreEscrito()"
+        [posicion]="ordenEscrito()"
+        (posicionChange)="form.controls.orden.setValue($event)"
+      />
+    }
     <app-campo
       idCampo="doc-orden"
       etiqueta="Orden"

@@ -22,22 +22,14 @@ const RESUMEN = [
   { catalogo: 'BARRIO', total: 178, activos: 178 },
 ];
 
-/** Responde las consultas de posición: total del grupo (sin `orden`) y quién ocupa la posición escrita. */
-function responderPosicion(
-  ctrl: ReturnType<typeof montarPantalla>['ctrl'],
-  total: number,
-  ocupante?: object,
-): void {
-  for (const r of ctrl.match((x) => x.url.includes('/items') && x.params.get('tamano') === '1')) {
-    const pideOcupante = r.request.params.has('orden');
-    r.flush({
-      items: pideOcupante && ocupante ? [ocupante] : [],
-      total,
-      pagina: 1,
-      tamano: 1,
-    });
+/** Responde la consulta de los elementos del grupo donde va a quedar el elemento (hasta 100). */
+function responderGrupo(ctrl: ReturnType<typeof montarPantalla>['ctrl'], items: object[]): void {
+  for (const r of ctrl.match((x) => x.url.includes('/items') && x.params.get('tamano') === '100')) {
+    r.flush({ items, total: items.length, pagina: 1, tamano: 100 });
   }
 }
+
+const GRUPO = [item({}), item({ id: 2, codigo: 'TI', nombre: 'Tarjeta de Identidad', orden: 2 })];
 
 describe('CatalogosPage', () => {
   async function montar() {
@@ -81,9 +73,8 @@ describe('CatalogosPage', () => {
     const { fixture, el, ctrl, escribir, enviar, asentar } = await montar();
     el.querySelector<HTMLButtonElement>('.encabezado .boton')!.click();
     await asentar();
-    responderPosicion(ctrl, 2);
+    responderGrupo(ctrl, GRUPO);
     await asentar();
-    responderPosicion(ctrl, 2);
     enviar();
     await asentar();
     expect(el.querySelector('dialog')?.textContent).toContain('Sigla');
@@ -116,16 +107,12 @@ describe('CatalogosPage', () => {
     const { el, ctrl, asentar, escribir } = await montar();
     el.querySelector<HTMLButtonElement>('.encabezado .boton')!.click();
     await asentar();
-    responderPosicion(ctrl, 2);
-    await asentar();
-    responderPosicion(ctrl, 2);
+    responderGrupo(ctrl, GRUPO);
     await asentar();
     expect(el.querySelector<HTMLInputElement>('#item-orden')?.value).toBe('3');
     expect(el.querySelector('dialog')?.textContent).toContain('Quedará al final de la lista');
 
     escribir('#item-orden', '1');
-    await asentar();
-    responderPosicion(ctrl, 2, item({}));
     await asentar();
     expect(el.querySelector('dialog')?.textContent).toContain(
       'La posición 1 la tiene «Cédula de Ciudadanía»',

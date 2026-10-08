@@ -257,6 +257,15 @@
         </select>
       </app-campo>
     }
+    @if (mostrarListaOrden()) {
+      <p class="ayuda-orden">Arrastre el elemento resaltado hasta el lugar donde debe quedar:</p>
+      <app-orden-lista
+        [elementos]="otros()"
+        [nombre]="nombreEscrito()"
+        [posicion]="ordenEscrito()"
+        (posicionChange)="form.controls.orden.setValue($event)"
+      />
+    }
     <app-campo
       idCampo="item-orden"
       etiqueta="Orden"

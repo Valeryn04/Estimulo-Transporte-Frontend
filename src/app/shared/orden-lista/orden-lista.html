@@ -1,0 +1,54 @@
+<ol
+  class="orden-lista"
+  cdkDropList
+  cdkDropListLockAxis="y"
+  aria-label="Lista donde va a quedar. Arrastre el elemento resaltado o use las flechas."
+  (cdkDropListDropped)="soltar($event)"
+>
+  @for (f of filas(); track f.id ?? 'actual'; let i = $index) {
+    <li
+      class="fila"
+      [class.actual]="f.actual"
+      cdkDrag
+      cdkDragPreviewContainer="parent"
+      [cdkDragDisabled]="!f.actual"
+    >
+      <span class="numero">{{ i + 1 }}</span>
+      @if (f.actual) {
+        <span
+          class="asa-orden"
+          cdkDragHandle
+          aria-hidden="true"
+          title="Arrastrar para cambiar la posición"
+        >
+          <app-icono nombre="arrastrar" />
+        </span>
+      }
+      <span class="texto">{{ f.nombre }}</span>
+      @if (f.actual) {
+        <span class="botones">
+          <button
+            type="button"
+            class="accion-icono"
+            title="Subir una posición"
+            [disabled]="!puedeSubir()"
+            (click)="subir()"
+          >
+            <app-icono nombre="subir" />
+            <span class="solo-lectores">Subir una posición</span>
+          </button>
+          <button
+            type="button"
+            class="accion-icono"
+            title="Bajar una posición"
+            [disabled]="!puedeBajar()"
+            (click)="bajar()"
+          >
+            <app-icono nombre="flecha" />
+            <span class="solo-lectores">Bajar una posición</span>
+          </button>
+        </span>
+      }
+    </li>
+  }
+</ol>

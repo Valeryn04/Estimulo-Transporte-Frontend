@@ -14,6 +14,7 @@ import { Campo } from '../../../../shared/campo';
 import { CampoControl } from '../../../../shared/campo-control';
 import { Dialogo } from '../../../../shared/dialogo/dialogo';
 import { Icono } from '../../../../shared/icono/icono';
+import { OrdenLista } from '../../../../shared/orden-lista/orden-lista';
 import { aplicarErroresApi } from '../../../../shared/forms';
 import { ayudaPosicion } from '../../../../shared/posicion';
 import { ConfigApi } from '../config/config-api';
@@ -34,6 +35,7 @@ import { AplicaA, DocumentoRequerido, NOMBRE_APLICA_A } from '../config/modelos-
     CampoControl,
     Dialogo,
     Icono,
+    OrdenLista,
   ],
   templateUrl: './documentos-page.html',
   styleUrl: './documentos-page.scss',
@@ -67,7 +69,14 @@ export class DocumentosPage implements OnInit {
   });
 
   // Cada documento tiene su posición en la lista y nunca se repite: la pantalla avisa quién la ocupa.
-  private readonly ordenEscrito = signal<number | null>(null);
+  protected readonly ordenEscrito = signal<number | null>(null);
+  protected readonly nombreEscrito = signal('');
+  /** Los demás documentos, en su orden, para arrastrar la posición dentro de la lista. */
+  protected readonly otros = computed(() =>
+    this.documentos()
+      .filter((d) => d.id !== this.editando()?.id)
+      .sort((a, b) => a.orden - b.orden),
+  );
   protected readonly ayudaOrden = computed(() => {
     const posicion = this.ordenEscrito();
     const propio = this.editando();
@@ -84,6 +93,9 @@ export class DocumentosPage implements OnInit {
     this.form.controls.orden.valueChanges
       .pipe(takeUntilDestroyed())
       .subscribe((v) => this.ordenEscrito.set(v));
+    this.form.controls.nombre.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((v) => this.nombreEscrito.set(v));
   }
 
   ngOnInit(): void {
