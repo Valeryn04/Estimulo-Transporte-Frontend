@@ -1,4 +1,11 @@
 import { DatePipe } from '@angular/common';
+import {
+  CdkDrag,
+  CdkDragDrop,
+  CdkDragHandle,
+  CdkDropList,
+  moveItemInArray,
+} from '@angular/cdk/drag-drop';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -28,7 +35,17 @@ type Dialogo_ = 'ninguno' | 'formulario' | 'historial';
  */
 @Component({
   selector: 'app-catalogos-page',
-  imports: [DatePipe, ReactiveFormsModule, Campo, CampoControl, Dialogo, Icono],
+  imports: [
+    DatePipe,
+    ReactiveFormsModule,
+    CdkDrag,
+    CdkDragHandle,
+    CdkDropList,
+    Campo,
+    CampoControl,
+    Dialogo,
+    Icono,
+  ],
   templateUrl: './catalogos-page.html',
   styleUrl: './catalogos-page.scss',
 })
@@ -50,6 +67,8 @@ export class CatalogosPage implements OnInit {
     Math.max(1, Math.ceil((this.datos()?.total ?? 0) / this.tamano)),
   );
   protected readonly esBarrio = computed(() => this.catalogo() === 'BARRIO');
+  /** Se puede reordenar solo con la lista completa (sin filtros) y, en barrios, de una localidad. */
+  protected readonly puedeOrdenar = signal(false);
   protected readonly pideCodigo = computed(() => this.catalogo() === 'TIPO_IDENTIFICACION');
 
   protected readonly filtros = new FormGroup({
@@ -141,6 +160,7 @@ export class CatalogosPage implements OnInit {
     this.error.set('');
     this.pagina.set(pagina);
     const f = this.filtros.getRawValue();
+    this.puedeOrdenar.set(!f.q.trim() && f.estado === '' && (!this.esBarrio() || !!f.padreId));
     try {
       this.datos.set(
         await firstValueFrom(
@@ -284,6 +304,41 @@ export class CatalogosPage implements OnInit {
     } finally {
       this.guardando.set(false);
     }
+  }
+
+  // ---------------------------------------------------------------- reordenar
+
+  /** Arrastrar una fila: queda en la posición de la fila donde se suelta y los demás se corren. */
+  protected async soltar(e: CdkDragDrop<ItemCatalogo[]>): Promise<void> {
+    const datos = this.datos();
+    if (!datos || e.previousIndex === e.currentIndex) return;
+    const mover = datos.items[e.previousIndex];
+    const destino = datos.items[e.currentIndex];
+    if (!mover || !destino) return;
+    const items = [...datos.items];
+    moveItemInArray(items, e.previousIndex, e.currentIndex);
+    this.datos.set({ ...datos, items });
+    await this.mover(mover, destino.orden);
+  }
+
+  protected subir(i: ItemCatalogo): Promise<void> {
+    return this.mover(i, i.orden - 1);
+  }
+
+  protected bajar(i: ItemCatalogo): Promise<void> {
+    return this.mover(i, i.orden + 1);
+  }
+
+  private async mover(i: ItemCatalogo, orden: number): Promise<void> {
+    this.error.set('');
+    this.mensaje.set('');
+    try {
+      await firstValueFrom(this.api.moverItem(i.id, orden));
+      this.mensaje.set(`«${i.nombre}» quedó en la posición ${orden}.`);
+    } catch (e) {
+      this.error.set(e instanceof ApiError ? e.message : 'No pudimos cambiar el orden.');
+    }
+    await this.buscar(this.pagina());
   }
 
   // ---------------------------------------------------------------- activar / historial

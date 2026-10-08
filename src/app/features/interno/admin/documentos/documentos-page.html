@@ -31,6 +31,7 @@
       </caption>
       <thead>
         <tr>
+          <th scope="col" class="mover"><span class="solo-lectores">Mover</span></th>
           <th scope="col">Documento</th>
           <th scope="col">Aplica a</th>
           <th scope="col">Exigencia</th>
@@ -40,9 +41,19 @@
           <th scope="col">Acciones</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody cdkDropList cdkDropListLockAxis="y" (cdkDropListDropped)="soltar($event)">
         @for (d of documentos(); track d.id) {
-          <tr [class.inactivo]="!d.activo">
+          <tr cdkDrag [class.inactivo]="!d.activo">
+            <td class="mover">
+              <span
+                class="asa-orden"
+                cdkDragHandle
+                aria-hidden="true"
+                [title]="'Arrastrar para cambiar el orden de ' + d.nombre"
+              >
+                <app-icono nombre="arrastrar" />
+              </span>
+            </td>
             <th scope="row">
               {{ d.nombre }}
               @if (d.descripcion) {
@@ -83,6 +94,26 @@
                 <button
                   type="button"
                   class="accion-icono"
+                  [title]="'Subir ' + d.nombre"
+                  [disabled]="d.orden <= 1"
+                  (click)="subir(d)"
+                >
+                  <app-icono nombre="subir" />
+                  <span class="solo-lectores">Subir una posición a {{ d.nombre }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="accion-icono"
+                  [title]="'Bajar ' + d.nombre"
+                  [disabled]="d.orden >= documentos().length"
+                  (click)="bajar(d)"
+                >
+                  <app-icono nombre="flecha" />
+                  <span class="solo-lectores">Bajar una posición a {{ d.nombre }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="accion-icono"
                   [title]="'Editar ' + d.nombre"
                   (click)="abrirEditar(d)"
                 >
@@ -106,7 +137,7 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="6">Todavía no hay documentos exigidos.</td>
+            <td colspan="7">Todavía no hay documentos exigidos.</td>
           </tr>
         }
       </tbody>

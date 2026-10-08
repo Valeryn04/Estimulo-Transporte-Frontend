@@ -1,3 +1,10 @@
+import {
+  CdkDrag,
+  CdkDragDrop,
+  CdkDragHandle,
+  CdkDropList,
+  moveItemInArray,
+} from '@angular/cdk/drag-drop';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -18,7 +25,16 @@ import { AplicaA, DocumentoRequerido, NOMBRE_APLICA_A } from '../config/modelos-
  */
 @Component({
   selector: 'app-documentos-page',
-  imports: [ReactiveFormsModule, Campo, CampoControl, Dialogo, Icono],
+  imports: [
+    ReactiveFormsModule,
+    CdkDrag,
+    CdkDragHandle,
+    CdkDropList,
+    Campo,
+    CampoControl,
+    Dialogo,
+    Icono,
+  ],
   templateUrl: './documentos-page.html',
   styleUrl: './documentos-page.scss',
 })
@@ -176,6 +192,38 @@ export class DocumentosPage implements OnInit {
     } finally {
       this.guardando.set(false);
     }
+  }
+
+  /** Arrastrar una fila: el documento queda en la posición de la fila donde se suelta y los demás se corren. */
+  protected async soltar(e: CdkDragDrop<DocumentoRequerido[]>): Promise<void> {
+    if (e.previousIndex === e.currentIndex) return;
+    const lista = [...this.documentos()];
+    const mover = lista[e.previousIndex];
+    const destino = lista[e.currentIndex];
+    if (!mover || !destino) return;
+    moveItemInArray(lista, e.previousIndex, e.currentIndex);
+    this.documentos.set(lista);
+    await this.mover(mover, destino.orden);
+  }
+
+  protected subir(d: DocumentoRequerido): Promise<void> {
+    return this.mover(d, d.orden - 1);
+  }
+
+  protected bajar(d: DocumentoRequerido): Promise<void> {
+    return this.mover(d, d.orden + 1);
+  }
+
+  private async mover(d: DocumentoRequerido, orden: number): Promise<void> {
+    this.error.set('');
+    this.mensaje.set('');
+    try {
+      await firstValueFrom(this.api.moverDocumento(d.id, orden));
+      this.mensaje.set(`«${d.nombre}» quedó en la posición ${orden}.`);
+    } catch (e) {
+      this.error.set(e instanceof ApiError ? e.message : 'No pudimos cambiar el orden.');
+    }
+    await this.cargar();
   }
 
   protected async cambiarActivo(d: DocumentoRequerido): Promise<void> {

@@ -62,6 +62,11 @@ export class ConfigApi {
     return this.http.put<ItemCatalogo>(`${ADMIN}/catalogos/items/${id}`, d);
   }
 
+  /** Lleva el elemento a esa posición de la lista (los demás se corren). */
+  moverItem(id: number, orden: number): Observable<ItemCatalogo> {
+    return this.http.post<ItemCatalogo>(`${ADMIN}/catalogos/items/${id}/mover`, { orden });
+  }
+
   cambiarActivoItem(id: number, activo: boolean): Observable<ItemCatalogo> {
     return this.http.post<ItemCatalogo>(
       `${ADMIN}/catalogos/items/${id}/${activo ? 'activar' : 'desactivar'}`,
@@ -98,6 +103,12 @@ export class ConfigApi {
       `${ADMIN}/documentos-requeridos/${id}/modelo`,
       datos,
     );
+  }
+
+  moverDocumento(id: number, orden: number): Observable<DocumentoRequerido> {
+    return this.http.post<DocumentoRequerido>(`${ADMIN}/documentos-requeridos/${id}/mover`, {
+      orden,
+    });
   }
 
   cambiarActivoDocumento(id: number, activo: boolean): Observable<DocumentoRequerido> {

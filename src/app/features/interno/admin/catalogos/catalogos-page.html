@@ -75,6 +75,16 @@
     role="region"
     [attr.aria-label]="'Tabla de ' + nombres[catalogo()]"
   >
+    @if (puedeOrdenar()) {
+      <p class="ayuda-orden">
+        Para cambiar el orden arrastre una fila desde <app-icono nombre="arrastrar" /> o use las
+        flechas. Cada elemento tiene su propia posición.
+      </p>
+    } @else {
+      <p class="ayuda-orden">
+        Para cambiar el orden quite los filtros{{ esBarrio() ? ' y elija una localidad' : '' }}.
+      </p>
+    }
     <table class="tabla">
       <caption class="solo-lectores">
         {{
@@ -83,6 +93,7 @@
       </caption>
       <thead>
         <tr>
+          <th scope="col" class="mover"><span class="solo-lectores">Mover</span></th>
           <th scope="col">Nombre</th>
           <th scope="col">Código</th>
           @if (esBarrio()) {
@@ -93,9 +104,26 @@
           <th scope="col">Acciones</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody
+        cdkDropList
+        cdkDropListLockAxis="y"
+        [cdkDropListDisabled]="!puedeOrdenar()"
+        (cdkDropListDropped)="soltar($event)"
+      >
         @for (i of d.items; track i.id) {
-          <tr [class.inactivo]="!i.activo">
+          <tr cdkDrag [cdkDragDisabled]="!puedeOrdenar()" [class.inactivo]="!i.activo">
+            <td class="mover">
+              @if (puedeOrdenar()) {
+                <span
+                  class="asa-orden"
+                  cdkDragHandle
+                  aria-hidden="true"
+                  [title]="'Arrastrar para cambiar el orden de ' + i.nombre"
+                >
+                  <app-icono nombre="arrastrar" />
+                </span>
+              }
+            </td>
             <th scope="row">{{ i.nombre }}</th>
             <td>{{ i.codigo }}</td>
             @if (esBarrio()) {
@@ -109,6 +137,28 @@
             </td>
             <td class="acciones-fila">
               <span class="grupo-acciones">
+                @if (puedeOrdenar()) {
+                  <button
+                    type="button"
+                    class="accion-icono"
+                    [title]="'Subir ' + i.nombre"
+                    [disabled]="i.orden <= 1"
+                    (click)="subir(i)"
+                  >
+                    <app-icono nombre="subir" />
+                    <span class="solo-lectores">Subir una posición a {{ i.nombre }}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="accion-icono"
+                    [title]="'Bajar ' + i.nombre"
+                    [disabled]="i.orden >= d.total"
+                    (click)="bajar(i)"
+                  >
+                    <app-icono nombre="flecha" />
+                    <span class="solo-lectores">Bajar una posición a {{ i.nombre }}</span>
+                  </button>
+                }
                 <button
                   type="button"
                   class="accion-icono"
@@ -144,7 +194,7 @@
           </tr>
         } @empty {
           <tr>
-            <td [attr.colspan]="esBarrio() ? 6 : 5">No hay elementos con esos filtros.</td>
+            <td [attr.colspan]="esBarrio() ? 7 : 6">No hay elementos con esos filtros.</td>
           </tr>
         }
       </tbody>

@@ -133,6 +133,29 @@ describe('CatalogosPage', () => {
     ctrl.verify();
   });
 
+  it('permite reordenar con la lista completa y lo pide quitar filtros cuando se filtra', async () => {
+    const { el, ctrl, asentar, escribir } = await montar();
+    expect(el.querySelector('.ayuda-orden')?.textContent).toContain('arrastre una fila');
+    el.querySelector<HTMLButtonElement>('button[title="Bajar Cédula de Ciudadanía"]')!.click();
+    const req = ctrl.expectOne(`${API_BASE}/admin/catalogos/items/1/mover`);
+    expect(req.request.body).toEqual({ orden: 2 });
+    req.flush(item({ orden: 2 }));
+    await asentar();
+    ctrl
+      .expectOne((r) => r.url.endsWith('/catalogos/TIPO_IDENTIFICACION/items'))
+      .flush({ items: [item({})], total: 2, pagina: 1, tamano: 20 });
+    await asentar();
+
+    escribir('#q', 'ced');
+    el.querySelector<HTMLButtonElement>('form .acciones button[type="submit"]')!.click();
+    ctrl
+      .expectOne((r) => r.url.endsWith('/catalogos/TIPO_IDENTIFICACION/items'))
+      .flush({ items: [item({})], total: 1, pagina: 1, tamano: 20 });
+    await asentar();
+    expect(el.querySelector('.ayuda-orden')?.textContent).toContain('quite los filtros');
+    expect(el.querySelector('button[title="Bajar Cédula de Ciudadanía"]')).toBeNull();
+  });
+
   it('un barrio exige la localidad y marca el campo como obligatorio', async () => {
     const { el, ctrl, asentar, escribir, enviar } = await montar();
     escribir('#lista', 'BARRIO');

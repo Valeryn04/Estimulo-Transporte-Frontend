@@ -86,6 +86,19 @@ describe('DocumentosPage', () => {
     );
   });
 
+  it('cambia el orden con las flechas: lleva el documento a la posición vecina y recarga', async () => {
+    const { el, ctrl, asentar } = await montar();
+    el.querySelector<HTMLButtonElement>('button[title="Subir Soporte SISBÉN IV"]')!.click();
+    const req = ctrl.expectOne(`${API_BASE}/admin/documentos-requeridos/1/mover`);
+    expect(req.request.body).toEqual({ orden: 3 });
+    req.flush(doc({ orden: 3 }));
+    await asentar();
+    ctrl.expectOne(`${API_BASE}/admin/documentos-requeridos`).flush({ items: [doc({ orden: 3 })] });
+    await asentar();
+    expect(el.querySelector('.aviso.exito')?.textContent).toContain('quedó en la posición 3');
+    expect(el.querySelector('button[title="Bajar Soporte SISBÉN IV"]')).not.toBeNull();
+  });
+
   it('activa y desactiva sin borrar', async () => {
     const { el, ctrl, asentar } = await montar();
     el.querySelector<HTMLButtonElement>('button[title="Activar Carta de cuidado"]')!.click();
