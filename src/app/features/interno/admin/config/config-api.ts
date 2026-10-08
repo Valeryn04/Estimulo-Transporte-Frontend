@@ -27,6 +27,8 @@ export interface FiltroItems {
   q?: string;
   activo?: boolean;
   padreId?: number;
+  /** Solo el elemento que ocupa esa posición. */
+  orden?: number;
   pagina: number;
   tamano: number;
 }
@@ -48,6 +50,7 @@ export class ConfigApi {
     if (f.q) params = params.set('q', f.q);
     if (f.activo !== undefined) params = params.set('activo', f.activo);
     if (f.padreId !== undefined) params = params.set('padreId', f.padreId);
+    if (f.orden !== undefined) params = params.set('orden', f.orden);
     return this.http.get<Pagina<ItemCatalogo>>(`${ADMIN}/catalogos/${catalogo}/items`, { params });
   }
 

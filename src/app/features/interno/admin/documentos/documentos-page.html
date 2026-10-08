@@ -142,8 +142,13 @@
       <input type="checkbox" formControlName="obligatorio" />
       <span>Es obligatorio para radicar la solicitud</span>
     </label>
-    <app-campo idCampo="doc-orden" etiqueta="Orden" [control]="form.controls.orden">
-      <input appCampoControl type="number" formControlName="orden" min="0" max="100000" />
+    <app-campo
+      idCampo="doc-orden"
+      etiqueta="Orden"
+      [ayuda]="ayudaOrden()"
+      [control]="form.controls.orden"
+    >
+      <input appCampoControl type="number" formControlName="orden" min="1" max="100000" />
     </app-campo>
     @if (errorDialogo()) {
       <p class="aviso error" role="alert">{{ errorDialogo() }}</p>

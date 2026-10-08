@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ApiError } from '../../../../core/api/api-error';
@@ -7,6 +8,7 @@ import { CampoControl } from '../../../../shared/campo-control';
 import { Dialogo } from '../../../../shared/dialogo/dialogo';
 import { Icono } from '../../../../shared/icono/icono';
 import { aplicarErroresApi } from '../../../../shared/forms';
+import { ayudaPosicion } from '../../../../shared/posicion';
 import { ConfigApi } from '../config/config-api';
 import { AplicaA, DocumentoRequerido, NOMBRE_APLICA_A } from '../config/modelos-config';
 
@@ -45,11 +47,28 @@ export class DocumentosPage implements OnInit {
     }),
     aplicaA: new FormControl<AplicaA>('PCD', { nonNullable: true }),
     obligatorio: new FormControl(true, { nonNullable: true }),
-    orden: new FormControl(0, {
-      nonNullable: true,
-      validators: [Validators.required, Validators.min(0), Validators.max(100000)],
-    }),
+    orden: new FormControl<number | null>(null, [Validators.min(1), Validators.max(100000)]),
   });
+
+  // Cada documento tiene su posición en la lista y nunca se repite: la pantalla avisa quién la ocupa.
+  private readonly ordenEscrito = signal<number | null>(null);
+  protected readonly ayudaOrden = computed(() => {
+    const posicion = this.ordenEscrito();
+    const propio = this.editando();
+    return ayudaPosicion({
+      posicion,
+      total: this.documentos().length,
+      esNuevo: !propio,
+      ocupante: this.documentos().find((d) => d.orden === posicion) ?? null,
+      propioId: propio?.id,
+    });
+  });
+
+  constructor() {
+    this.form.controls.orden.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((v) => this.ordenEscrito.set(v));
+  }
 
   ngOnInit(): void {
     void this.cargar();
@@ -100,7 +119,14 @@ export class DocumentosPage implements OnInit {
   protected abrirNuevo(): void {
     this.editando.set(null);
     this.errorDialogo.set('');
-    this.form.reset({ nombre: '', descripcion: '', aplicaA: 'PCD', obligatorio: true, orden: 0 });
+    const siguiente = this.documentos().length + 1;
+    this.form.reset({
+      nombre: '',
+      descripcion: '',
+      aplicaA: 'PCD',
+      obligatorio: true,
+      orden: siguiente,
+    });
     this.abierto.set(true);
   }
 
@@ -127,7 +153,12 @@ export class DocumentosPage implements OnInit {
     this.guardando.set(true);
     this.errorDialogo.set('');
     const v = this.form.getRawValue();
-    const datos = { ...v, nombre: v.nombre.trim(), descripcion: v.descripcion.trim() };
+    const datos = {
+      ...v,
+      orden: v.orden ?? undefined,
+      nombre: v.nombre.trim(),
+      descripcion: v.descripcion.trim(),
+    };
     const edicion = this.editando();
     try {
       if (edicion) await firstValueFrom(this.api.actualizarDocumento(edicion.id, datos));

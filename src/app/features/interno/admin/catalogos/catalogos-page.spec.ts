@@ -22,6 +22,23 @@ const RESUMEN = [
   { catalogo: 'BARRIO', total: 178, activos: 178 },
 ];
 
+/** Responde las consultas de posición: total del grupo (sin `orden`) y quién ocupa la posición escrita. */
+function responderPosicion(
+  ctrl: ReturnType<typeof montarPantalla>['ctrl'],
+  total: number,
+  ocupante?: object,
+): void {
+  for (const r of ctrl.match((x) => x.url.includes('/items') && x.params.get('tamano') === '1')) {
+    const pideOcupante = r.request.params.has('orden');
+    r.flush({
+      items: pideOcupante && ocupante ? [ocupante] : [],
+      total,
+      pagina: 1,
+      tamano: 1,
+    });
+  }
+}
+
 describe('CatalogosPage', () => {
   async function montar() {
     const p = montarPantalla(CatalogosPage);
@@ -64,6 +81,9 @@ describe('CatalogosPage', () => {
     const { fixture, el, ctrl, escribir, enviar, asentar } = await montar();
     el.querySelector<HTMLButtonElement>('.encabezado .boton')!.click();
     await asentar();
+    responderPosicion(ctrl, 2);
+    await asentar();
+    responderPosicion(ctrl, 2);
     enviar();
     await asentar();
     expect(el.querySelector('dialog')?.textContent).toContain('Sigla');
@@ -77,7 +97,7 @@ describe('CatalogosPage', () => {
       nombre: 'Pasaporte',
       codigo: 'PA',
       padreId: null,
-      orden: 0,
+      orden: 3,
     });
     req.flush(item({ id: 9, codigo: 'PA', nombre: 'Pasaporte' }), {
       status: 201,
@@ -90,6 +110,27 @@ describe('CatalogosPage', () => {
       .flush({ items: [], total: 0, pagina: 1, tamano: 20 });
     await asentar();
     expect(fixture.nativeElement.querySelector('.aviso.exito')?.textContent).toContain('Pasaporte');
+  });
+
+  it('al crear propone la última posición y, si se pide una ocupada, avisa quién la tiene', async () => {
+    const { el, ctrl, asentar, escribir } = await montar();
+    el.querySelector<HTMLButtonElement>('.encabezado .boton')!.click();
+    await asentar();
+    responderPosicion(ctrl, 2);
+    await asentar();
+    responderPosicion(ctrl, 2);
+    await asentar();
+    expect(el.querySelector<HTMLInputElement>('#item-orden')?.value).toBe('3');
+    expect(el.querySelector('dialog')?.textContent).toContain('Quedará al final de la lista');
+
+    escribir('#item-orden', '1');
+    await asentar();
+    responderPosicion(ctrl, 2, item({}));
+    await asentar();
+    expect(el.querySelector('dialog')?.textContent).toContain(
+      'La posición 1 la tiene «Cédula de Ciudadanía»',
+    );
+    ctrl.verify();
   });
 
   it('un barrio exige la localidad y marca el campo como obligatorio', async () => {

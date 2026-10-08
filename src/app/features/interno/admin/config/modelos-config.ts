@@ -51,7 +51,8 @@ export interface DatosItem {
   nombre: string;
   codigo?: string;
   padreId?: number | null;
-  orden: number;
+  /** Posición en la lista (única). Sin indicarla queda al final o conserva la suya. */
+  orden?: number;
 }
 
 export interface VersionRegistro {
@@ -93,7 +94,8 @@ export interface DatosDocumento {
   descripcion: string;
   aplicaA: AplicaA;
   obligatorio: boolean;
-  orden: number;
+  /** Posición en la lista (única). Sin indicarla queda al final o conserva la suya. */
+  orden?: number;
 }
 
 export interface VersionParametro {

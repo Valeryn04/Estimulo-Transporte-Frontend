@@ -1,5 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ApiError } from '../../../../core/api/api-error';
@@ -8,6 +9,7 @@ import { CampoControl } from '../../../../shared/campo-control';
 import { Dialogo } from '../../../../shared/dialogo/dialogo';
 import { Icono } from '../../../../shared/icono/icono';
 import { aplicarErroresApi } from '../../../../shared/forms';
+import { ayudaPosicion } from '../../../../shared/posicion';
 import { Pagina } from '../modelos';
 import { ConfigApi } from '../config/config-api';
 import {
@@ -69,11 +71,34 @@ export class CatalogosPage implements OnInit {
     }),
     codigo: new FormControl('', { nonNullable: true }),
     padreId: new FormControl<number | null>(null),
-    orden: new FormControl(0, {
-      nonNullable: true,
-      validators: [Validators.required, Validators.min(0), Validators.max(100000)],
-    }),
+    orden: new FormControl<number | null>(null, [Validators.min(1), Validators.max(100000)]),
   });
+
+  // ---- posición en la lista: cada elemento tiene la suya, nunca se repite
+  private readonly ordenEscrito = signal<number | null>(null);
+  private readonly totalGrupo = signal(0);
+  private readonly ocupante = signal<ItemCatalogo | null>(null);
+  private revision = 0;
+  protected readonly ayudaOrden = computed(() =>
+    ayudaPosicion({
+      posicion: this.ordenEscrito(),
+      total: this.totalGrupo(),
+      esNuevo: !this.editando(),
+      ocupante: this.ocupante(),
+      propioId: this.editando()?.id,
+    }),
+  );
+
+  constructor() {
+    this.form.controls.orden.valueChanges.pipe(takeUntilDestroyed()).subscribe((v) => {
+      this.ordenEscrito.set(v);
+      void this.revisarPosicion();
+    });
+    this.form.controls.padreId.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
+      // Un barrio que cambia de localidad queda, por defecto, al final de la nueva.
+      if (this.dialogo() === 'formulario') void this.sugerirFinal();
+    });
+  }
 
   ngOnInit(): void {
     void this.cargarResumen();
@@ -145,7 +170,10 @@ export class CatalogosPage implements OnInit {
   protected abrirNuevo(): void {
     this.editando.set(null);
     this.errorDialogo.set('');
-    this.form.reset({ nombre: '', codigo: '', padreId: null, orden: 0 });
+    this.form.reset({ nombre: '', codigo: '', padreId: null, orden: null }, { emitEvent: false });
+    this.ordenEscrito.set(null);
+    this.totalGrupo.set(0);
+    this.ocupante.set(null);
     this.form.controls.codigo.enable();
     this.form.controls.codigo.setValidators(
       this.pideCodigo() ? [Validators.required, Validators.pattern(/^[A-Za-z0-9_]{1,10}$/)] : [],
@@ -154,17 +182,71 @@ export class CatalogosPage implements OnInit {
     this.form.controls.codigo.updateValueAndValidity();
     this.form.controls.padreId.updateValueAndValidity();
     this.dialogo.set('formulario');
+    void this.sugerirFinal();
   }
 
   protected abrirEditar(i: ItemCatalogo): void {
     this.editando.set(i);
     this.errorDialogo.set('');
-    this.form.reset({ nombre: i.nombre, codigo: i.codigo, padreId: i.padreId, orden: i.orden });
+    this.form.reset(
+      { nombre: i.nombre, codigo: i.codigo, padreId: i.padreId, orden: i.orden },
+      { emitEvent: false },
+    );
+    this.ordenEscrito.set(i.orden);
     this.form.controls.codigo.disable();
     this.form.controls.codigo.setValidators([]);
     this.form.controls.padreId.setValidators(this.esBarrio() ? [Validators.required] : []);
     this.form.controls.padreId.updateValueAndValidity();
     this.dialogo.set('formulario');
+    void this.revisarPosicion();
+  }
+
+  /** Cuántos elementos hay en el grupo (la lista, o la localidad en los barrios) y quién ocupa la posición escrita. */
+  private async revisarPosicion(): Promise<void> {
+    const actual = ++this.revision;
+    const padreId = this.esBarrio() ? this.form.controls.padreId.value : null;
+    if (this.esBarrio() && !padreId) {
+      this.totalGrupo.set(0);
+      this.ocupante.set(null);
+      return;
+    }
+    const posicion = this.form.controls.orden.value;
+    try {
+      const filtro = { padreId: padreId ?? undefined, pagina: 1, tamano: 1 };
+      const [grupo, ocupa] = await Promise.all([
+        firstValueFrom(this.api.items(this.catalogo(), filtro)),
+        posicion !== null && posicion >= 1
+          ? firstValueFrom(this.api.items(this.catalogo(), { ...filtro, orden: posicion }))
+          : Promise.resolve(null),
+      ]);
+      if (actual !== this.revision) return;
+      this.totalGrupo.set(grupo.total);
+      this.ocupante.set(ocupa?.items[0] ?? null);
+    } catch {
+      if (actual === this.revision) {
+        this.totalGrupo.set(0);
+        this.ocupante.set(null);
+      }
+    }
+  }
+
+  /** Propone la última posición: al crear, y cuando un barrio cambia de localidad. */
+  private async sugerirFinal(): Promise<void> {
+    const padreId = this.esBarrio() ? this.form.controls.padreId.value : null;
+    const edicion = this.editando();
+    if (edicion && padreId === edicion.padreId) {
+      this.form.controls.orden.setValue(edicion.orden);
+      return;
+    }
+    if (this.esBarrio() && !padreId) return;
+    try {
+      const grupo = await firstValueFrom(
+        this.api.items(this.catalogo(), { padreId: padreId ?? undefined, pagina: 1, tamano: 1 }),
+      );
+      this.form.controls.orden.setValue(grupo.total + 1);
+    } catch {
+      this.form.controls.orden.setValue(null);
+    }
   }
 
   protected cerrar(): void {
@@ -181,7 +263,7 @@ export class CatalogosPage implements OnInit {
       nombre: v.nombre.trim(),
       codigo: this.pideCodigo() && v.codigo ? v.codigo.trim().toUpperCase() : undefined,
       padreId: this.esBarrio() ? v.padreId : null,
-      orden: v.orden,
+      orden: v.orden ?? undefined,
     };
     const edicion = this.editando();
     try {

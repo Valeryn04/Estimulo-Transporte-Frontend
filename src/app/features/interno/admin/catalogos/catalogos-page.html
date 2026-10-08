@@ -210,10 +210,10 @@
     <app-campo
       idCampo="item-orden"
       etiqueta="Orden"
-      ayuda="Posición en el desplegable (0 = primero)."
+      [ayuda]="ayudaOrden()"
       [control]="form.controls.orden"
     >
-      <input appCampoControl type="number" formControlName="orden" min="0" max="100000" />
+      <input appCampoControl type="number" formControlName="orden" min="1" max="100000" />
     </app-campo>
     @if (errorDialogo()) {
       <p class="aviso error" role="alert">{{ errorDialogo() }}</p>

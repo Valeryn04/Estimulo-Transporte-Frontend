@@ -73,6 +73,19 @@ describe('DocumentosPage', () => {
     expect(el.querySelector('.aviso.exito')?.textContent).toContain('Registro RLCPD');
   });
 
+  it('propone la última posición y avisa quién ocupa la que se escriba', async () => {
+    const { el, escribir, asentar } = await montar();
+    el.querySelector<HTMLButtonElement>('.encabezado .boton')!.click();
+    await asentar();
+    expect(el.querySelector<HTMLInputElement>('#doc-orden')?.value).toBe('3');
+    expect(el.querySelector('dialog')?.textContent).toContain('Quedará al final de la lista');
+    escribir('#doc-orden', '4');
+    await asentar();
+    expect(el.querySelector('dialog')?.textContent).toContain(
+      'La posición 4 la tiene «Soporte SISBÉN IV»',
+    );
+  });
+
   it('activa y desactiva sin borrar', async () => {
     const { el, ctrl, asentar } = await montar();
     el.querySelector<HTMLButtonElement>('button[title="Activar Carta de cuidado"]')!.click();
