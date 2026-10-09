@@ -298,6 +298,30 @@ describe('CaracterizacionPage', () => {
       expect(p.q('#car-semanasGestacion')).toBeNull();
     });
 
+    it('el embarazo se ajusta al género: masculino solo «No aplica», femenino sin «No aplica»', async () => {
+      const p = await montar();
+      const opciones = () =>
+        [...p.el.querySelectorAll<HTMLInputElement>('input[formcontrolname="embarazo"]')].map(
+          (i) => i.value,
+        );
+      await p.paso('Datos personales');
+      await p.elegir('#car-generoId select, select[formcontrolname="generoId"]', 'Masculino');
+      await p.paso('Salud y apoyos');
+      expect(opciones()).toEqual(['NO_APLICA']);
+      expect(
+        p.q<HTMLInputElement>('input[formcontrolname="embarazo"][value="NO_APLICA"]')!.checked,
+      ).toBe(true);
+      await p.paso('Datos personales');
+      await p.elegir('select[formcontrolname="generoId"]', 'Femenino');
+      await p.paso('Salud y apoyos');
+      expect(opciones()).toEqual(['NO', 'SI']);
+      expect(p.q<HTMLInputElement>('input[formcontrolname="embarazo"]:checked')).toBeNull();
+      await p.paso('Datos personales');
+      await p.elegir('select[formcontrolname="generoId"]', 'Otro');
+      await p.paso('Salud y apoyos');
+      expect(opciones()).toEqual(['NO', 'SI', 'NO_APLICA']);
+    });
+
     it('la sección del cuidador solo aparece si requiere el servicio', async () => {
       const p = await montar();
       const nombres = () =>

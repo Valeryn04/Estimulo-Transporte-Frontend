@@ -209,6 +209,14 @@ export class CaracterizacionPage implements OnInit, OnDestroy {
   // Lo que decide qué campos se muestran.
   protected readonly tieneHijos: Signal<boolean | null> = valorDe(this.form.controls.tieneHijos);
   protected readonly embarazo: Signal<Embarazo | null> = valorDe(this.form.controls.embarazo);
+  protected readonly generoId: Signal<number | null> = valorDe(this.form.controls.generoId);
+  private readonly generoCodigo = computed(
+    () => this.c()?.catalogos.generos.find((g) => g.id === this.generoId())?.codigo ?? null,
+  );
+  /** Qué opciones de embarazo tienen sentido según el género: «Sí» y «No» no van para masculino. */
+  protected readonly embarazoSiNo = computed(() => this.generoCodigo() !== 'MASCULINO');
+  /** «No aplica» no va para femenino. */
+  protected readonly embarazoNoAplica = computed(() => this.generoCodigo() !== 'FEMENINO');
   protected readonly recibeSubsidios: Signal<boolean | null> = valorDe(
     this.form.controls.recibeSubsidios,
   );
@@ -249,6 +257,7 @@ export class CaracterizacionPage implements OnInit, OnDestroy {
       f.tieneHijos.valueChanges,
       f.hijosCantidad.valueChanges,
       f.embarazo.valueChanges,
+      f.generoId.valueChanges,
       f.recibeSubsidios.valueChanges,
       f.requiereCuidador.valueChanges,
     ];
@@ -463,6 +472,11 @@ export class CaracterizacionPage implements OnInit, OnDestroy {
   private sincronizarDependientes(): void {
     this.ajustarEdades();
     const f = this.form.controls;
+    // El embarazo se ajusta al género: masculino solo puede ser «No aplica» y femenino no puede serlo.
+    const genero = this.c()?.catalogos.generos.find((g) => g.id === f.generoId.value)?.codigo;
+    if (genero === 'MASCULINO' && f.embarazo.value !== 'NO_APLICA')
+      f.embarazo.setValue('NO_APLICA');
+    else if (genero === 'FEMENINO' && f.embarazo.value === 'NO_APLICA') f.embarazo.setValue(null);
     const alternar = (control: AbstractControl, obligatorio: boolean) => {
       if (obligatorio === control.hasValidator(Validators.required)) return;
       if (obligatorio) control.addValidators(Validators.required);

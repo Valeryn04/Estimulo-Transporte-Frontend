@@ -416,15 +416,20 @@
                   [mensajes]="{ required: 'elija una opción' }"
                 >
                   <div class="opciones">
-                    <label class="opcion">
-                      <input type="radio" formControlName="embarazo" value="NO" /> No
-                    </label>
-                    <label class="opcion">
-                      <input type="radio" formControlName="embarazo" value="SI" /> Sí
-                    </label>
-                    <label class="opcion">
-                      <input type="radio" formControlName="embarazo" value="NO_APLICA" /> No aplica
-                    </label>
+                    @if (embarazoSiNo()) {
+                      <label class="opcion">
+                        <input type="radio" formControlName="embarazo" value="NO" /> No
+                      </label>
+                      <label class="opcion">
+                        <input type="radio" formControlName="embarazo" value="SI" /> Sí
+                      </label>
+                    }
+                    @if (embarazoNoAplica()) {
+                      <label class="opcion">
+                        <input type="radio" formControlName="embarazo" value="NO_APLICA" /> No
+                        aplica
+                      </label>
+                    }
                   </div>
                 </app-campo>
                 @if (embarazo() === 'SI') {
