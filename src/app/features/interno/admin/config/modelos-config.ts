@@ -41,7 +41,6 @@ export interface ItemCatalogo {
   nombre: string;
   padreId: number | null;
   padreNombre: string | null;
-  orden: number;
   activo: boolean;
   version: number;
   updatedAt: string;
@@ -51,8 +50,6 @@ export interface DatosItem {
   nombre: string;
   codigo?: string;
   padreId?: number | null;
-  /** Posición en la lista (única). Sin indicarla queda al final o conserva la suya. */
-  orden?: number;
 }
 
 export interface VersionRegistro {
@@ -77,7 +74,6 @@ export interface DocumentoRequerido {
   descripcion: string;
   aplicaA: AplicaA;
   obligatorio: boolean;
-  orden: number;
   activo: boolean;
   version: number;
   /** Modelo descargable que publicó la Gerencia (carta de solicitud, carta de cuidador...). */
@@ -94,8 +90,6 @@ export interface DatosDocumento {
   descripcion: string;
   aplicaA: AplicaA;
   obligatorio: boolean;
-  /** Posición en la lista (única). Sin indicarla queda al final o conserva la suya. */
-  orden?: number;
 }
 
 export interface VersionParametro {

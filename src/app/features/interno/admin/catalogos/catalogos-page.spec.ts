@@ -9,7 +9,6 @@ const item = (c: object) => ({
   nombre: 'Cédula de Ciudadanía',
   padreId: null,
   padreNombre: null,
-  orden: 1,
   activo: true,
   version: 1,
   updatedAt: '2026-10-01T10:00:00Z',
@@ -21,15 +20,6 @@ const RESUMEN = [
   { catalogo: 'LOCALIDAD', total: 5, activos: 5 },
   { catalogo: 'BARRIO', total: 178, activos: 178 },
 ];
-
-/** Responde la consulta de los elementos del grupo donde va a quedar el elemento (hasta 100). */
-function responderGrupo(ctrl: ReturnType<typeof montarPantalla>['ctrl'], items: object[]): void {
-  for (const r of ctrl.match((x) => x.url.includes('/items') && x.params.get('tamano') === '100')) {
-    r.flush({ items, total: items.length, pagina: 1, tamano: 100 });
-  }
-}
-
-const GRUPO = [item({}), item({ id: 2, codigo: 'TI', nombre: 'Tarjeta de Identidad', orden: 2 })];
 
 describe('CatalogosPage', () => {
   async function montar() {
@@ -73,8 +63,6 @@ describe('CatalogosPage', () => {
     const { fixture, el, ctrl, escribir, enviar, asentar } = await montar();
     el.querySelector<HTMLButtonElement>('.encabezado .boton')!.click();
     await asentar();
-    responderGrupo(ctrl, GRUPO);
-    await asentar();
     enviar();
     await asentar();
     expect(el.querySelector('dialog')?.textContent).toContain('Sigla');
@@ -88,7 +76,6 @@ describe('CatalogosPage', () => {
       nombre: 'Pasaporte',
       codigo: 'PA',
       padreId: null,
-      orden: 3,
     });
     req.flush(item({ id: 9, codigo: 'PA', nombre: 'Pasaporte' }), {
       status: 201,
@@ -101,46 +88,6 @@ describe('CatalogosPage', () => {
       .flush({ items: [], total: 0, pagina: 1, tamano: 20 });
     await asentar();
     expect(fixture.nativeElement.querySelector('.aviso.exito')?.textContent).toContain('Pasaporte');
-  });
-
-  it('al crear propone la última posición y, si se pide una ocupada, avisa quién la tiene', async () => {
-    const { el, ctrl, asentar, escribir } = await montar();
-    el.querySelector<HTMLButtonElement>('.encabezado .boton')!.click();
-    await asentar();
-    responderGrupo(ctrl, GRUPO);
-    await asentar();
-    expect(el.querySelector<HTMLInputElement>('#item-orden')?.value).toBe('3');
-    expect(el.querySelector('dialog')?.textContent).toContain('Quedará al final de la lista');
-
-    escribir('#item-orden', '1');
-    await asentar();
-    expect(el.querySelector('dialog')?.textContent).toContain(
-      'La posición 1 la tiene «Cédula de Ciudadanía»',
-    );
-    ctrl.verify();
-  });
-
-  it('permite reordenar con la lista completa y lo pide quitar filtros cuando se filtra', async () => {
-    const { el, ctrl, asentar, escribir } = await montar();
-    expect(el.querySelector('.ayuda-orden')?.textContent).toContain('arrastre una fila');
-    el.querySelector<HTMLButtonElement>('button[title="Bajar Cédula de Ciudadanía"]')!.click();
-    const req = ctrl.expectOne(`${API_BASE}/admin/catalogos/items/1/mover`);
-    expect(req.request.body).toEqual({ orden: 2 });
-    req.flush(item({ orden: 2 }));
-    await asentar();
-    ctrl
-      .expectOne((r) => r.url.endsWith('/catalogos/TIPO_IDENTIFICACION/items'))
-      .flush({ items: [item({})], total: 2, pagina: 1, tamano: 20 });
-    await asentar();
-
-    escribir('#q', 'ced');
-    el.querySelector<HTMLButtonElement>('form .acciones button[type="submit"]')!.click();
-    ctrl
-      .expectOne((r) => r.url.endsWith('/catalogos/TIPO_IDENTIFICACION/items'))
-      .flush({ items: [item({})], total: 1, pagina: 1, tamano: 20 });
-    await asentar();
-    expect(el.querySelector('.ayuda-orden')?.textContent).toContain('quite los filtros');
-    expect(el.querySelector('button[title="Bajar Cédula de Ciudadanía"]')).toBeNull();
   });
 
   it('un barrio exige la localidad y marca el campo como obligatorio', async () => {
@@ -182,13 +129,13 @@ describe('CatalogosPage', () => {
       items: [
         {
           version: 2,
-          snapshot: { nombre: 'Cédula', orden: 1, activo: true },
+          snapshot: { nombre: 'Cédula', activo: true },
           usuario: 'admin',
           creadoAt: '2026-10-02T10:00:00Z',
         },
         {
           version: 1,
-          snapshot: { nombre: 'Cédula de Ciudadanía', orden: 1, activo: true },
+          snapshot: { nombre: 'Cédula de Ciudadanía', activo: true },
           usuario: null,
           creadoAt: '2026-10-01T10:00:00Z',
         },

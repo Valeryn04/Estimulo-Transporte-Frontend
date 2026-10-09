@@ -27,8 +27,6 @@ export interface FiltroItems {
   q?: string;
   activo?: boolean;
   padreId?: number;
-  /** Solo el elemento que ocupa esa posición. */
-  orden?: number;
   pagina: number;
   tamano: number;
 }
@@ -50,7 +48,6 @@ export class ConfigApi {
     if (f.q) params = params.set('q', f.q);
     if (f.activo !== undefined) params = params.set('activo', f.activo);
     if (f.padreId !== undefined) params = params.set('padreId', f.padreId);
-    if (f.orden !== undefined) params = params.set('orden', f.orden);
     return this.http.get<Pagina<ItemCatalogo>>(`${ADMIN}/catalogos/${catalogo}/items`, { params });
   }
 
@@ -60,11 +57,6 @@ export class ConfigApi {
 
   actualizarItem(id: number, d: DatosItem): Observable<ItemCatalogo> {
     return this.http.put<ItemCatalogo>(`${ADMIN}/catalogos/items/${id}`, d);
-  }
-
-  /** Lleva el elemento a esa posición de la lista (los demás se corren). */
-  moverItem(id: number, orden: number): Observable<ItemCatalogo> {
-    return this.http.post<ItemCatalogo>(`${ADMIN}/catalogos/items/${id}/mover`, { orden });
   }
 
   cambiarActivoItem(id: number, activo: boolean): Observable<ItemCatalogo> {
@@ -103,12 +95,6 @@ export class ConfigApi {
       `${ADMIN}/documentos-requeridos/${id}/modelo`,
       datos,
     );
-  }
-
-  moverDocumento(id: number, orden: number): Observable<DocumentoRequerido> {
-    return this.http.post<DocumentoRequerido>(`${ADMIN}/documentos-requeridos/${id}/mover`, {
-      orden,
-    });
   }
 
   cambiarActivoDocumento(id: number, activo: boolean): Observable<DocumentoRequerido> {

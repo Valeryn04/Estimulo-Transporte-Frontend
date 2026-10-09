@@ -1,13 +1,5 @@
 import { DatePipe } from '@angular/common';
-import {
-  CdkDrag,
-  CdkDragDrop,
-  CdkDragHandle,
-  CdkDropList,
-  moveItemInArray,
-} from '@angular/cdk/drag-drop';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ApiError } from '../../../../core/api/api-error';
@@ -15,9 +7,7 @@ import { Campo } from '../../../../shared/campo';
 import { CampoControl } from '../../../../shared/campo-control';
 import { Dialogo } from '../../../../shared/dialogo/dialogo';
 import { Icono } from '../../../../shared/icono/icono';
-import { OrdenLista } from '../../../../shared/orden-lista/orden-lista';
 import { aplicarErroresApi } from '../../../../shared/forms';
-import { ayudaPosicion } from '../../../../shared/posicion';
 import { Pagina } from '../modelos';
 import { ConfigApi } from '../config/config-api';
 import {
@@ -36,18 +26,7 @@ type Dialogo_ = 'ninguno' | 'formulario' | 'historial';
  */
 @Component({
   selector: 'app-catalogos-page',
-  imports: [
-    DatePipe,
-    ReactiveFormsModule,
-    CdkDrag,
-    CdkDragHandle,
-    CdkDropList,
-    Campo,
-    CampoControl,
-    Dialogo,
-    Icono,
-    OrdenLista,
-  ],
+  imports: [DatePipe, ReactiveFormsModule, Campo, CampoControl, Dialogo, Icono],
   templateUrl: './catalogos-page.html',
   styleUrl: './catalogos-page.scss',
 })
@@ -69,8 +48,6 @@ export class CatalogosPage implements OnInit {
     Math.max(1, Math.ceil((this.datos()?.total ?? 0) / this.tamano)),
   );
   protected readonly esBarrio = computed(() => this.catalogo() === 'BARRIO');
-  /** Se puede reordenar solo con la lista completa (sin filtros) y, en barrios, de una localidad. */
-  protected readonly puedeOrdenar = signal(false);
   protected readonly pideCodigo = computed(() => this.catalogo() === 'TIPO_IDENTIFICACION');
 
   protected readonly filtros = new FormGroup({
@@ -92,46 +69,7 @@ export class CatalogosPage implements OnInit {
     }),
     codigo: new FormControl('', { nonNullable: true }),
     padreId: new FormControl<number | null>(null),
-    orden: new FormControl<number | null>(null, [Validators.min(1), Validators.max(100000)]),
   });
-
-  // ---- posición en la lista: cada elemento tiene la suya, nunca se repite
-  protected readonly ordenEscrito = signal<number | null>(null);
-  protected readonly nombreEscrito = signal('');
-  /** Elementos del grupo donde va a quedar (la lista, o la localidad en los barrios), hasta 100. */
-  private readonly grupo = signal<ItemCatalogo[]>([]);
-  private readonly totalGrupo = signal(0);
-  private revision = 0;
-  /** Los demás elementos del grupo, para mostrarlos en la lista donde se arrastra la posición. */
-  protected readonly otros = computed(() =>
-    this.grupo().filter((i) => i.id !== this.editando()?.id),
-  );
-  /** La lista visual solo sale cuando se conocen todos los elementos del grupo. */
-  protected readonly mostrarListaOrden = computed(
-    () => this.totalGrupo() > 0 && this.totalGrupo() <= this.grupo().length,
-  );
-  protected readonly ayudaOrden = computed(() =>
-    ayudaPosicion({
-      posicion: this.ordenEscrito(),
-      total: this.totalGrupo(),
-      esNuevo: !this.editando(),
-      ocupante: this.grupo().find((i) => i.orden === this.ordenEscrito()) ?? null,
-      propioId: this.editando()?.id,
-    }),
-  );
-
-  constructor() {
-    this.form.controls.orden.valueChanges
-      .pipe(takeUntilDestroyed())
-      .subscribe((v) => this.ordenEscrito.set(v));
-    this.form.controls.nombre.valueChanges
-      .pipe(takeUntilDestroyed())
-      .subscribe((v) => this.nombreEscrito.set(v));
-    this.form.controls.padreId.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
-      // Un barrio que cambia de localidad queda, por defecto, al final de la nueva.
-      if (this.dialogo() === 'formulario') void this.sugerirFinal();
-    });
-  }
 
   ngOnInit(): void {
     void this.cargarResumen();
@@ -174,7 +112,6 @@ export class CatalogosPage implements OnInit {
     this.error.set('');
     this.pagina.set(pagina);
     const f = this.filtros.getRawValue();
-    this.puedeOrdenar.set(!f.q.trim() && f.estado === '' && (!this.esBarrio() || !!f.padreId));
     try {
       this.datos.set(
         await firstValueFrom(
@@ -204,11 +141,7 @@ export class CatalogosPage implements OnInit {
   protected abrirNuevo(): void {
     this.editando.set(null);
     this.errorDialogo.set('');
-    this.form.reset({ nombre: '', codigo: '', padreId: null, orden: null }, { emitEvent: false });
-    this.ordenEscrito.set(null);
-    this.nombreEscrito.set('');
-    this.grupo.set([]);
-    this.totalGrupo.set(0);
+    this.form.reset({ nombre: '', codigo: '', padreId: null });
     this.form.controls.codigo.enable();
     this.form.controls.codigo.setValidators(
       this.pideCodigo() ? [Validators.required, Validators.pattern(/^[A-Za-z0-9_]{1,10}$/)] : [],
@@ -217,61 +150,17 @@ export class CatalogosPage implements OnInit {
     this.form.controls.codigo.updateValueAndValidity();
     this.form.controls.padreId.updateValueAndValidity();
     this.dialogo.set('formulario');
-    void this.sugerirFinal();
   }
 
   protected abrirEditar(i: ItemCatalogo): void {
     this.editando.set(i);
     this.errorDialogo.set('');
-    this.form.reset(
-      { nombre: i.nombre, codigo: i.codigo, padreId: i.padreId, orden: i.orden },
-      { emitEvent: false },
-    );
-    this.ordenEscrito.set(i.orden);
-    this.nombreEscrito.set(i.nombre);
+    this.form.reset({ nombre: i.nombre, codigo: i.codigo, padreId: i.padreId });
     this.form.controls.codigo.disable();
     this.form.controls.codigo.setValidators([]);
     this.form.controls.padreId.setValidators(this.esBarrio() ? [Validators.required] : []);
     this.form.controls.padreId.updateValueAndValidity();
     this.dialogo.set('formulario');
-    void this.cargarGrupo();
-  }
-
-  /** Trae los elementos del grupo donde va a quedar el elemento (la lista, o la localidad en los barrios). */
-  private async cargarGrupo(): Promise<void> {
-    const actual = ++this.revision;
-    const padreId = this.esBarrio() ? this.form.controls.padreId.value : null;
-    if (this.esBarrio() && !padreId) {
-      this.grupo.set([]);
-      this.totalGrupo.set(0);
-      return;
-    }
-    try {
-      const r = await firstValueFrom(
-        this.api.items(this.catalogo(), { padreId: padreId ?? undefined, pagina: 1, tamano: 100 }),
-      );
-      if (actual !== this.revision) return;
-      this.grupo.set(r.items);
-      this.totalGrupo.set(r.total);
-    } catch {
-      if (actual === this.revision) {
-        this.grupo.set([]);
-        this.totalGrupo.set(0);
-      }
-    }
-  }
-
-  /** Propone la última posición: al crear, y cuando un barrio cambia de localidad. */
-  private async sugerirFinal(): Promise<void> {
-    await this.cargarGrupo();
-    const padreId = this.esBarrio() ? this.form.controls.padreId.value : null;
-    const edicion = this.editando();
-    if (edicion && padreId === edicion.padreId) {
-      this.form.controls.orden.setValue(edicion.orden);
-      return;
-    }
-    if (this.esBarrio() && !padreId) return;
-    this.form.controls.orden.setValue(this.totalGrupo() > 0 ? this.totalGrupo() + 1 : 1);
   }
 
   protected cerrar(): void {
@@ -288,7 +177,6 @@ export class CatalogosPage implements OnInit {
       nombre: v.nombre.trim(),
       codigo: this.pideCodigo() && v.codigo ? v.codigo.trim().toUpperCase() : undefined,
       padreId: this.esBarrio() ? v.padreId : null,
-      orden: v.orden ?? undefined,
     };
     const edicion = this.editando();
     try {
@@ -309,41 +197,6 @@ export class CatalogosPage implements OnInit {
     } finally {
       this.guardando.set(false);
     }
-  }
-
-  // ---------------------------------------------------------------- reordenar
-
-  /** Arrastrar una fila: queda en la posición de la fila donde se suelta y los demás se corren. */
-  protected async soltar(e: CdkDragDrop<ItemCatalogo[]>): Promise<void> {
-    const datos = this.datos();
-    if (!datos || e.previousIndex === e.currentIndex) return;
-    const mover = datos.items[e.previousIndex];
-    const destino = datos.items[e.currentIndex];
-    if (!mover || !destino) return;
-    const items = [...datos.items];
-    moveItemInArray(items, e.previousIndex, e.currentIndex);
-    this.datos.set({ ...datos, items });
-    await this.mover(mover, destino.orden);
-  }
-
-  protected subir(i: ItemCatalogo): Promise<void> {
-    return this.mover(i, i.orden - 1);
-  }
-
-  protected bajar(i: ItemCatalogo): Promise<void> {
-    return this.mover(i, i.orden + 1);
-  }
-
-  private async mover(i: ItemCatalogo, orden: number): Promise<void> {
-    this.error.set('');
-    this.mensaje.set('');
-    try {
-      await firstValueFrom(this.api.moverItem(i.id, orden));
-      this.mensaje.set(`«${i.nombre}» quedó en la posición ${orden}.`);
-    } catch (e) {
-      this.error.set(e instanceof ApiError ? e.message : 'No pudimos cambiar el orden.');
-    }
-    await this.buscar(this.pagina());
   }
 
   // ---------------------------------------------------------------- activar / historial
@@ -375,7 +228,7 @@ export class CatalogosPage implements OnInit {
   }
 
   protected resumenVersion(v: VersionRegistro): string {
-    const s = v.snapshot as { nombre?: string; orden?: number; activo?: boolean };
-    return `${s.nombre ?? ''} · orden ${s.orden ?? 0} · ${s.activo ? 'activo' : 'inactivo'}`;
+    const s = v.snapshot as { nombre?: string; activo?: boolean };
+    return `${s.nombre ?? ''} · ${s.activo ? 'activo' : 'inactivo'}`;
   }
 }

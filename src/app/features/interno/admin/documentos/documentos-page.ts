@@ -1,12 +1,4 @@
-import {
-  CdkDrag,
-  CdkDragDrop,
-  CdkDragHandle,
-  CdkDropList,
-  moveItemInArray,
-} from '@angular/cdk/drag-drop';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ApiError } from '../../../../core/api/api-error';
@@ -14,9 +6,7 @@ import { Campo } from '../../../../shared/campo';
 import { CampoControl } from '../../../../shared/campo-control';
 import { Dialogo } from '../../../../shared/dialogo/dialogo';
 import { Icono } from '../../../../shared/icono/icono';
-import { OrdenLista } from '../../../../shared/orden-lista/orden-lista';
 import { aplicarErroresApi } from '../../../../shared/forms';
-import { ayudaPosicion } from '../../../../shared/posicion';
 import { ConfigApi } from '../config/config-api';
 import { AplicaA, DocumentoRequerido, NOMBRE_APLICA_A } from '../config/modelos-config';
 
@@ -26,17 +16,7 @@ import { AplicaA, DocumentoRequerido, NOMBRE_APLICA_A } from '../config/modelos-
  */
 @Component({
   selector: 'app-documentos-page',
-  imports: [
-    ReactiveFormsModule,
-    CdkDrag,
-    CdkDragHandle,
-    CdkDropList,
-    Campo,
-    CampoControl,
-    Dialogo,
-    Icono,
-    OrdenLista,
-  ],
+  imports: [ReactiveFormsModule, Campo, CampoControl, Dialogo, Icono],
   templateUrl: './documentos-page.html',
   styleUrl: './documentos-page.scss',
 })
@@ -65,38 +45,7 @@ export class DocumentosPage implements OnInit {
     }),
     aplicaA: new FormControl<AplicaA>('PCD', { nonNullable: true }),
     obligatorio: new FormControl(true, { nonNullable: true }),
-    orden: new FormControl<number | null>(null, [Validators.min(1), Validators.max(100000)]),
   });
-
-  // Cada documento tiene su posición en la lista y nunca se repite: la pantalla avisa quién la ocupa.
-  protected readonly ordenEscrito = signal<number | null>(null);
-  protected readonly nombreEscrito = signal('');
-  /** Los demás documentos, en su orden, para arrastrar la posición dentro de la lista. */
-  protected readonly otros = computed(() =>
-    this.documentos()
-      .filter((d) => d.id !== this.editando()?.id)
-      .sort((a, b) => a.orden - b.orden),
-  );
-  protected readonly ayudaOrden = computed(() => {
-    const posicion = this.ordenEscrito();
-    const propio = this.editando();
-    return ayudaPosicion({
-      posicion,
-      total: this.documentos().length,
-      esNuevo: !propio,
-      ocupante: this.documentos().find((d) => d.orden === posicion) ?? null,
-      propioId: propio?.id,
-    });
-  });
-
-  constructor() {
-    this.form.controls.orden.valueChanges
-      .pipe(takeUntilDestroyed())
-      .subscribe((v) => this.ordenEscrito.set(v));
-    this.form.controls.nombre.valueChanges
-      .pipe(takeUntilDestroyed())
-      .subscribe((v) => this.nombreEscrito.set(v));
-  }
 
   ngOnInit(): void {
     void this.cargar();
@@ -147,14 +96,7 @@ export class DocumentosPage implements OnInit {
   protected abrirNuevo(): void {
     this.editando.set(null);
     this.errorDialogo.set('');
-    const siguiente = this.documentos().length + 1;
-    this.form.reset({
-      nombre: '',
-      descripcion: '',
-      aplicaA: 'PCD',
-      obligatorio: true,
-      orden: siguiente,
-    });
+    this.form.reset({ nombre: '', descripcion: '', aplicaA: 'PCD', obligatorio: true });
     this.abierto.set(true);
   }
 
@@ -166,7 +108,6 @@ export class DocumentosPage implements OnInit {
       descripcion: d.descripcion,
       aplicaA: d.aplicaA,
       obligatorio: d.obligatorio,
-      orden: d.orden,
     });
     this.abierto.set(true);
   }
@@ -181,12 +122,7 @@ export class DocumentosPage implements OnInit {
     this.guardando.set(true);
     this.errorDialogo.set('');
     const v = this.form.getRawValue();
-    const datos = {
-      ...v,
-      orden: v.orden ?? undefined,
-      nombre: v.nombre.trim(),
-      descripcion: v.descripcion.trim(),
-    };
+    const datos = { ...v, nombre: v.nombre.trim(), descripcion: v.descripcion.trim() };
     const edicion = this.editando();
     try {
       if (edicion) await firstValueFrom(this.api.actualizarDocumento(edicion.id, datos));
@@ -204,38 +140,6 @@ export class DocumentosPage implements OnInit {
     } finally {
       this.guardando.set(false);
     }
-  }
-
-  /** Arrastrar una fila: el documento queda en la posición de la fila donde se suelta y los demás se corren. */
-  protected async soltar(e: CdkDragDrop<DocumentoRequerido[]>): Promise<void> {
-    if (e.previousIndex === e.currentIndex) return;
-    const lista = [...this.documentos()];
-    const mover = lista[e.previousIndex];
-    const destino = lista[e.currentIndex];
-    if (!mover || !destino) return;
-    moveItemInArray(lista, e.previousIndex, e.currentIndex);
-    this.documentos.set(lista);
-    await this.mover(mover, destino.orden);
-  }
-
-  protected subir(d: DocumentoRequerido): Promise<void> {
-    return this.mover(d, d.orden - 1);
-  }
-
-  protected bajar(d: DocumentoRequerido): Promise<void> {
-    return this.mover(d, d.orden + 1);
-  }
-
-  private async mover(d: DocumentoRequerido, orden: number): Promise<void> {
-    this.error.set('');
-    this.mensaje.set('');
-    try {
-      await firstValueFrom(this.api.moverDocumento(d.id, orden));
-      this.mensaje.set(`«${d.nombre}» quedó en la posición ${orden}.`);
-    } catch (e) {
-      this.error.set(e instanceof ApiError ? e.message : 'No pudimos cambiar el orden.');
-    }
-    await this.cargar();
   }
 
   protected async cambiarActivo(d: DocumentoRequerido): Promise<void> {

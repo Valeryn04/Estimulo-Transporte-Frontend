@@ -31,29 +31,17 @@
       </caption>
       <thead>
         <tr>
-          <th scope="col" class="mover"><span class="solo-lectores">Mover</span></th>
           <th scope="col">Documento</th>
           <th scope="col">Aplica a</th>
           <th scope="col">Exigencia</th>
           <th scope="col">Modelo descargable</th>
-          <th scope="col" class="num">Orden</th>
           <th scope="col">Estado</th>
           <th scope="col">Acciones</th>
         </tr>
       </thead>
-      <tbody cdkDropList cdkDropListLockAxis="y" (cdkDropListDropped)="soltar($event)">
+      <tbody>
         @for (d of documentos(); track d.id) {
-          <tr cdkDrag [class.inactivo]="!d.activo">
-            <td class="mover">
-              <span
-                class="asa-orden"
-                cdkDragHandle
-                aria-hidden="true"
-                [title]="'Arrastrar para cambiar el orden de ' + d.nombre"
-              >
-                <app-icono nombre="arrastrar" />
-              </span>
-            </td>
+          <tr [class.inactivo]="!d.activo">
             <th scope="row">
               {{ d.nombre }}
               @if (d.descripcion) {
@@ -82,7 +70,6 @@
                 />
               </label>
             </td>
-            <td class="num">{{ d.orden }}</td>
             <td>
               <span class="etiqueta" [class.ok]="d.activo" [class.mal]="!d.activo">
                 {{ d.activo ? 'Activo' : 'Inactivo' }}
@@ -91,26 +78,6 @@
             </td>
             <td class="acciones-fila">
               <span class="grupo-acciones">
-                <button
-                  type="button"
-                  class="accion-icono"
-                  [title]="'Subir ' + d.nombre"
-                  [disabled]="d.orden <= 1"
-                  (click)="subir(d)"
-                >
-                  <app-icono nombre="subir" />
-                  <span class="solo-lectores">Subir una posición a {{ d.nombre }}</span>
-                </button>
-                <button
-                  type="button"
-                  class="accion-icono"
-                  [title]="'Bajar ' + d.nombre"
-                  [disabled]="d.orden >= documentos().length"
-                  (click)="bajar(d)"
-                >
-                  <app-icono nombre="flecha" />
-                  <span class="solo-lectores">Bajar una posición a {{ d.nombre }}</span>
-                </button>
                 <button
                   type="button"
                   class="accion-icono"
@@ -137,7 +104,7 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="7">Todavía no hay documentos exigidos.</td>
+            <td colspan="6">Todavía no hay documentos exigidos.</td>
           </tr>
         }
       </tbody>
@@ -173,23 +140,6 @@
       <input type="checkbox" formControlName="obligatorio" />
       <span>Es obligatorio para radicar la solicitud</span>
     </label>
-    @if (otros().length > 0) {
-      <p class="ayuda-orden">Arrastre el documento resaltado hasta el lugar donde debe quedar:</p>
-      <app-orden-lista
-        [elementos]="otros()"
-        [nombre]="nombreEscrito()"
-        [posicion]="ordenEscrito()"
-        (posicionChange)="form.controls.orden.setValue($event)"
-      />
-    }
-    <app-campo
-      idCampo="doc-orden"
-      etiqueta="Orden"
-      [ayuda]="ayudaOrden()"
-      [control]="form.controls.orden"
-    >
-      <input appCampoControl type="number" formControlName="orden" min="1" max="100000" />
-    </app-campo>
     @if (errorDialogo()) {
       <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
     }

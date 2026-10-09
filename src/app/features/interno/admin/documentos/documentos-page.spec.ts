@@ -9,7 +9,6 @@ const doc = (c: object) => ({
   descripcion: 'Grupo A, B o C',
   aplicaA: 'PCD',
   obligatorio: true,
-  orden: 4,
   activo: true,
   version: 1,
   ...c,
@@ -54,7 +53,6 @@ describe('DocumentosPage', () => {
     ctrl.expectNone((r) => r.method === 'POST');
     escribir('#doc-nombre', 'Registro RLCPD');
     escribir('#doc-aplica', 'COMUN');
-    escribir('#doc-orden', '9');
     enviar();
     const req = ctrl.expectOne(`${API_BASE}/admin/documentos-requeridos`);
     expect(req.request.body).toEqual({
@@ -62,7 +60,6 @@ describe('DocumentosPage', () => {
       descripcion: '',
       aplicaA: 'COMUN',
       obligatorio: true,
-      orden: 9,
     });
     req.flush(doc({ id: 3 }), { status: 201, statusText: 'Creado' });
     await asentar();
@@ -71,32 +68,6 @@ describe('DocumentosPage', () => {
       .flush({ items: [doc({ id: 3, nombre: 'Registro RLCPD' })] });
     await asentar();
     expect(el.querySelector('.aviso.exito')?.textContent).toContain('Registro RLCPD');
-  });
-
-  it('propone la última posición y avisa quién ocupa la que se escriba', async () => {
-    const { el, escribir, asentar } = await montar();
-    el.querySelector<HTMLButtonElement>('.encabezado .boton')!.click();
-    await asentar();
-    expect(el.querySelector<HTMLInputElement>('#doc-orden')?.value).toBe('3');
-    expect(el.querySelector('dialog')?.textContent).toContain('Quedará al final de la lista');
-    escribir('#doc-orden', '4');
-    await asentar();
-    expect(el.querySelector('dialog')?.textContent).toContain(
-      'La posición 4 la tiene «Soporte SISBÉN IV»',
-    );
-  });
-
-  it('cambia el orden con las flechas: lleva el documento a la posición vecina y recarga', async () => {
-    const { el, ctrl, asentar } = await montar();
-    el.querySelector<HTMLButtonElement>('button[title="Subir Soporte SISBÉN IV"]')!.click();
-    const req = ctrl.expectOne(`${API_BASE}/admin/documentos-requeridos/1/mover`);
-    expect(req.request.body).toEqual({ orden: 3 });
-    req.flush(doc({ orden: 3 }));
-    await asentar();
-    ctrl.expectOne(`${API_BASE}/admin/documentos-requeridos`).flush({ items: [doc({ orden: 3 })] });
-    await asentar();
-    expect(el.querySelector('.aviso.exito')?.textContent).toContain('quedó en la posición 3');
-    expect(el.querySelector('button[title="Bajar Soporte SISBÉN IV"]')).not.toBeNull();
   });
 
   it('activa y desactiva sin borrar', async () => {
