@@ -121,11 +121,16 @@
             <label class="opcion">
               <input
                 type="checkbox"
-                [checked]="soloLectura() || marcado(p.codigo)"
-                [disabled]="soloLectura()"
+                [checked]="soloLectura() || (!p.soloAdministrador && marcado(p.codigo))"
+                [disabled]="soloLectura() || p.soloAdministrador"
                 (change)="alternar(p.codigo, $any($event.target).checked)"
               />
-              <span>{{ p.descripcion }}</span>
+              <span
+                >{{ p.descripcion }}
+                @if (p.soloAdministrador) {
+                  <small class="solo-admin">Solo el administrador</small>
+                }
+              </span>
             </label>
           }
         </div>

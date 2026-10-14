@@ -14,6 +14,12 @@ const PERMISOS: Permiso[] = [
     modulo: 'Administración',
     descripcion: 'Administrar usuarios y roles',
   },
+  {
+    codigo: 'parametros.administrar',
+    modulo: 'Administración',
+    descripcion: 'Administrar los parámetros',
+    soloAdministrador: true,
+  },
 ];
 
 const rol = (c: Partial<Rol>): Rol => ({
@@ -107,7 +113,7 @@ describe('RolesPage', () => {
       const casillas = p.el.querySelectorAll<HTMLInputElement>(
         '.permisos-rol input[type="checkbox"]',
       );
-      expect(casillas).toHaveLength(2);
+      expect(casillas).toHaveLength(3);
       casillas[0]!.click();
       await p.asentar();
       p.enviar('dialog form');
@@ -124,6 +130,20 @@ describe('RolesPage', () => {
       expect(p.diálogoAbierto()).toBeNull();
       expect(p.q('.aviso.exito')?.textContent).toContain('«Revisor Externo» se creó');
       expect(p.el.querySelectorAll('tbody tr')).toHaveLength(4);
+    });
+
+    it('los permisos exclusivos del administrador salen deshabilitados y nunca se envían', async () => {
+      const p = await montar();
+      p.q<HTMLButtonElement>('.encabezado .boton')!.click();
+      await p.asentar();
+      const casillas = p.el.querySelectorAll<HTMLInputElement>(
+        '.permisos-rol input[type="checkbox"]',
+      );
+      const parametros = casillas[2]!;
+      expect(parametros.disabled).toBe(true);
+      expect(parametros.checked).toBe(false);
+      expect(p.q('.permisos-rol')?.textContent).toContain('Solo el administrador');
+      expect(casillas[0]!.disabled).toBe(false);
     });
 
     it('un rol puede crearse sin permisos', async () => {
@@ -167,7 +187,7 @@ describe('RolesPage', () => {
       const casillas = p.el.querySelectorAll<HTMLInputElement>(
         '.permisos-rol input[type="checkbox"]',
       );
-      expect([...casillas].map((c) => c.checked)).toEqual([true, false]);
+      expect([...casillas].map((c) => c.checked)).toEqual([true, false, false]);
       casillas[1]!.click();
       await p.asentar();
       p.enviar('dialog form');

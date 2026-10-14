@@ -45,6 +45,8 @@ export interface Permiso {
   codigo: string;
   modulo: string;
   descripcion: string;
+  /** Solo lo tiene el administrador: no se asigna a otros roles. */
+  soloAdministrador?: boolean;
 }
 
 export interface DatosRol {
