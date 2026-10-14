@@ -8,9 +8,6 @@ import { Campo } from '../../../../shared/campo';
 import { CampoControl } from '../../../../shared/campo-control';
 import { Dialogo } from '../../../../shared/dialogo/dialogo';
 import { Icono } from '../../../../shared/icono/icono';
-import { aplicarErroresApi, valorDe } from '../../../../shared/forms';
-import { passwordValida } from '../../../../shared/requisitos-password/politica-password';
-import { RequisitosPassword } from '../../../../shared/requisitos-password/requisitos-password';
 import { AdminApi } from '../admin-api';
 import { EstadoUsuario, Pagina, Rol, Usuario } from '../modelos';
 
@@ -28,16 +25,7 @@ const ETIQUETA_ESTADO: Record<EstadoUsuario, string> = {
  */
 @Component({
   selector: 'app-usuarios-page',
-  imports: [
-    Icono,
-    DatePipe,
-    ReactiveFormsModule,
-    RouterLink,
-    Campo,
-    CampoControl,
-    Dialogo,
-    RequisitosPassword,
-  ],
+  imports: [Icono, DatePipe, ReactiveFormsModule, RouterLink, Campo, CampoControl, Dialogo],
   templateUrl: './usuarios-page.html',
   styleUrl: './usuarios-page.scss',
 })
@@ -73,16 +61,6 @@ export class UsuariosPage implements OnInit {
       validators: [Validators.required, Validators.minLength(5), Validators.maxLength(500)],
     }),
   });
-  protected readonly formPassword = new FormGroup({
-    password: new FormControl('', {
-      nonNullable: true,
-      validators: [
-        Validators.required,
-        (c) => (c.value && !passwordValida(c.value) ? { politica: true } : null),
-      ],
-    }),
-  });
-  protected readonly passwordTemporal = valorDe(this.formPassword.controls.password);
 
   ngOnInit(): void {
     void this.cargarRoles();
@@ -142,7 +120,6 @@ export class UsuariosPage implements OnInit {
   protected abrirPassword(u: Usuario): void {
     this.objetivo.set(u);
     this.errorDialogo.set('');
-    this.formPassword.reset({ password: '' });
     this.accion.set('password');
   }
 
@@ -194,28 +171,20 @@ export class UsuariosPage implements OnInit {
 
   protected async guardarPassword(): Promise<void> {
     const u = this.objetivo();
-    this.formPassword.markAllAsTouched();
-    if (!u || this.formPassword.invalid) return;
+    if (!u) return;
     this.trabajando.set(true);
     this.errorDialogo.set('');
     try {
-      await firstValueFrom(
-        this.api.restablecerPassword(u.id, this.formPassword.controls.password.value),
-      );
+      await firstValueFrom(this.api.restablecerPassword(u.id));
       this.cerrarDialogo();
       this.mensaje.set(
-        `Contraseña temporal asignada a «${u.usuario}». Deberá cambiarla al ingresar.`,
+        `Enviamos una contraseña temporal al correo de «${u.usuario}» (${u.correo}). Deberá cambiarla al ingresar.`,
       );
       await this.buscar(this.pagina());
     } catch (e) {
-      if (e instanceof ApiError && e.errores.length > 0) {
-        const sueltos = aplicarErroresApi(this.formPassword, e.errores);
-        if (sueltos.length) this.errorDialogo.set(sueltos.join(' '));
-      } else {
-        this.errorDialogo.set(
-          e instanceof ApiError ? e.message : 'No pudimos asignar la contraseña.',
-        );
-      }
+      this.errorDialogo.set(
+        e instanceof ApiError ? e.message : 'No pudimos restablecer la contraseña.',
+      );
     } finally {
       this.trabajando.set(false);
     }

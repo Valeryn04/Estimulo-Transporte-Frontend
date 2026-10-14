@@ -104,13 +104,18 @@ describe('UsuarioFormPage', () => {
     expect(el.querySelector('.detalle-rol')?.textContent).toContain('Rol propio');
   });
 
+  it('al crear no pide contraseña: la genera el sistema y la envía por correo', async () => {
+    const { el } = await montar();
+    expect(el.querySelector('#password')).toBeNull();
+    expect(el.textContent).toContain('genera el sistema');
+  });
+
   it('crea el usuario con el rol elegido y vuelve a la lista', async () => {
     const { fixture, el, ctrl, escribir, enviar } = await montar();
     const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     escribir('#usuario', 'maria.lopez');
     escribir('#nombres', 'María López');
     escribir('#correo', 'maria@barranquilla.gov.co');
-    escribir('#password', 'Temporal#2026ab');
     elegirRol(el, 'Coordinación');
     await asentar(fixture);
     enviar();
@@ -120,7 +125,6 @@ describe('UsuarioFormPage', () => {
       usuario: 'maria.lopez',
       nombres: 'María López',
       correo: 'maria@barranquilla.gov.co',
-      password: 'Temporal#2026ab',
       rolId: 3,
     });
     req.flush({ id: 9 }, { status: 201, statusText: 'Creado' });
@@ -133,7 +137,6 @@ describe('UsuarioFormPage', () => {
     escribir('#usuario', 'maria.lopez');
     escribir('#nombres', 'María López');
     escribir('#correo', 'maria@barranquilla.gov.co');
-    escribir('#password', 'Temporal#2026ab');
     elegirRol(el, 'Analista');
     await asentar(fixture);
     enviar();

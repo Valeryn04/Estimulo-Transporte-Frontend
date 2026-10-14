@@ -112,11 +112,11 @@
                   <button
                     type="button"
                     class="accion-icono"
-                    [title]="'Contraseña temporal de ' + u.usuario"
+                    [title]="'Restablecer la contraseña de ' + u.usuario"
                     (click)="abrirPassword(u)"
                   >
                     <app-icono nombre="llave" />
-                    <span class="solo-lectores">Contraseña temporal de {{ u.usuario }}</span>
+                    <span class="solo-lectores">Restablecer la contraseña de {{ u.usuario }}</span>
                   </button>
                   @if (u.protegido) {
                     <button
@@ -239,32 +239,25 @@
   </form>
 </app-dialogo>
 
-<!-- Contraseña temporal -->
+<!-- Restablecer contraseña -->
 <app-dialogo
-  [titulo]="'Contraseña temporal para ' + (objetivo()?.usuario ?? '')"
+  [titulo]="'Restablecer la contraseña de ' + (objetivo()?.usuario ?? '')"
   [abierto]="accion() === 'password'"
   (cierra)="cerrarDialogo()"
 >
-  <form [formGroup]="formPassword" (ngSubmit)="guardarPassword()" novalidate>
-    <p>La persona deberá cambiarla al ingresar. Cualquier sesión que tenga abierta se cerrará.</p>
-    <app-campo
-      idCampo="password-temporal"
-      etiqueta="Contraseña temporal"
-      [control]="formPassword.controls.password"
-      [mensajes]="{ politica: 'no cumple todos los requisitos de la lista' }"
-    >
-      <input appCampoControl type="text" formControlName="password" autocomplete="off" />
-    </app-campo>
-    <app-requisitos-password
-      [password]="passwordTemporal()"
-      [usuario]="objetivo()?.usuario ?? ''"
-    />
-    @if (errorDialogo()) {
-      <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
-    }
-    <div class="acciones">
-      <button type="submit" class="boton" [disabled]="trabajando()">Asignar contraseña</button>
-      <button type="button" class="boton secundario" (click)="cerrarDialogo()">Cancelar</button>
-    </div>
-  </form>
+  <p>
+    El sistema genera una contraseña temporal y la envía al correo de la persona ({{
+      objetivo()?.correo
+    }}). Usted no la verá. Deberá cambiarla al ingresar y cualquier sesión que tenga abierta se
+    cerrará.
+  </p>
+  @if (errorDialogo()) {
+    <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
+  }
+  <div class="acciones">
+    <button type="button" class="boton" [disabled]="trabajando()" (click)="guardarPassword()">
+      {{ trabajando() ? 'Enviando…' : 'Enviar contraseña temporal' }}
+    </button>
+    <button type="button" class="boton secundario" (click)="cerrarDialogo()">Cancelar</button>
+  </div>
 </app-dialogo>

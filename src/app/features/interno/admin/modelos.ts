@@ -57,7 +57,6 @@ export interface DatosUsuarioNuevo {
   usuario: string;
   nombres: string;
   correo: string;
-  password: string;
   rolId: number;
 }
 

@@ -6,15 +6,13 @@ import { ApiError } from '../../../../../core/api/api-error';
 import { Campo } from '../../../../../shared/campo';
 import { CampoControl } from '../../../../../shared/campo-control';
 import { aplicarErroresApi, valorDe } from '../../../../../shared/forms';
-import { passwordValida } from '../../../../../shared/requisitos-password/politica-password';
-import { RequisitosPassword } from '../../../../../shared/requisitos-password/requisitos-password';
 import { AdminApi } from '../../admin-api';
 import { Rol } from '../../modelos';
 
 /** Crear o modificar un usuario interno y asignarle su rol (uno solo) (RF-ADM-01). */
 @Component({
   selector: 'app-usuario-form-page',
-  imports: [ReactiveFormsModule, RouterLink, Campo, CampoControl, RequisitosPassword],
+  imports: [ReactiveFormsModule, RouterLink, Campo, CampoControl],
   templateUrl: './usuario-form-page.html',
   styleUrl: './usuario-form-page.scss',
 })
@@ -46,11 +44,8 @@ export class UsuarioFormPage implements OnInit {
       nonNullable: true,
       validators: [Validators.required, Validators.email, Validators.maxLength(150)],
     }),
-    password: new FormControl('', { nonNullable: true }),
     rolId: new FormControl<number | null>(null, [Validators.required]),
   });
-  protected readonly passwordTemporal = valorDe(this.form.controls.password);
-  protected readonly usuarioEscrito = valorDe(this.form.controls.usuario);
   private readonly rolElegido = valorDe(this.form.controls.rolId);
   /** El rol elegido, para mostrar qué es y qué permisos da. */
   protected readonly rolSeleccionado = computed(
@@ -73,17 +68,6 @@ export class UsuarioFormPage implements OnInit {
         this.protegido.set(u.protegido);
         // El administrador principal conserva siempre el rol de administrador: la lista queda fija.
         if (u.protegido) this.form.controls.rolId.disable();
-      } else {
-        this.form.controls.password.addValidators([
-          Validators.required,
-          (c) =>
-            c.value && !passwordValida(c.value, this.form.controls.usuario.value)
-              ? { politica: true }
-              : null,
-        ]);
-        this.form.controls.usuario.valueChanges.subscribe(() =>
-          this.form.controls.password.updateValueAndValidity({ emitEvent: false }),
-        );
       }
     } catch (e) {
       this.error.set(e instanceof ApiError ? e.message : 'No pudimos cargar la información.');
@@ -116,7 +100,6 @@ export class UsuarioFormPage implements OnInit {
             usuario: v.usuario.trim().toLowerCase(),
             nombres: v.nombres.trim(),
             correo: v.correo.trim(),
-            password: v.password,
             rolId: v.rolId as number,
           }),
         );

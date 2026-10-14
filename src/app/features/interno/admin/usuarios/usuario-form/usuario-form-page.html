@@ -42,16 +42,10 @@
     </app-campo>
 
     @if (!editando()) {
-      <app-campo
-        idCampo="password"
-        etiqueta="Contraseña temporal"
-        ayuda="La persona deberá cambiarla en su primer ingreso."
-        [control]="form.controls.password"
-        [mensajes]="{ politica: 'no cumple todos los requisitos de la lista' }"
-      >
-        <input appCampoControl type="text" formControlName="password" autocomplete="off" />
-      </app-campo>
-      <app-requisitos-password [password]="passwordTemporal()" [usuario]="usuarioEscrito()" />
+      <p class="nota-contrasena">
+        La contraseña temporal la genera el sistema y se envía al correo de la persona. En su primer
+        ingreso deberá cambiarla por una propia.
+      </p>
     }
 
     <app-campo

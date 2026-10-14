@@ -126,6 +126,29 @@ describe('UsuariosPage', () => {
     expect(el.querySelector('.aviso.exito')?.textContent).toContain('desbloqueado');
   });
 
+  it('restablecer la contraseña no pide escribir nada: el sistema la genera y la envía por correo', async () => {
+    const { fixture, el, ctrl } = await montar([usuario({})]);
+    el.querySelector<HTMLButtonElement>(
+      'button[title="Restablecer la contraseña de maria"]',
+    )!.click();
+    await asentar(fixture);
+    const dialogo = el.querySelector('dialog[open]')!;
+    expect(dialogo.querySelector('input')).toBeNull();
+    expect(dialogo.textContent).toContain('Usted no la verá');
+    dialogo.querySelector<HTMLButtonElement>('button.boton:not(.secundario)')!.click();
+    const req = ctrl.expectOne(`${API_BASE}/admin/usuarios/1/restablecer-password`);
+    expect(req.request.body).toEqual({});
+    req.flush(null, { status: 204, statusText: 'Sin contenido' });
+    await asentar(fixture);
+    ctrl
+      .expectOne((r) => r.url === `${API_BASE}/admin/usuarios`)
+      .flush({ items: [usuario({})], total: 1, pagina: 1, tamano: 15 });
+    await asentar(fixture);
+    expect(el.querySelector('.aviso.exito')?.textContent).toContain(
+      'Enviamos una contraseña temporal',
+    );
+  });
+
   it('muestra el error de la API (por ejemplo, regla del administrador principal)', async () => {
     const { fixture, el, ctrl } = await montar([usuario({ estado: 'BLOQUEADO' })]);
     el.querySelector<HTMLButtonElement>('button[title="Desbloquear a maria"]')!.click();

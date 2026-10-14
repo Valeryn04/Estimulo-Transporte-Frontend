@@ -80,7 +80,8 @@ export class AdminApi {
     return this.http.post<Usuario>(`${ADMIN}/usuarios/${id}/baja`, { motivo });
   }
 
-  restablecerPassword(id: number, password: string): Observable<void> {
-    return this.http.post<void>(`${ADMIN}/usuarios/${id}/restablecer-password`, { password });
+  /** El sistema genera una contraseña temporal y se la envía por correo a la persona. */
+  restablecerPassword(id: number): Observable<void> {
+    return this.http.post<void>(`${ADMIN}/usuarios/${id}/restablecer-password`, {});
   }
 }
