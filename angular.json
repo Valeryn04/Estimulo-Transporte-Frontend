@@ -66,6 +66,18 @@
                   "with": "src/environments/environment.development.ts"
                 }
               ]
+            },
+            "demo": {
+              "optimization": true,
+              "outputHashing": "all",
+              "extractLicenses": false,
+              "sourceMap": false,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.development.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -78,6 +90,9 @@
             },
             "development": {
               "buildTarget": "estimulo-transporte:build:development"
+            },
+            "demo": {
+              "buildTarget": "estimulo-transporte:build:demo"
             }
           },
           "defaultConfiguration": "development"

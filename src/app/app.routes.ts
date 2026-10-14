@@ -1,19 +1,27 @@
 import { Routes } from '@angular/router';
-import { noIncrustableGuard } from './core/incrustacion';
+import { noIncrustableGuard } from './core/no-incrustable';
 
 // Cada pantalla se carga bajo demanda (lazy loading) para mantener liviano el bundle inicial.
 export const routes: Routes = [
   {
+    // Aviso que ve quien abre el portal dentro de otra página (iframe).
+    path: 'no-incrustable',
+    title: 'Abra el portal en su propia pestaña · Estímulo Social de Transporte',
+    loadComponent: () =>
+      import('./pages/no-incrustable/no-incrustable-page').then((m) => m.NoIncrustablePage),
+  },
+  {
     // Portal interno de funcionarios (RF-ADM-01). Va primero para que el comodín del portal ciudadano
     // no lo capture.
     path: 'interno',
-    // El portal interno nunca se abre dentro de otra página.
+    // Ningún portal se abre dentro de otra página.
     canActivate: [noIncrustableGuard],
     loadChildren: () => import('./features/interno/interno.routes').then((m) => m.internoRoutes),
   },
   {
-    // Portal ciudadano (RNF-01): sus URL son las que la Alcaldía enlaza desde su página institucional.
+    // Portal ciudadano (RNF-01): la página de la Alcaldía enlaza a estas URL con un botón o enlace (se abre aparte).
     path: '',
+    canActivate: [noIncrustableGuard],
     loadComponent: () =>
       import('./features/ciudadano/layout/ciudadano-shell').then((m) => m.CiudadanoShell),
     children: [

@@ -7,13 +7,6 @@ const TITULO = 'Portal interno · Estímulo Social de Transporte';
 /** Portal interno de funcionarios. Cada pantalla se carga bajo demanda y se protege con sesión y permiso. */
 export const internoRoutes: Routes = [
   {
-    // Mensaje que ve quien intenta abrir el portal interno dentro de otra página.
-    path: 'no-incrustable',
-    title: `No se puede incrustar · ${TITULO}`,
-    loadComponent: () =>
-      import('./no-incrustable/no-incrustable-page').then((m) => m.NoIncrustablePage),
-  },
-  {
     // Área de trabajo: requiere sesión.
     path: '',
     canActivate: [sesionGuard],

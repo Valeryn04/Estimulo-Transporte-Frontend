@@ -6,9 +6,9 @@ import {
   UrlTree,
   provideRouter,
 } from '@angular/router';
-import { Incrustacion, estaIncrustado, noIncrustableGuard } from './incrustacion';
+import { Incrustacion, estaIncrustado, noIncrustableGuard } from './no-incrustable';
 
-describe('incrustación en la página institucional', () => {
+describe('portal que no se abre dentro de otra página', () => {
   describe('estaIncrustado', () => {
     it('es falso cuando la ventana es la superior', () => {
       const w: { self?: unknown; top?: unknown } = {};
@@ -36,8 +36,9 @@ describe('incrustación en la página institucional', () => {
     });
   });
 
-  describe('noIncrustableGuard (el portal interno nunca dentro de otra página)', () => {
+  describe('noIncrustableGuard', () => {
     const correr = (url: string, incrustado: boolean) => {
+      TestBed.resetTestingModule();
       TestBed.configureTestingModule({ providers: [provideRouter([])] });
       vi.spyOn(TestBed.inject(Incrustacion), 'incrustado').mockReturnValue(incrustado);
       return TestBed.runInInjectionContext(() =>
@@ -46,17 +47,20 @@ describe('incrustación en la página institucional', () => {
     };
 
     it('deja pasar cuando se abre directamente en el navegador', () => {
+      expect(correr('/preinscripcion', false)).toBe(true);
       expect(correr('/interno/login', false)).toBe(true);
     });
 
-    it('dentro de un iframe lleva al mensaje de que no se puede incrustar', () => {
-      const r = correr('/interno/login', true);
-      expect(r).toBeInstanceOf(UrlTree);
-      expect(TestBed.inject(Router).serializeUrl(r as UrlTree)).toBe('/interno/no-incrustable');
+    it('dentro de un iframe lleva al aviso, sea el portal ciudadano o el interno', () => {
+      for (const url of ['/preinscripcion', '/interno/login']) {
+        const r = correr(url, true);
+        expect(r).toBeInstanceOf(UrlTree);
+        expect(TestBed.inject(Router).serializeUrl(r as UrlTree)).toBe('/no-incrustable');
+      }
     });
 
-    it('el propio mensaje sí se muestra (no se entra en un ciclo)', () => {
-      expect(correr('/interno/no-incrustable', true)).toBe(true);
+    it('el propio aviso sí se muestra (no se entra en un ciclo)', () => {
+      expect(correr('/no-incrustable', true)).toBe(true);
     });
   });
 });
