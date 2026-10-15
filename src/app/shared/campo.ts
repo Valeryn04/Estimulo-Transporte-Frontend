@@ -21,6 +21,8 @@ const MENSAJES: Record<string, (valor: unknown) => string> = {
   respuesta: () => 'responda Sí o No',
   numeroIdentificacion: (motivo) => String(motivo),
   direccion: (motivo) => String(motivo),
+  correoDiferente: () => 'los dos correos no coinciden, revíselos',
+  ocupado: (motivo) => String(motivo),
 };
 
 /** Mensaje que explica qué corregir en un control (el mismo que muestra el campo y el resumen de errores). */

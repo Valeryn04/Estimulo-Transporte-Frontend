@@ -37,6 +37,7 @@ export interface DatosPreinscripcion {
   localidadId: number | null;
   barrioId: number | null;
   correo: string;
+  correoConfirmacion: string;
   aceptaAutorizacion: true;
   autorizacionVersion: number;
   formularioToken: string;

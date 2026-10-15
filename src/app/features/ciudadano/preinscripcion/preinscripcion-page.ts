@@ -1,5 +1,6 @@
 import {
   Component,
+  DestroyRef,
   ElementRef,
   Injector,
   OnInit,
@@ -10,6 +11,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -18,7 +20,7 @@ import { FormularioPreinscripcion, PublicoApi } from '../../../core/publico/publ
 import { Campo, textoError } from '../../../shared/campo';
 import { CampoControl } from '../../../shared/campo-control';
 import { Direccion } from '../../../shared/direccion/direccion';
-import { aplicarErroresApi, valorDe } from '../../../shared/forms';
+import { aplicarErroresApi, igualA, valorDe } from '../../../shared/forms';
 import { PATRON_NOMBRE, numeroSegunTipo, soloDigitos } from '../../../shared/identificacion';
 
 /** Campos que se muestran en el resumen de errores, en el orden del formulario. */
@@ -33,6 +35,7 @@ const CAMPOS = [
   ['localidadId', 'localidad', 'Localidad'],
   ['barrioId', 'barrio', 'Barrio'],
   ['correo', 'correo', 'Correo electrónico para notificaciones'],
+  ['correoConfirmacion', 'correo-confirmacion', 'Confirmación del correo'],
   ['aceptaAutorizacion', 'acepta', 'Autorización de tratamiento de datos'],
 ] as const;
 
@@ -57,6 +60,7 @@ export class PreinscripcionPage implements OnInit {
   private readonly api = inject(PublicoApi);
   private readonly router = inject(Router);
   private readonly injector = inject(Injector);
+  private readonly destruir = inject(DestroyRef);
 
   protected readonly datos = signal<FormularioPreinscripcion | null>(null);
   protected readonly cargando = signal(true);
@@ -110,6 +114,11 @@ export class PreinscripcionPage implements OnInit {
       nonNullable: true,
       validators: [Validators.required, Validators.email, Validators.maxLength(150)],
     }),
+    // Se escribe dos veces para evitar un error de digitación: ahí llega el enlace de verificación.
+    correoConfirmacion: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, igualA('correo', 'correoDiferente')],
+    }),
     aceptaAutorizacion: new FormControl(false, {
       nonNullable: true,
       validators: [Validators.required, Validators.requiredTrue],
@@ -142,6 +151,9 @@ export class PreinscripcionPage implements OnInit {
   });
 
   ngOnInit(): void {
+    this.form.controls.correo.valueChanges
+      .pipe(takeUntilDestroyed(this.destruir))
+      .subscribe(() => this.form.controls.correoConfirmacion.updateValueAndValidity());
     void this.cargar();
     // Al cambiar el tipo de documento se vuelve a validar el número; al cambiar la localidad se limpia el barrio.
     this.form.controls.pcdTipoIdentificacionId.valueChanges.subscribe(() =>
@@ -234,6 +246,7 @@ export class PreinscripcionPage implements OnInit {
           localidadId: v.localidadId,
           barrioId: v.barrioId,
           correo: v.correo.trim(),
+          correoConfirmacion: v.correoConfirmacion.trim(),
           aceptaAutorizacion: true,
           autorizacionVersion: d.autorizacion.version,
           formularioToken: d.formularioToken,

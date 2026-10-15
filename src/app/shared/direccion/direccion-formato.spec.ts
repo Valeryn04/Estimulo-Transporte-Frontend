@@ -1,5 +1,6 @@
 import {
   PARTES_VACIAS,
+  armarParcial,
   evaluarDireccion,
   limpiarComplemento,
   partesDeDireccion,
@@ -40,6 +41,25 @@ describe('dirección estandarizada', () => {
       }),
     );
     expect(e.texto).toBe('Carrera 54 B Bis Sur # 72 A - 30 Este, Apto 301 Torre 2');
+  });
+
+  it('se va armando desde el primer dato, aunque esté incompleta', () => {
+    expect(armarParcial(PARTES_VACIAS)).toBe('');
+    expect(armarParcial(partes({ tipo: 'Calle' }))).toBe('Calle');
+    expect(armarParcial(partes({ tipo: 'Calle', numero: '72' }))).toBe('Calle 72');
+    expect(armarParcial(partes({ tipo: 'Calle', numero: '72', letra: 'B', bis: 'Bis' }))).toBe(
+      'Calle 72 B Bis',
+    );
+    expect(armarParcial(partes({ tipo: 'Calle', numero: '72', cruce: '54' }))).toBe(
+      'Calle 72 # 54',
+    );
+    expect(armarParcial(partes({ tipo: 'Calle', numero: '72', cruce: '54', placa: '30' }))).toBe(
+      'Calle 72 # 54 - 30',
+    );
+    expect(armarParcial(partes({ cruce: '54' }))).toBe('# 54');
+    expect(armarParcial(partes({ tipo: 'Carrera', complemento: 'Apto 5' }))).toBe(
+      'Carrera, Apto 5',
+    );
   });
 
   it('si empezó y falta algo, dice qué falta y no arma nada', () => {

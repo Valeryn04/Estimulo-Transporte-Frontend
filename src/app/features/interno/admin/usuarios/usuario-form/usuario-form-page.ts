@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
+import { ValidatorFn } from '@angular/forms';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -44,15 +45,67 @@ export class UsuarioFormPage implements OnInit {
       nonNullable: true,
       validators: [Validators.required, Validators.email, Validators.maxLength(150)],
     }),
+    // El correo se escribe dos veces: ahí llega la contraseña temporal, así que un error de digitación la perdería.
+    correoConfirmacion: new FormControl('', { nonNullable: true }),
     rolId: new FormControl<number | null>(null, [Validators.required]),
   });
   private readonly rolElegido = valorDe(this.form.controls.rolId);
+  private readonly correoEscrito = valorDe(this.form.controls.correo);
+  /** Correo que tenía la persona al abrir la edición. */
+  private readonly correoOriginal = signal('');
+  /** Se pide confirmar el correo al crear, y al editar solo si se cambió. */
+  protected readonly pideConfirmacion = computed(
+    () =>
+      !this.editando() ||
+      this.correoEscrito().trim().toLowerCase() !== this.correoOriginal().trim().toLowerCase(),
+  );
   /** El rol elegido, para mostrar qué es y qué permisos da. */
   protected readonly rolSeleccionado = computed(
     () => this.roles().find((r) => r.id === this.rolElegido()) ?? null,
   );
 
+  /**
+   * Al salir del campo (y otra vez al enviar) pregunta si el usuario o el correo ya los usa otra cuenta, y lo dice
+   * con claridad: «este correo ya lo usa la cuenta «ana.gomez»». Al volver a escribir, el aviso se quita solo.
+   */
+  protected async revisarDisponibilidad(campo: 'usuario' | 'correo'): Promise<void> {
+    const control = this.form.controls[campo];
+    const valor = control.value.trim();
+    // En edición el usuario no se puede cambiar; y un dato mal escrito ya tiene su propio aviso.
+    if (!valor || (campo === 'usuario' && this.editando())) return;
+    if (control.errors && !control.errors['ocupado']) return;
+    const excluirId = this.editando() ? Number(this.id()) : undefined;
+    try {
+      const r = await firstValueFrom(this.api.disponibilidad({ [campo]: valor, excluirId }));
+      const dato = r[campo];
+      if (dato && !dato.disponible) {
+        const quien = dato.usadoPor ? ` la cuenta «${dato.usadoPor}»` : ' otra cuenta';
+        control.setErrors({
+          ocupado: `${campo === 'correo' ? 'este correo' : 'este usuario'} ya lo usa${quien}`,
+        });
+        control.markAsTouched();
+      }
+    } catch {
+      // Si no se pudo consultar, el servidor igual lo rechaza al guardar.
+    }
+  }
+
+  private readonly validarConfirmacion: ValidatorFn = (c) => {
+    if (!this.pideConfirmacion()) return null;
+    const valor = String(c.value ?? '')
+      .trim()
+      .toLowerCase();
+    if (!valor) return { required: true };
+    return valor === this.correoEscrito().trim().toLowerCase() ? null : { correoDiferente: true };
+  };
+
   async ngOnInit(): Promise<void> {
+    this.form.controls.correoConfirmacion.setValidators(this.validarConfirmacion);
+    this.form.controls.correoConfirmacion.updateValueAndValidity({ emitEvent: false });
+    // Al cambiar el correo se vuelve a revisar la confirmación.
+    this.form.controls.correo.valueChanges.subscribe(() =>
+      this.form.controls.correoConfirmacion.updateValueAndValidity(),
+    );
     try {
       const roles = await firstValueFrom(this.api.roles());
       this.roles.set(roles);
@@ -64,6 +117,7 @@ export class UsuarioFormPage implements OnInit {
           correo: u.correo,
           rolId: u.rol?.id ?? null,
         });
+        this.correoOriginal.set(u.correo);
         this.form.controls.usuario.disable();
         this.protegido.set(u.protegido);
         // El administrador principal conserva siempre el rol de administrador: la lista queda fija.
@@ -78,6 +132,10 @@ export class UsuarioFormPage implements OnInit {
 
   protected async guardar(): Promise<void> {
     this.error.set('');
+    await Promise.all([
+      this.revisarDisponibilidad('usuario'),
+      this.revisarDisponibilidad('correo'),
+    ]);
     this.form.markAllAsTouched();
     if (this.form.invalid) {
       this.error.set('Revise los campos marcados en rojo.');

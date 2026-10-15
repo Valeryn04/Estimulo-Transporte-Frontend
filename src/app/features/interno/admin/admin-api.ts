@@ -6,6 +6,7 @@ import {
   DatosRol,
   DatosUsuarioEdicion,
   DatosUsuarioNuevo,
+  DisponibilidadUsuario,
   EstadoUsuario,
   Pagina,
   Permiso,
@@ -34,6 +35,19 @@ export class AdminApi {
     if (f.estado) params = params.set('estado', f.estado);
     if (f.rolId !== undefined) params = params.set('rolId', f.rolId);
     return this.http.get<Pagina<Usuario>>(`${ADMIN}/usuarios`, { params });
+  }
+
+  /** ¿El usuario o el correo ya los usa otra cuenta? Se consulta mientras se llena el formulario. */
+  disponibilidad(q: {
+    usuario?: string;
+    correo?: string;
+    excluirId?: number;
+  }): Observable<DisponibilidadUsuario> {
+    let params = new HttpParams();
+    if (q.usuario) params = params.set('usuario', q.usuario);
+    if (q.correo) params = params.set('correo', q.correo);
+    if (q.excluirId) params = params.set('excluirId', q.excluirId);
+    return this.http.get<DisponibilidadUsuario>(`${ADMIN}/usuarios/disponibilidad`, { params });
   }
 
   usuario(id: number): Observable<Usuario> {

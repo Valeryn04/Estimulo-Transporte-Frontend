@@ -222,6 +222,26 @@
             maxlength="150"
           />
         </app-campo>
+        <app-campo
+          idCampo="correo-confirmacion"
+          etiqueta="Confirme su correo electrónico"
+          ayuda="Escríbalo otra vez para estar seguros de que el enlace le llegue."
+          [control]="form.controls.correoConfirmacion"
+          [mensajes]="{
+            required: 'escriba otra vez su correo',
+            correoDiferente: 'los dos correos no coinciden, revíselos',
+          }"
+        >
+          <input
+            appCampoControl
+            type="email"
+            formControlName="correoConfirmacion"
+            autocomplete="email"
+            inputmode="email"
+            autocapitalize="none"
+            maxlength="150"
+          />
+        </app-campo>
       </fieldset>
 
       <section class="seccion" aria-labelledby="titulo-autorizacion">

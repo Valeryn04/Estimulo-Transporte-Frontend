@@ -11,6 +11,7 @@ import {
   PARTES_VACIAS,
   TIPOS_VIA,
   evaluarDireccion,
+  armarParcial,
   limpiarComplemento,
   partesDeDireccion,
   textoFaltantes,
@@ -63,11 +64,8 @@ export class Direccion implements OnInit {
     { initialValue: PARTES_VACIAS },
   );
   protected readonly estado = computed(() => evaluarDireccion(this.valores()));
-  protected readonly vista = computed(() => {
-    const e = this.estado();
-    if (e.completa) return e.texto;
-    return e.iniciada ? `Aún falta: ${e.faltantes.join(', ')}.` : '';
-  });
+  /** Lo que va quedando, desde el primer dato (el aviso de lo que falta solo sale al intentar enviar). */
+  protected readonly vista = computed(() => armarParcial(this.valores()));
   /** Mensaje del error cuando la dirección quedó a medias. */
   protected readonly mensajes = computed(() => ({
     direccion: textoFaltantes(this.estado().faltantes),

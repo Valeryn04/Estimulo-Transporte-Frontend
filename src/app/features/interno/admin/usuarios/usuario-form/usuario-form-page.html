@@ -24,6 +24,7 @@
           formControlName="usuario"
           autocomplete="off"
           autocapitalize="none"
+          (blur)="revisarDisponibilidad('usuario')"
         />
       </app-campo>
 
@@ -38,8 +39,35 @@
       ayuda="Cada cuenta es personal: el correo no puede repetirse en otro usuario."
       [control]="form.controls.correo"
     >
-      <input appCampoControl type="email" formControlName="correo" maxlength="150" />
+      <input
+        appCampoControl
+        type="email"
+        formControlName="correo"
+        maxlength="150"
+        (blur)="revisarDisponibilidad('correo')"
+      />
     </app-campo>
+
+    @if (pideConfirmacion()) {
+      <app-campo
+        idCampo="correoConfirmacion"
+        etiqueta="Confirme el correo institucional"
+        ayuda="Escríbalo otra vez: la contraseña temporal se envía a este correo."
+        [control]="form.controls.correoConfirmacion"
+        [mensajes]="{
+          required: 'escriba otra vez el correo',
+          correoDiferente: 'los dos correos no coinciden, revíselos',
+        }"
+      >
+        <input
+          appCampoControl
+          type="email"
+          formControlName="correoConfirmacion"
+          maxlength="150"
+          autocomplete="off"
+        />
+      </app-campo>
+    }
 
     @if (!editando()) {
       <p class="nota-contrasena">

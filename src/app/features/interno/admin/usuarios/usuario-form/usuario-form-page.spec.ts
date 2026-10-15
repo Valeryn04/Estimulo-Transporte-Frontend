@@ -64,7 +64,17 @@ describe('UsuarioFormPage', () => {
     };
     const enviar = () =>
       el.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
-    return { fixture, el, ctrl, escribir, enviar };
+    /** Al enviar se revisa si el usuario o el correo ya existen: aquí se responde que están libres. */
+    const libres = async () => {
+      for (const r of ctrl.match((x) => x.url.endsWith('/admin/usuarios/disponibilidad'))) {
+        r.flush({
+          usuario: { disponible: true, usadoPor: null },
+          correo: { disponible: true, usadoPor: null, estado: null },
+        });
+      }
+      await asentar(fixture);
+    };
+    return { fixture, el, ctrl, escribir, enviar, libres };
   }
 
   it('al crear, exige los datos y el rol antes de llamar a la API', async () => {
@@ -110,15 +120,93 @@ describe('UsuarioFormPage', () => {
     expect(el.textContent).toContain('genera el sistema');
   });
 
-  it('crea el usuario con el rol elegido y vuelve a la lista', async () => {
+  it('el correo se escribe dos veces: si son diferentes lo dice y no se envía', async () => {
     const { fixture, el, ctrl, escribir, enviar } = await montar();
+    escribir('#usuario', 'maria.lopez');
+    escribir('#nombres', 'María López');
+    escribir('#correo', 'maria@barranquilla.gov.co');
+    escribir('#correoConfirmacion', 'maira@barranquilla.gov.co');
+    elegirRol(el, 'Coordinación');
+    await asentar(fixture);
+    expect(el.querySelector('#correoConfirmacion-error')?.textContent).toContain(
+      'los dos correos no coinciden',
+    );
+    enviar();
+    await asentar(fixture);
+    ctrl.expectNone((r) => r.method === 'POST');
+    // Al corregir la confirmación el error desaparece.
+    escribir('#correoConfirmacion', 'maria@barranquilla.gov.co');
+    await asentar(fixture);
+    expect(el.querySelector('#correoConfirmacion-error')).toBeNull();
+  });
+
+  it('al salir del campo avisa si otra cuenta ya usa el correo o el usuario, y dice cuál cuenta', async () => {
+    const { fixture, el, ctrl, escribir } = await montar();
+    escribir('#correo', 'ana@barranquilla.gov.co');
+    el.querySelector<HTMLInputElement>('#correo')!.dispatchEvent(new Event('blur'));
+    const correo = ctrl.expectOne(
+      (r) => r.url.endsWith('/admin/usuarios/disponibilidad') && r.params.has('correo'),
+    );
+    expect(correo.request.params.get('correo')).toBe('ana@barranquilla.gov.co');
+    correo.flush({
+      usuario: null,
+      correo: { disponible: false, usadoPor: 'ana.gomez', estado: 'ACTIVO' },
+    });
+    await asentar(fixture);
+    expect(el.querySelector('#correo-error')?.textContent).toContain(
+      'este correo ya lo usa la cuenta «ana.gomez»',
+    );
+    expect(el.querySelector('#correo')?.getAttribute('aria-invalid')).toBe('true');
+
+    escribir('#usuario', 'ana.perez');
+    el.querySelector<HTMLInputElement>('#usuario')!.dispatchEvent(new Event('blur'));
+    ctrl
+      .expectOne((r) => r.url.endsWith('/admin/usuarios/disponibilidad') && r.params.has('usuario'))
+      .flush({ usuario: { disponible: false, usadoPor: 'ana.perez' }, correo: null });
+    await asentar(fixture);
+    expect(el.querySelector('#usuario-error')?.textContent).toContain(
+      'este usuario ya lo usa la cuenta «ana.perez»',
+    );
+
+    // Al cambiar el correo, el aviso se quita solo.
+    escribir('#correo', 'ana.otra@barranquilla.gov.co');
+    await asentar(fixture);
+    expect(el.querySelector('#correo-error')).toBeNull();
+  });
+
+  it('un correo ya usado impide enviar aunque no se haya salido del campo', async () => {
+    const { fixture, el, ctrl, escribir, enviar } = await montar();
+    escribir('#usuario', 'maria.lopez');
+    escribir('#nombres', 'María López');
+    escribir('#correo', 'maria@barranquilla.gov.co');
+    escribir('#correoConfirmacion', 'maria@barranquilla.gov.co');
+    elegirRol(el, 'Analista');
+    await asentar(fixture);
+    enviar();
+    for (const r of ctrl.match((x) => x.url.endsWith('/admin/usuarios/disponibilidad'))) {
+      r.flush({
+        usuario: { disponible: true, usadoPor: null },
+        correo: { disponible: false, usadoPor: 'maria.gomez', estado: 'ACTIVO' },
+      });
+    }
+    await asentar(fixture);
+    ctrl.expectNone((r) => r.method === 'POST');
+    expect(el.querySelector('#correo-error')?.textContent).toContain(
+      'ya lo usa la cuenta «maria.gomez»',
+    );
+  });
+
+  it('crea el usuario con el rol elegido y vuelve a la lista', async () => {
+    const { fixture, el, ctrl, escribir, enviar, libres } = await montar();
     const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     escribir('#usuario', 'maria.lopez');
     escribir('#nombres', 'María López');
     escribir('#correo', 'maria@barranquilla.gov.co');
+    escribir('#correoConfirmacion', 'maria@barranquilla.gov.co');
     elegirRol(el, 'Coordinación');
     await asentar(fixture);
     enviar();
+    await libres();
     const req = ctrl.expectOne(`${API_BASE}/admin/usuarios`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({
@@ -133,13 +221,15 @@ describe('UsuarioFormPage', () => {
   });
 
   it('muestra en el campo el error de unicidad que devuelve la API', async () => {
-    const { fixture, el, ctrl, escribir, enviar } = await montar();
+    const { fixture, el, ctrl, escribir, enviar, libres } = await montar();
     escribir('#usuario', 'maria.lopez');
     escribir('#nombres', 'María López');
     escribir('#correo', 'maria@barranquilla.gov.co');
+    escribir('#correoConfirmacion', 'maria@barranquilla.gov.co');
     elegirRol(el, 'Analista');
     await asentar(fixture);
     enviar();
+    await libres();
     ctrl.expectOne(`${API_BASE}/admin/usuarios`).flush(
       {
         error: {

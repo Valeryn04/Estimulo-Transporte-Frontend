@@ -126,6 +126,22 @@ export function evaluarDireccion(partes: PartesDireccion): EstadoDireccion {
   return { iniciada, completa: true, faltantes: [], texto };
 }
 
+/**
+ * La dirección tal como va quedando, aunque todavía esté a medias: apenas se elige «Calle» ya se ve «Calle», y así
+ * con cada dato que se agrega. Sirve para la vista previa; solo la dirección completa se guarda.
+ */
+export function armarParcial(partes: PartesDireccion): string {
+  const p = normalizarPartes(partes);
+  const via = [p.tipo, p.numero, p.letra, p.bis, p.orientacion].filter(Boolean).join(' ');
+  const cruce = [p.cruce, p.cruceLetra].filter(Boolean).join(' ');
+  const placa = [p.placa, p.placaOrientacion].filter(Boolean).join(' ');
+  let texto = via;
+  if (cruce || placa) texto += `${texto ? ' ' : ''}# ${cruce}`.trimEnd();
+  if (placa) texto += ` - ${placa}`;
+  if (p.complemento) texto += `${texto ? ', ' : ''}${p.complemento}`;
+  return texto.trim();
+}
+
 /** Texto que explica qué falta: «falta el tipo de vía y el número de la placa». */
 export function textoFaltantes(faltantes: string[]): string {
   if (faltantes.length === 0) return '';

@@ -43,6 +43,7 @@ describe('PreinscripcionPage', () => {
       elegir('#cui-tipo', 'CC');
       p.escribir('#cui-numero', '98765432');
       p.escribir('#correo', 'familia@correo.com');
+      p.escribir('#correo-confirmacion', 'familia@correo.com');
       p.el.querySelector<HTMLInputElement>('#acepta')!.click();
       await p.asentar();
     };
@@ -155,6 +156,7 @@ describe('PreinscripcionPage', () => {
       barrioId: 100,
       direccion: null,
       correo: 'familia@correo.com',
+      correoConfirmacion: 'familia@correo.com',
       aceptaAutorizacion: true,
       autorizacionVersion: 1,
       formularioToken: 'token.del.formulario',
@@ -168,6 +170,27 @@ describe('PreinscripcionPage', () => {
     expect(navegar).toHaveBeenCalledWith(['/preinscripcion/enviada'], {
       state: { correo: 'f****@correo.com', horas: 72 },
     });
+  });
+
+  it('el correo se escribe dos veces: si son diferentes lo dice en el campo y no se envía', async () => {
+    const { el, ctrl, llenar, escribir, enviar, asentar } = await montar();
+    await llenar();
+    escribir('#correo-confirmacion', 'famlia@correo.com');
+    await asentar();
+    expect(el.querySelector('#correo-confirmacion-error')?.textContent).toContain(
+      'los dos correos no coinciden',
+    );
+    enviar();
+    await asentar();
+    ctrl.expectNone((r) => r.method === 'POST');
+    const items = [...el.querySelectorAll('.resumen li')].map((l) => l.textContent!.trim());
+    expect(
+      items.some((t) => t.includes('Confirmación del correo: los dos correos no coinciden')),
+    ).toBe(true);
+    // Al corregirlo (o al cambiar el primero para que coincida) el error desaparece.
+    escribir('#correo', 'famlia@correo.com');
+    await asentar();
+    expect(el.querySelector('#correo-confirmacion-error')).toBeNull();
   });
 
   it('la dirección se arma por partes con el formato estándar y se envía ya armada', async () => {

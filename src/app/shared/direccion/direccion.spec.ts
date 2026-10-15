@@ -38,8 +38,12 @@ describe('Direccion', () => {
   it('muestra cómo va quedando y deja en el control la dirección armada', async () => {
     const { el, cambiar, control } = await montar();
     await cambiar('dir-tipo', 'Carrera', 'change');
+    // Desde el primer dato ya se ve cómo va quedando, sin avisos de error.
+    expect(el.querySelector('.vista strong')?.textContent).toBe('Carrera');
     await cambiar('dir-numero', '54', 'input');
-    expect(el.querySelector('.vista')?.textContent).toContain('Aún falta');
+    expect(el.querySelector('.vista strong')?.textContent).toBe('Carrera 54');
+    expect(el.querySelector('.vista')?.textContent).not.toContain('falta');
+    expect(el.querySelector('#dir-error')).toBeNull();
     expect(control.value).toBe('');
     await cambiar('dir-cruce', '72', 'input');
     await cambiar('dir-placa', '30', 'input');
