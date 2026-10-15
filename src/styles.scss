@@ -322,6 +322,20 @@ input[type='radio'] {
   min-width: 0;
 }
 
+// Los campos de una misma fila se alinean por partes (etiqueta, control, ayuda): aunque una etiqueta ocupe dos
+// líneas o un campo tenga ayuda debajo, todos los controles de la fila quedan a la misma altura.
+.rejilla > app-campo:has(> div.campo) {
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  row-gap: 0;
+  margin-bottom: 20px;
+
+  > div.campo {
+    display: contents;
+  }
+}
+
 main :is(p, li, dd, dt, small, label, h1, h2, h3, .aviso) {
   overflow-wrap: anywhere;
 }

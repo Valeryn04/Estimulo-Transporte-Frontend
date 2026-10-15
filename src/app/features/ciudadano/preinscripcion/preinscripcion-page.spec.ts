@@ -59,7 +59,7 @@ describe('PreinscripcionPage', () => {
 
   it('contiene todos los campos del documento y marca los obligatorios', async () => {
     const { el } = await montar();
-    const etiquetas = [...el.querySelectorAll('label')].map((l) =>
+    const etiquetas = [...el.querySelectorAll('label, legend')].map((l) =>
       l.textContent!.replace(/\s+/g, ' ').trim(),
     );
     for (const e of [
@@ -168,6 +168,38 @@ describe('PreinscripcionPage', () => {
     expect(navegar).toHaveBeenCalledWith(['/preinscripcion/enviada'], {
       state: { correo: 'f****@correo.com', horas: 72 },
     });
+  });
+
+  it('la dirección se arma por partes con el formato estándar y se envía ya armada', async () => {
+    const { ctrl, el, llenar, elegir, escribir, enviar, asentar } = await montar();
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    await llenar();
+    elegir('#direccion-tipo', 'Carrera');
+    escribir('#direccion-numero', '54');
+    elegir('#direccion-letra', 'B');
+    escribir('#direccion-cruce', '72');
+    escribir('#direccion-placa', '30');
+    escribir('#direccion-complemento', 'Apto 301');
+    await asentar();
+    expect(el.querySelector('.vista strong')?.textContent).toBe('Carrera 54 B # 72 - 30, Apto 301');
+    enviar();
+    const req = ctrl.expectOne(`${API_BASE}/publico/preinscripciones`);
+    expect(req.request.body).toMatchObject({ direccion: 'Carrera 54 B # 72 - 30, Apto 301' });
+  });
+
+  it('una dirección a medias no se envía y el resumen dice qué falta', async () => {
+    const { el, ctrl, llenar, elegir, escribir, enviar, asentar } = await montar();
+    await llenar();
+    elegir('#direccion-tipo', 'Calle');
+    escribir('#direccion-numero', '72');
+    await asentar();
+    enviar();
+    await asentar();
+    ctrl.expectNone((r) => r.method === 'POST');
+    const items = [...el.querySelectorAll('.resumen li')].map((l) => l.textContent!.trim());
+    expect(items).toContain(
+      'Dirección de residencia: falta el número del cruce y el número de la placa',
+    );
   });
 
   it('si ya existe una solicitud lo informa y ofrece consultar el estado', async () => {

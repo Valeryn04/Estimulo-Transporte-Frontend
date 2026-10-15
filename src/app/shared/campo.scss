@@ -23,6 +23,19 @@ legend {
   color: var(--color-muted);
   font-size: 0.9rem;
 }
+// Ayuda y error van debajo del control.
+.pie {
+  margin-top: 6px;
+
+  .ayuda,
+  .error {
+    margin: 0;
+  }
+
+  .ayuda + .error {
+    margin-top: 4px;
+  }
+}
 .error {
   margin: 6px 0 0;
   color: var(--color-error);

@@ -1,0 +1,161 @@
+<app-campo
+  tipo="grupo"
+  [idCampo]="idCampo()"
+  [etiqueta]="etiqueta()"
+  [ayuda]="ayuda()"
+  [control]="control()"
+  [mensajes]="mensajes()"
+>
+  <div [formGroup]="partes" class="direccion">
+    <p class="subtitulo">Vía principal</p>
+    <div class="rejilla compacta">
+      <app-campo
+        [idCampo]="idCampo() + '-tipo'"
+        etiqueta="Tipo de vía"
+        [control]="partes.controls.tipo"
+      >
+        <select appCampoControl formControlName="tipo">
+          <option value="">Seleccione</option>
+          @for (t of tipos; track t) {
+            <option [value]="t">{{ t }}</option>
+          }
+        </select>
+      </app-campo>
+      <app-campo
+        [idCampo]="idCampo() + '-numero'"
+        etiqueta="Número"
+        [control]="partes.controls.numero"
+      >
+        <input
+          appCampoControl
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          maxlength="3"
+          formControlName="numero"
+          (input)="soloNumeros('numero', $event)"
+        />
+      </app-campo>
+      <app-campo
+        [idCampo]="idCampo() + '-letra'"
+        etiqueta="Letra"
+        [control]="partes.controls.letra"
+      >
+        <select appCampoControl formControlName="letra">
+          <option value="">Sin letra</option>
+          @for (l of letras; track l) {
+            <option [value]="l">{{ l }}</option>
+          }
+        </select>
+      </app-campo>
+      <app-campo [idCampo]="idCampo() + '-bis'" etiqueta="Bis" [control]="partes.controls.bis">
+        <select appCampoControl formControlName="bis">
+          <option value="">No</option>
+          <option value="Bis">Bis</option>
+        </select>
+      </app-campo>
+      <app-campo
+        [idCampo]="idCampo() + '-orientacion'"
+        etiqueta="Orientación"
+        [control]="partes.controls.orientacion"
+      >
+        <select appCampoControl formControlName="orientacion">
+          <option value="">Ninguna</option>
+          @for (o of orientaciones; track o) {
+            <option [value]="o">{{ o }}</option>
+          }
+        </select>
+      </app-campo>
+    </div>
+
+    <p class="subtitulo">
+      Cruce y placa
+      <span class="nota"
+        >(el cruce va después de <span class="signo">#</span> y la placa después del guion
+        <span class="signo">-</span>)</span
+      >
+    </p>
+    <div class="rejilla compacta">
+      <app-campo
+        [idCampo]="idCampo() + '-cruce'"
+        etiqueta="Número del cruce"
+        [control]="partes.controls.cruce"
+      >
+        <input
+          appCampoControl
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          maxlength="3"
+          formControlName="cruce"
+          (input)="soloNumeros('cruce', $event)"
+        />
+      </app-campo>
+      <app-campo
+        [idCampo]="idCampo() + '-cruce-letra'"
+        etiqueta="Letra"
+        [control]="partes.controls.cruceLetra"
+      >
+        <select appCampoControl formControlName="cruceLetra">
+          <option value="">Sin letra</option>
+          @for (l of letras; track l) {
+            <option [value]="l">{{ l }}</option>
+          }
+        </select>
+      </app-campo>
+      <app-campo
+        [idCampo]="idCampo() + '-placa'"
+        etiqueta="Número de la placa"
+        [control]="partes.controls.placa"
+      >
+        <input
+          appCampoControl
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          maxlength="3"
+          formControlName="placa"
+          (input)="soloNumeros('placa', $event)"
+        />
+      </app-campo>
+      <app-campo
+        [idCampo]="idCampo() + '-placa-orientacion'"
+        etiqueta="Orientación"
+        [control]="partes.controls.placaOrientacion"
+      >
+        <select appCampoControl formControlName="placaOrientacion">
+          <option value="">Ninguna</option>
+          @for (o of orientaciones; track o) {
+            <option [value]="o">{{ o }}</option>
+          }
+        </select>
+      </app-campo>
+    </div>
+
+    <app-campo
+      [idCampo]="idCampo() + '-complemento'"
+      etiqueta="Complemento (opcional)"
+      ayuda="Apartamento, casa, torre, conjunto... Por ejemplo: Apto 301 Torre 2."
+      [control]="partes.controls.complemento"
+    >
+      <input
+        appCampoControl
+        type="text"
+        autocomplete="off"
+        formControlName="complemento"
+        [attr.maxlength]="maxComplemento"
+        (input)="limpiarComplemento($event)"
+        (blur)="completarComplemento()"
+      />
+    </app-campo>
+
+    <div class="vista" [class.completa]="estado().completa" role="status" aria-live="polite">
+      <span class="titulo">Así va quedando su dirección</span>
+      @if (vista()) {
+        <strong class="texto">{{ vista() }}</strong>
+      } @else {
+        <span class="vacia">Elija el tipo de vía y complete los números.</span>
+      }
+    </div>
+  </div>
+</app-campo>

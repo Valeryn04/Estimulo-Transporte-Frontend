@@ -170,19 +170,11 @@
         <p class="por-que">
           Nos ayuda a conocer en qué zona de Barranquilla vive. Puede completarlo más adelante.
         </p>
-        <app-campo
+        <app-direccion
           idCampo="direccion"
           etiqueta="Dirección de residencia"
           [control]="form.controls.direccion"
-        >
-          <input
-            appCampoControl
-            type="text"
-            formControlName="direccion"
-            autocomplete="street-address"
-            maxlength="200"
-          />
-        </app-campo>
+        />
         <div class="rejilla">
           <app-campo idCampo="localidad" etiqueta="Localidad" [control]="form.controls.localidadId">
             <select appCampoControl formControlName="localidadId">

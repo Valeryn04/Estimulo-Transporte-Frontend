@@ -25,12 +25,17 @@
         <span class="solo-lectores">(obligatorio)</span>
       }
     </label>
-    @if (ayuda()) {
-      <p class="ayuda" [id]="idCampo() + '-ayuda'">{{ ayuda() }}</p>
-    }
-    <ng-container [ngTemplateOutlet]="cuerpo" />
-    @if (mostrarError()) {
-      <p class="error" [id]="idCampo() + '-error'" role="alert">{{ mensajeError() }}</p>
+    <div class="control"><ng-container [ngTemplateOutlet]="cuerpo" /></div>
+    <!-- La ayuda y el error van DEBAJO del control: así, en una fila, todos los controles quedan a la misma altura. -->
+    @if (ayuda() || mostrarError()) {
+      <div class="pie">
+        @if (ayuda()) {
+          <p class="ayuda" [id]="idCampo() + '-ayuda'">{{ ayuda() }}</p>
+        }
+        @if (mostrarError()) {
+          <p class="error" [id]="idCampo() + '-error'" role="alert">{{ mensajeError() }}</p>
+        }
+      </div>
     }
   </div>
 }

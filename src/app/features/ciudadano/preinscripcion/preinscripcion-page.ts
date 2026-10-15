@@ -17,6 +17,7 @@ import { ApiError } from '../../../core/api/api-error';
 import { FormularioPreinscripcion, PublicoApi } from '../../../core/publico/publico-api';
 import { Campo, textoError } from '../../../shared/campo';
 import { CampoControl } from '../../../shared/campo-control';
+import { Direccion } from '../../../shared/direccion/direccion';
 import { aplicarErroresApi, valorDe } from '../../../shared/forms';
 import { PATRON_NOMBRE, numeroSegunTipo, soloDigitos } from '../../../shared/identificacion';
 
@@ -48,7 +49,7 @@ interface ErrorResumen {
  */
 @Component({
   selector: 'app-preinscripcion-page',
-  imports: [ReactiveFormsModule, RouterLink, Campo, CampoControl],
+  imports: [ReactiveFormsModule, RouterLink, Campo, CampoControl, Direccion],
   templateUrl: './preinscripcion-page.html',
   styleUrl: './preinscripcion-page.scss',
 })
@@ -100,7 +101,8 @@ export class PreinscripcionPage implements OnInit {
     }),
     direccion: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.minLength(3), Validators.maxLength(200)],
+      // El componente de dirección la arma por partes con un formato estándar.
+      validators: [Validators.maxLength(200)],
     }),
     localidadId: new FormControl<number | null>(null),
     barrioId: new FormControl<number | null>(null),

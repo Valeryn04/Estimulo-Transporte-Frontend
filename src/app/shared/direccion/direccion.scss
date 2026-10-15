@@ -1,0 +1,64 @@
+:host {
+  display: block;
+}
+
+.direccion {
+  padding: 16px;
+  background: var(--govco-azul-claro, #f1f5fb);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+}
+
+.subtitulo {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+
+.nota {
+  font-weight: 400;
+  color: var(--color-muted);
+}
+
+.signo {
+  display: inline-block;
+  padding: 0 6px;
+  font-weight: 700;
+  background: #fff;
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+}
+
+// Campos pequeños: caben varios por fila y se alinean entre sí (etiqueta, control).
+.rejilla.compacta {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr));
+  gap: 0 16px;
+}
+
+.vista {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px dashed var(--color-line);
+  border-radius: var(--radius);
+
+  &.completa {
+    border-style: solid;
+    border-color: var(--govco-azul-oscuro);
+  }
+
+  .titulo {
+    font-size: 0.9rem;
+    color: var(--color-muted);
+  }
+
+  .texto {
+    font-size: 1.1rem;
+    overflow-wrap: anywhere;
+  }
+
+  .vacia {
+    color: var(--color-muted);
+  }
+}

@@ -20,6 +20,7 @@ const MENSAJES: Record<string, (valor: unknown) => string> = {
   seleccion: () => 'seleccione al menos una opción',
   respuesta: () => 'responda Sí o No',
   numeroIdentificacion: (motivo) => String(motivo),
+  direccion: (motivo) => String(motivo),
 };
 
 /** Mensaje que explica qué corregir en un control (el mismo que muestra el campo y el resumen de errores). */
