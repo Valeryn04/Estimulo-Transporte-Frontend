@@ -125,6 +125,24 @@ export interface AlertaCruce {
   coincidencias: { persona: 'PCD' | 'CUIDADOR'; detalle: string }[];
 }
 
+/** Datos que el validador registra para la priorización (RF-PRI-01) y el puntaje que resulta al validar. */
+export interface PriorizacionCaso {
+  matrizVersion: number | null;
+  variables: {
+    codigo: string;
+    nombre: string;
+    descripcion: string;
+    opciones: { codigo: string; etiqueta: string }[];
+    valor: string | null;
+  }[];
+  puntaje: {
+    total: number;
+    matrizVersion: number;
+    calculadoAt: string;
+    detalle: { variable: string; nombre: string; etiqueta: string; aporte: number }[];
+  } | null;
+}
+
 export interface Caso {
   solicitud: {
     id: number;
@@ -158,6 +176,7 @@ export interface Caso {
   documentos: DocumentoCaso[];
   items: ItemCaso[];
   alertas: AlertaCruce[];
+  priorizacion: PriorizacionCaso;
   decisiones: DecisionCaso[];
   subsanacion: SubsanacionCaso | null;
 }

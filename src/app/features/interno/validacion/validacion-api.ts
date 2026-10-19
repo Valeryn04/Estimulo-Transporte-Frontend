@@ -11,6 +11,7 @@ import {
   DecisionValidacion,
   FiltroBandeja,
   ItemCaso,
+  PriorizacionCaso,
   Requisito,
   ResultadoDecision,
   Validador,
@@ -65,6 +66,13 @@ export class ValidacionApi {
 
   registrarItem(id: number, itemId: number, d: DatosItem): Observable<ItemCaso> {
     return this.http.put<ItemCaso>(`${VALIDACION}/casos/${id}/items/${itemId}`, d);
+  }
+
+  /** Registra un dato de priorización del caso (la opción elegida de una variable de la matriz). */
+  registrarVariable(id: number, codigo: string, valor: string): Observable<PriorizacionCaso> {
+    return this.http.put<PriorizacionCaso>(`${VALIDACION}/casos/${id}/variables/${codigo}`, {
+      valor,
+    });
   }
 
   decidir(

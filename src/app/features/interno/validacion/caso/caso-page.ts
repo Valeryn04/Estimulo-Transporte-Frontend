@@ -202,6 +202,27 @@ export class CasoPage implements OnInit {
 
   // ---------------------------------------------------------------- documentos
 
+  protected readonly errorVariable = signal('');
+
+  /** El validador elige la opción de una variable de priorización; se guarda al instante. */
+  protected async registrarVariable(codigo: string, valor: string): Promise<void> {
+    const c = this.caso();
+    if (!c || !valor) return;
+    this.errorVariable.set('');
+    try {
+      const priorizacion = await firstValueFrom(
+        this.api.registrarVariable(c.solicitud.id, codigo, valor),
+      );
+      this.caso.set({ ...c, priorizacion });
+    } catch (e) {
+      this.errorVariable.set(e instanceof ApiError ? e.message : 'No pudimos guardar el dato.');
+    }
+  }
+
+  protected readonly variablesFaltan = computed(
+    () => (this.caso()?.priorizacion.variables ?? []).filter((v) => v.valor === null).length,
+  );
+
   /** La alerta del cruce con el que se contrasta el requisito, si el cruce existe. */
   protected alertaDe(i: ItemCaso): AlertaCruce | null {
     if (!i.cruceCodigo) return null;

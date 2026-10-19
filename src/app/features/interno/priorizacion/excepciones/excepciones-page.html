@@ -1,0 +1,169 @@
+<div class="encabezado">
+  <h1>Excepciones de priorización</h1>
+</div>
+<p class="intro">
+  Ajustes de puntaje propuestos para casos especiales, con su justificación y evidencia. Solo se
+  aplican cuando los aprueba el responsable del proceso, que no puede ser quien los propuso; el
+  puntaje calculado se conserva siempre.
+</p>
+
+@if (mensaje()) {
+  <p class="aviso exito" role="status">{{ mensaje() }}</p>
+}
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+
+<form class="tarjeta filtros" (submit)="$event.preventDefault(); cargar()" role="search">
+  <div class="campo-simple">
+    <label for="estado">Estado</label>
+    <select id="estado" [formControl]="estado" (change)="cargar()">
+      <option value="">Todas</option>
+      @for (o of opciones; track o) {
+        <option [value]="o">{{ estados[o] }}</option>
+      }
+    </select>
+  </div>
+</form>
+
+@if (cargando()) {
+  <p role="status">Cargando excepciones…</p>
+} @else {
+  <p class="total" role="status">{{ total() }} excepción(es).</p>
+  <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Tabla de excepciones">
+    <table class="tabla">
+      <caption class="solo-lectores">
+        Excepciones de priorización
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Caso</th>
+          <th scope="col" class="num">Puntaje</th>
+          <th scope="col">Justificación</th>
+          <th scope="col">Propuesta</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (e of items(); track e.id) {
+          <tr>
+            <th scope="row">
+              {{ e.radicado }}
+              <small>{{ e.pcdNombre }}</small>
+            </th>
+            <td class="num">
+              {{ e.puntajeOriginal | number: '1.0-2' }} →
+              <strong>{{ e.puntajeConAjuste | number: '1.0-2' }}</strong>
+              <small>({{ signo(e.ajuste) }})</small>
+            </td>
+            <td class="justificacion">{{ e.justificacion }}</td>
+            <td>
+              {{ e.propuestaPor }}
+              <small>{{ e.propuestaAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+            </td>
+            <td>
+              <span
+                class="etiqueta"
+                [class.ok]="e.estado === 'APROBADA'"
+                [class.mal]="e.estado === 'RECHAZADA'"
+              >
+                {{ estados[e.estado] }}
+              </span>
+              @if (e.estado === 'APROBADA' && !e.aplicable) {
+                <small>No se aplica: el puntaje se recalculó.</small>
+              }
+              @if (e.decididaPor) {
+                <small>{{ e.decididaPor }} · {{ e.decididaAt | date: 'dd/MM/yyyy' }}</small>
+              }
+              @if (e.motivoDecision) {
+                <small>{{ e.motivoDecision }}</small>
+              }
+            </td>
+            <td class="acciones-fila">
+              <span class="grupo-acciones">
+                <button type="button" class="enlace" (click)="verEvidencia(e)">
+                  Ver evidencia<span class="solo-lectores"> de {{ e.radicado }}</span>
+                </button>
+                @if (puedeDecidirEsta(e)) {
+                  <button type="button" class="enlace" (click)="abrirDecision(e, 'APROBAR')">
+                    Aprobar<span class="solo-lectores"> la excepción de {{ e.radicado }}</span>
+                  </button>
+                  <button type="button" class="enlace" (click)="abrirDecision(e, 'RECHAZAR')">
+                    Rechazar<span class="solo-lectores"> la excepción de {{ e.radicado }}</span>
+                  </button>
+                }
+              </span>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6">No hay excepciones con ese estado.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (totalPaginas() > 1) {
+    <nav class="paginacion" aria-label="Paginación">
+      <button
+        type="button"
+        class="boton secundario"
+        [disabled]="pagina() <= 1"
+        (click)="cargar(pagina() - 1)"
+      >
+        Anterior
+      </button>
+      <span>Página {{ pagina() }} de {{ totalPaginas() }}</span>
+      <button
+        type="button"
+        class="boton secundario"
+        [disabled]="pagina() >= totalPaginas()"
+        (click)="cargar(pagina() + 1)"
+      >
+        Siguiente
+      </button>
+    </nav>
+  }
+}
+
+<app-dialogo
+  [titulo]="
+    (decidiendo()?.decision === 'APROBAR' ? 'Aprobar' : 'Rechazar') +
+    ' la excepción de ' +
+    (decidiendo()?.e?.radicado ?? '')
+  "
+  [abierto]="decidiendo() !== null"
+  (cierra)="cerrar()"
+>
+  @if (decidiendo(); as d) {
+    <p>
+      Ajuste de <strong>{{ signo(d.e.ajuste) }}</strong> puntos: de
+      {{ d.e.puntajeOriginal | number: '1.0-2' }} a {{ d.e.puntajeConAjuste | number: '1.0-2' }}.
+    </p>
+    <p>{{ d.e.justificacion }}</p>
+  }
+  <form [formGroup]="formDecision" (ngSubmit)="decidir()" novalidate>
+    <div class="campo-simple">
+      <label for="motivo">
+        Motivo de la decisión
+        @if (decidiendo()?.decision === 'RECHAZAR') {
+          (obligatorio)
+        }
+      </label>
+      <textarea id="motivo" rows="3" formControlName="motivo" maxlength="1000"></textarea>
+    </div>
+    @if (errorDialogo()) {
+      <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
+    }
+    <div class="acciones">
+      <button type="submit" class="boton" [disabled]="guardando()">
+        {{
+          guardando() ? 'Guardando…' : decidiendo()?.decision === 'APROBAR' ? 'Aprobar' : 'Rechazar'
+        }}
+      </button>
+      <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>
+    </div>
+  </form>
+</app-dialogo>

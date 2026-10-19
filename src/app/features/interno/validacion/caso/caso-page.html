@@ -300,6 +300,52 @@
     }
   </section>
 
+  @if (c.priorizacion.variables.length > 0 || c.priorizacion.puntaje) {
+    <section class="tarjeta" aria-labelledby="t-prio">
+      <h2 id="t-prio">Datos para la priorización</h2>
+      @if (c.priorizacion.variables.length > 0) {
+        <p class="intro">
+          La matriz vigente (versión {{ c.priorizacion.matrizVersion }}) pide estos datos para
+          calcular el puntaje. Se necesitan todos para aprobar la validación.
+          @if (puedeEditar() && variablesFaltan() > 0) {
+            <strong>Faltan {{ variablesFaltan() }}.</strong>
+          }
+        </p>
+        <div class="rejilla">
+          @for (v of c.priorizacion.variables; track v.codigo) {
+            <div class="campo-simple">
+              <label [attr.for]="'var-' + v.codigo">{{ v.nombre }}</label>
+              <select
+                [id]="'var-' + v.codigo"
+                [disabled]="!puedeEditar()"
+                (change)="registrarVariable(v.codigo, $any($event.target).value)"
+              >
+                <option value="" [selected]="v.valor === null">Elija una opción</option>
+                @for (o of v.opciones; track o.codigo) {
+                  <option [value]="o.codigo" [selected]="v.valor === o.codigo">
+                    {{ o.etiqueta }}
+                  </option>
+                }
+              </select>
+              @if (v.descripcion) {
+                <small class="ayuda">{{ v.descripcion }}</small>
+              }
+            </div>
+          }
+        </div>
+        @if (errorVariable()) {
+          <p class="aviso error" role="alert">{{ errorVariable() }}</p>
+        }
+      }
+      @if (c.priorizacion.puntaje; as p) {
+        <p>
+          <strong>Puntaje: {{ p.total }}</strong> (versión {{ p.matrizVersion }} de la matriz,
+          {{ p.calculadoAt | date: 'dd/MM/yyyy HH:mm' }}).
+        </p>
+      }
+    </section>
+  }
+
   @if (puedeEditar() && !resultado()) {
     <section class="tarjeta" aria-labelledby="t-decision">
       <h2 id="t-decision">Decisión</h2>

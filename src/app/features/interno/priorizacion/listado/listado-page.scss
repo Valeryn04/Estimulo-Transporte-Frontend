@@ -1,0 +1,47 @@
+.intro {
+  margin: 0 0 12px;
+  color: var(--color-muted);
+}
+
+.matriz {
+  margin: 0 0 16px;
+
+  .etiqueta {
+    margin-left: 6px;
+  }
+}
+
+.grupo-botones {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pendiente {
+  color: var(--color-error);
+}
+
+.calculo {
+  margin: 0 0 16px;
+
+  h3 {
+    margin: 0 0 4px;
+  }
+
+  &.anterior {
+    opacity: 0.8;
+  }
+}
+
+.excepciones {
+  padding-left: 20px;
+
+  li {
+    margin-bottom: 10px;
+  }
+
+  small {
+    display: block;
+    color: var(--color-muted);
+  }
+}

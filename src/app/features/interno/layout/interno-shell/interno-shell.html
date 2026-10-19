@@ -50,6 +50,22 @@
       <a routerLink="/interno/validacion" routerLinkActive="activo">Bandeja de validación</a>
     }
 
+    @if (sesion.tieneAlguno(PERMISO.priorizacionVer, PERMISO.matriz, PERMISO.priorizacionAprobar)) {
+      <p class="grupo">Priorización</p>
+    }
+    @if (sesion.tiene(PERMISO.priorizacionVer)) {
+      <a
+        routerLink="/interno/priorizacion"
+        routerLinkActive="activo"
+        [routerLinkActiveOptions]="{ exact: true }"
+        >Listado priorizado</a
+      >
+      <a routerLink="/interno/priorizacion/excepciones" routerLinkActive="activo">Excepciones</a>
+    }
+    @if (sesion.tieneAlguno(PERMISO.matriz, PERMISO.priorizacionAprobar)) {
+      <a routerLink="/interno/admin/matriz" routerLinkActive="activo">Matriz de ponderación</a>
+    }
+
     @if (sesion.tiene(PERMISO.usuarios)) {
       <p class="grupo">Seguridad y accesos</p>
       <a routerLink="/interno/admin/usuarios" routerLinkActive="activo">Usuarios</a>

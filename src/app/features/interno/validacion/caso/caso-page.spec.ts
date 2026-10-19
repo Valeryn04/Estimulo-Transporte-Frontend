@@ -55,6 +55,7 @@ const caso = (c: Partial<Caso> = {}, items: ItemCaso[] = [item({})]): Caso => ({
   catalogos: { '7': 'Femenino', '9': 'Sanitas' },
   sensiblesOcultos: false,
   alertas: [],
+  priorizacion: { matrizVersion: 1, variables: [], puntaje: null },
   version: 3,
   documentos: [
     {
@@ -373,5 +374,117 @@ describe('CasoPage', () => {
       ),
     );
     expect(nada.el.textContent).toContain('todavía no hay archivo cargado');
+  });
+
+  it('el validador registra los datos de priorización con la matriz vigente y se guardan al elegirlos', async () => {
+    const { el, ctrl, asentar } = await montar(
+      caso({
+        priorizacion: {
+          matrizVersion: 1,
+          variables: [
+            {
+              codigo: 'DEPENDENCIA_FUNCIONAL',
+              nombre: 'Dependencia funcional',
+              descripcion: 'Según el certificado',
+              opciones: [
+                { codigo: 'SEVERA', etiqueta: 'Severa' },
+                { codigo: 'LEVE', etiqueta: 'Leve' },
+              ],
+              valor: null,
+            },
+          ],
+          puntaje: null,
+        },
+      }),
+    );
+    expect(el.querySelector('#t-prio')?.textContent).toContain('Datos para la priorización');
+    expect(el.textContent).toContain('Faltan 1');
+    const select = el.querySelector<HTMLSelectElement>('#var-DEPENDENCIA_FUNCIONAL')!;
+    select.value = 'SEVERA';
+    select.dispatchEvent(new Event('change'));
+    const r = ctrl.expectOne(`${URL_CASO}/variables/DEPENDENCIA_FUNCIONAL`);
+    expect(r.request.method).toBe('PUT');
+    expect(r.request.body).toEqual({ valor: 'SEVERA' });
+    r.flush({
+      matrizVersion: 1,
+      variables: [
+        {
+          codigo: 'DEPENDENCIA_FUNCIONAL',
+          nombre: 'Dependencia funcional',
+          descripcion: '',
+          opciones: [
+            { codigo: 'SEVERA', etiqueta: 'Severa' },
+            { codigo: 'LEVE', etiqueta: 'Leve' },
+          ],
+          valor: 'SEVERA',
+        },
+      ],
+      puntaje: null,
+    });
+    await asentar();
+    expect(el.textContent).not.toContain('Faltan 1');
+  });
+
+  it('muestra el error al guardar un dato de priorización', async () => {
+    const { el, ctrl, asentar } = await montar(
+      caso({
+        priorizacion: {
+          matrizVersion: 1,
+          variables: [
+            {
+              codigo: 'GRUPO_SISBEN',
+              nombre: 'Grupo del SISBÉN IV',
+              descripcion: '',
+              opciones: [{ codigo: 'GRUPO_A', etiqueta: 'Grupo A' }],
+              valor: null,
+            },
+          ],
+          puntaje: null,
+        },
+      }),
+    );
+    const select = el.querySelector<HTMLSelectElement>('#var-GRUPO_SISBEN')!;
+    select.value = 'GRUPO_A';
+    select.dispatchEvent(new Event('change'));
+    ctrl
+      .expectOne(`${URL_CASO}/variables/GRUPO_SISBEN`)
+      .flush(
+        errorApi('CASO_NO_TOMADO', 'Abra el caso para revisarlo antes de registrar resultados.'),
+        { status: 409, statusText: 'Conflicto' },
+      );
+    await asentar();
+    expect(
+      el.querySelector('#t-prio')?.parentElement?.querySelector('.aviso.error')?.textContent,
+    ).toContain('Abra el caso');
+  });
+
+  it('con el caso ya validado muestra el puntaje y no deja cambiar los datos', async () => {
+    const { el } = await montar(
+      caso({
+        validacion: { ...caso().validacion, puedeEditar: false },
+        priorizacion: {
+          matrizVersion: 1,
+          variables: [
+            {
+              codigo: 'GRUPO_SISBEN',
+              nombre: 'Grupo del SISBÉN IV',
+              descripcion: '',
+              opciones: [{ codigo: 'GRUPO_A', etiqueta: 'Grupo A' }],
+              valor: 'GRUPO_A',
+            },
+          ],
+          puntaje: {
+            total: 90,
+            matrizVersion: 1,
+            calculadoAt: '2026-10-05T10:00:00Z',
+            detalle: [],
+          },
+        },
+      }),
+    );
+    expect(el.querySelector('section[aria-labelledby="t-prio"]')?.textContent).toContain(
+      'Puntaje: 90',
+    );
+    expect(el.querySelector<HTMLSelectElement>('#var-GRUPO_SISBEN')!.disabled).toBe(true);
   });
 });

@@ -15,6 +15,28 @@
     </div>
   }
 
+  @if (sesion.tieneAlguno(PERMISO.priorizacionVer, PERMISO.matriz, PERMISO.priorizacionAprobar)) {
+    <h2>Priorización</h2>
+    <div class="atajos">
+      @if (sesion.tiene(PERMISO.priorizacionVer)) {
+        <a class="tarjeta" routerLink="/interno/priorizacion">
+          <strong>Listado priorizado</strong>
+          <span>Casos validados por puntaje, con filtros y criterio de desempate.</span>
+        </a>
+        <a class="tarjeta" routerLink="/interno/priorizacion/excepciones">
+          <strong>Excepciones</strong>
+          <span>Ajustes justificados de casos especiales y su aprobación.</span>
+        </a>
+      }
+      @if (sesion.tieneAlguno(PERMISO.matriz, PERMISO.priorizacionAprobar)) {
+        <a class="tarjeta" routerLink="/interno/admin/matriz">
+          <strong>Matriz de ponderación</strong>
+          <span>Variables, pesos y versiones: simulación y aprobación.</span>
+        </a>
+      }
+    </div>
+  }
+
   @if (
     sesion.tieneAlguno(
       PERMISO.usuarios,

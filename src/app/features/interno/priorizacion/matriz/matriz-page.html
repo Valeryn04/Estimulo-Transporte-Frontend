@@ -1,0 +1,473 @@
+<div class="encabezado">
+  <h1>Matriz de ponderación</h1>
+  @if (puedeAdministrar() && !hayAbierta()) {
+    <button type="button" class="boton" (click)="nuevaVersion()">
+      Nueva versión (copia de la vigente)
+    </button>
+  }
+</div>
+<p class="intro">
+  El puntaje de cada caso sale de esta matriz: cada variable tiene un peso y, según la opción
+  elegida, unos puntos. Cada cambio es una versión nueva: se prepara como borrador, se simula contra
+  los casos validados y se activa cuando la aprueba el responsable del proceso. Los casos ya
+  calculados conservan la versión con la que se priorizaron.
+</p>
+
+@if (mensaje()) {
+  <p class="aviso exito" role="status">{{ mensaje() }}</p>
+}
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+
+@if (cargando()) {
+  <p role="status">Cargando versiones…</p>
+} @else {
+  <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Versiones de la matriz">
+    <table class="tabla">
+      <caption class="solo-lectores">
+        Versiones de la matriz de ponderación
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Versión</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Creada</th>
+          <th scope="col">Decisión</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (v of versiones(); track v.id) {
+          <tr [class.seleccionada]="seleccionada()?.id === v.id">
+            <th scope="row">
+              Versión {{ v.version }}
+              @if (v.notas) {
+                <small>{{ v.notas }}</small>
+              }
+            </th>
+            <td>
+              <span
+                class="etiqueta"
+                [class.ok]="v.estado === 'VIGENTE'"
+                [class.mal]="v.estado === 'RECHAZADA'"
+              >
+                {{ estados[v.estado] }}
+              </span>
+              @if (v.vigenteDesde) {
+                <small>Desde {{ v.vigenteDesde | date: 'dd/MM/yyyy' }}</small>
+              }
+              @if (v.vigenteHasta) {
+                <small>Hasta {{ v.vigenteHasta | date: 'dd/MM/yyyy' }}</small>
+              }
+            </td>
+            <td>
+              {{ v.creadaPor ?? 'Versión inicial' }}
+              <small>{{ v.creadaAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+            </td>
+            <td>
+              @if (v.decididaPor) {
+                {{ v.decididaPor }}
+                <small>{{ v.decididaAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+                @if (v.motivoDecision) {
+                  <small>{{ v.motivoDecision }}</small>
+                }
+              } @else if (v.estado === 'EN_APROBACION') {
+                <small>Pidió la aprobación {{ v.solicitadaPor }}</small>
+              } @else {
+                —
+              }
+            </td>
+            <td class="acciones-fila">
+              <span class="grupo-acciones">
+                <button type="button" class="enlace" (click)="abrir(v.id)">
+                  {{ v.estado === 'BORRADOR' && puedeAdministrar() ? 'Editar' : 'Ver' }}
+                  <span class="solo-lectores"> la versión {{ v.version }}</span>
+                </button>
+                <button type="button" class="enlace" (click)="simular(v.id)">
+                  Simular<span class="solo-lectores"> la versión {{ v.version }}</span>
+                </button>
+                @if (puedeAdministrar() && !hayAbierta()) {
+                  <button type="button" class="enlace" (click)="nuevaVersion(v.id)">
+                    Crear versión a partir de esta
+                  </button>
+                }
+              </span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+@if (seleccionada(); as m) {
+  <section class="tarjeta detalle" aria-labelledby="titulo-version">
+    <h2 id="titulo-version">
+      Versión {{ m.version }}
+      <span class="etiqueta" [class.ok]="m.estado === 'VIGENTE'">{{ estados[m.estado] }}</span>
+    </h2>
+    <p class="maximo">
+      Puntaje máximo posible: <strong>{{ m.puntajeMaximo | number: '1.0-2' }}</strong>
+    </p>
+
+    @if (erroresForm().length > 0) {
+      <div class="aviso error" role="alert">
+        <ul>
+          @for (e of erroresForm(); track $index) {
+            <li>{{ e }}</li>
+          }
+        </ul>
+      </div>
+    }
+
+    @if (editable()) {
+      <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+        <div class="campo-simple">
+          <label for="notas">Notas de esta versión</label>
+          <textarea id="notas" rows="2" formControlName="notas" maxlength="1000"></textarea>
+        </div>
+
+        <div formArrayName="variables">
+          @for (v of variables.controls; track v; let i = $index) {
+            <fieldset class="variable" [formGroupName]="i">
+              <legend>Variable {{ i + 1 }}</legend>
+              <div class="rejilla">
+                <div class="campo-simple">
+                  <label [for]="'v-nombre-' + i">Nombre</label>
+                  <input
+                    [id]="'v-nombre-' + i"
+                    type="text"
+                    formControlName="nombre"
+                    maxlength="150"
+                  />
+                </div>
+                <div class="campo-simple">
+                  <label [for]="'v-origen-' + i">Origen del dato</label>
+                  <select
+                    [id]="'v-origen-' + i"
+                    formControlName="origen"
+                    (change)="cambiarOrigen(i)"
+                  >
+                    @for (o of origenesLista; track o) {
+                      <option [value]="o">{{ origenes[o] }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="campo-simple">
+                  <label [for]="'v-peso-' + i">Peso</label>
+                  <input
+                    [id]="'v-peso-' + i"
+                    type="number"
+                    step="0.1"
+                    min="0.01"
+                    formControlName="peso"
+                  />
+                </div>
+              </div>
+              <div class="campo-simple">
+                <label [for]="'v-desc-' + i">Qué se verifica</label>
+                <input
+                  [id]="'v-desc-' + i"
+                  type="text"
+                  formControlName="descripcion"
+                  maxlength="500"
+                />
+              </div>
+
+              <table class="tabla opciones" formArrayName="opciones">
+                <caption class="solo-lectores">
+                  Opciones de la variable
+                  {{
+                    i + 1
+                  }}
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Opción</th>
+                    <th scope="col">Puntos (0 a 100)</th>
+                    <th scope="col"><span class="solo-lectores">Quitar</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (o of opciones(i).controls; track o; let j = $index) {
+                    <tr [formGroupName]="j">
+                      <td>
+                        <label class="solo-lectores" [for]="'o-etiqueta-' + i + '-' + j"
+                          >Opción {{ j + 1 }} de la variable {{ i + 1 }}</label
+                        >
+                        <input
+                          [id]="'o-etiqueta-' + i + '-' + j"
+                          type="text"
+                          formControlName="etiqueta"
+                          maxlength="100"
+                          [readonly]="esSubsidios(i)"
+                        />
+                      </td>
+                      <td>
+                        <label class="solo-lectores" [for]="'o-puntos-' + i + '-' + j"
+                          >Puntos de la opción {{ j + 1 }} de la variable {{ i + 1 }}</label
+                        >
+                        <input
+                          [id]="'o-puntos-' + i + '-' + j"
+                          type="number"
+                          step="0.5"
+                          min="0"
+                          max="100"
+                          formControlName="puntos"
+                        />
+                      </td>
+                      <td>
+                        @if (!esSubsidios(i)) {
+                          <button type="button" class="enlace" (click)="quitarOpcion(i, j)">
+                            Quitar<span class="solo-lectores"> la opción {{ j + 1 }}</span>
+                          </button>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+              <div class="acciones">
+                @if (!esSubsidios(i)) {
+                  <button type="button" class="boton secundario" (click)="agregarOpcion(i)">
+                    Agregar opción
+                  </button>
+                }
+                <button type="button" class="boton secundario" (click)="quitarVariable(i)">
+                  Quitar la variable {{ i + 1 }}
+                </button>
+              </div>
+            </fieldset>
+          }
+        </div>
+        <button type="button" class="boton secundario" (click)="agregarVariable()">
+          Agregar variable
+        </button>
+
+        <fieldset class="desempate" formArrayName="desempate">
+          <legend>Criterios de desempate, en orden</legend>
+          <p class="ayuda">
+            Si dos casos tienen el mismo puntaje se aplican en este orden; si siguen empatados,
+            decide el número de radicado.
+          </p>
+          @for (c of form.controls.desempate.controls; track $index) {
+            <div class="campo-simple">
+              <label [for]="'d-' + $index">Criterio {{ $index + 1 }}</label>
+              <select [id]="'d-' + $index" [formControlName]="$index">
+                <option value="">Ninguno</option>
+                @for (k of criterios(); track k.valor) {
+                  <option [value]="k.valor">{{ k.nombre }}</option>
+                }
+              </select>
+            </div>
+          }
+        </fieldset>
+
+        <div class="acciones">
+          <button type="submit" class="boton" [disabled]="guardando()">
+            {{ guardando() ? 'Guardando…' : 'Guardar borrador' }}
+          </button>
+          <button type="button" class="boton secundario" (click)="simularBorrador()">
+            Guardar y simular
+          </button>
+          <button type="button" class="boton secundario" (click)="pedirAprobacion()">
+            Pedir aprobación del responsable
+          </button>
+        </div>
+      </form>
+    } @else {
+      @if (m.notas) {
+        <p>{{ m.notas }}</p>
+      }
+      <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Variables de la versión">
+        <table class="tabla">
+          <caption class="solo-lectores">
+            Variables y puntos de la versión
+            {{
+              m.version
+            }}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Variable</th>
+              <th scope="col" class="num">Peso</th>
+              <th scope="col">Opciones y puntos</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (v of m.variables; track v.codigo) {
+              <tr>
+                <th scope="row">
+                  {{ v.nombre }}
+                  <small>{{ origenes[v.origen] }}</small>
+                  @if (v.descripcion) {
+                    <small>{{ v.descripcion }}</small>
+                  }
+                </th>
+                <td class="num">{{ v.peso }}</td>
+                <td>
+                  <ul class="lista-opciones">
+                    @for (o of v.opciones; track o.codigo) {
+                      <li>
+                        {{ o.etiqueta }}: <strong>{{ o.puntos }}</strong>
+                      </li>
+                    }
+                  </ul>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Desempate:
+        @for (c of m.desempateTexto; track $index) {
+          <span class="etiqueta">{{ $index + 1 }}. {{ c }}</span>
+        } @empty {
+          por número de radicado.
+        }
+      </p>
+      @if (puedeDecidir(m)) {
+        <div class="acciones">
+          <button type="button" class="boton" (click)="abrirDecision('APROBAR')">
+            Aprobar y activar
+          </button>
+          <button type="button" class="boton secundario" (click)="abrirDecision('RECHAZAR')">
+            Rechazar
+          </button>
+        </div>
+      } @else if (m.estado === 'EN_APROBACION') {
+        <p class="aviso" role="status">
+          Pendiente de aprobación del responsable del proceso, que no puede ser quien la pidió.
+        </p>
+      }
+    }
+  </section>
+}
+
+<!-- Simulación -->
+<app-dialogo
+  titulo="Simulación de la versión"
+  [abierto]="vista() === 'simulacion'"
+  (cierra)="cerrar()"
+>
+  @if (errorDialogo()) {
+    <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
+  }
+  @if (cargandoSimulacion()) {
+    <p role="status">Calculando sobre los casos validados…</p>
+  }
+  @if (simulacion(); as s) {
+    <p>
+      Versión {{ s.matriz.version }} frente a la
+      @if (s.vigenteVersion) {
+        versión vigente ({{ s.vigenteVersion }}).
+      }
+      No se guarda nada.
+    </p>
+    <ul class="resumen">
+      <li>
+        <strong>{{ s.resumen.casos }}</strong> caso(s) validados
+      </li>
+      <li>
+        <strong>{{ s.resumen.cambianPosicion }}</strong> cambian de posición
+      </li>
+      <li>
+        <strong>{{ s.resumen.suben }}</strong> suben y <strong>{{ s.resumen.bajan }}</strong> bajan
+      </li>
+      @if (s.resumen.sinDatos > 0) {
+        <li>
+          <strong>{{ s.resumen.sinDatos }}</strong> no tienen algún dato que pide esta versión
+        </li>
+      }
+    </ul>
+    <div
+      class="tabla-contenedor"
+      tabindex="0"
+      role="region"
+      aria-label="Resultado de la simulación"
+    >
+      <table class="tabla">
+        <caption class="solo-lectores">
+          Posición actual y simulada de cada caso
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col" class="num">Nueva posición</th>
+            <th scope="col">Caso</th>
+            <th scope="col" class="num">Puntaje actual</th>
+            <th scope="col" class="num">Puntaje simulado</th>
+            <th scope="col">Cambio</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (f of s.items; track f.solicitudId) {
+            <tr>
+              <td class="num">{{ f.posicionSimulada }}</td>
+              <th scope="row">
+                {{ f.radicado }}
+                <small>{{ f.pcdNombre }}</small>
+                @if (f.faltantes.length > 0) {
+                  <small>Falta: {{ f.faltantes.join(', ') }}</small>
+                }
+              </th>
+              <td class="num">
+                {{ f.puntajeActual === null ? '—' : (f.puntajeActual | number: '1.0-2') }}
+              </td>
+              <td class="num">{{ f.puntajeSimulado | number: '1.0-2' }}</td>
+              <td>
+                {{ signo(f.cambio) }}
+                @if (f.posicionActual) {
+                  <small>era {{ f.posicionActual }}</small>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5">Todavía no hay casos validados para simular.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (s.truncado) {
+      <p class="ayuda">Se muestran los primeros casos por posición simulada.</p>
+    }
+  }
+  <div class="acciones">
+    <button type="button" class="boton secundario" (click)="cerrar()">Cerrar</button>
+  </div>
+</app-dialogo>
+
+<!-- Decisión del responsable -->
+<app-dialogo
+  [titulo]="decision() === 'APROBAR' ? 'Aprobar y activar la versión' : 'Rechazar la versión'"
+  [abierto]="vista() === 'decision'"
+  (cierra)="cerrar()"
+>
+  @if (decision() === 'APROBAR') {
+    <p>
+      La versión pasa a ser la vigente. Los casos que ya tienen puntaje conservan la versión con la
+      que se calcularon.
+    </p>
+  }
+  <div class="campo-simple">
+    <label for="motivo-version">
+      Motivo
+      @if (decision() === 'RECHAZAR') {
+        (obligatorio)
+      }
+    </label>
+    <textarea id="motivo-version" rows="3" [formControl]="motivo" maxlength="1000"></textarea>
+  </div>
+  @if (errorDialogo()) {
+    <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
+  }
+  <div class="acciones">
+    <button type="button" class="boton" (click)="decidir()">
+      {{ decision() === 'APROBAR' ? 'Aprobar y activar' : 'Rechazar' }}
+    </button>
+    <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>
+  </div>
+</app-dialogo>

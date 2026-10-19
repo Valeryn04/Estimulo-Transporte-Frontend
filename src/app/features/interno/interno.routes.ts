@@ -38,6 +38,26 @@ export const internoRoutes: Routes = [
         loadComponent: () => import('./validacion/caso/caso-page').then((m) => m.CasoPage),
       },
       {
+        path: 'priorizacion',
+        title: `Listado priorizado · ${TITULO}`,
+        canActivate: [permisoGuard(PERMISO.priorizacionVer)],
+        loadComponent: () =>
+          import('./priorizacion/listado/listado-page').then((m) => m.ListadoPriorizadoPage),
+      },
+      {
+        path: 'priorizacion/excepciones',
+        title: `Excepciones de priorización · ${TITULO}`,
+        canActivate: [permisoGuard(PERMISO.priorizacionVer)],
+        loadComponent: () =>
+          import('./priorizacion/excepciones/excepciones-page').then((m) => m.ExcepcionesPage),
+      },
+      {
+        path: 'admin/matriz',
+        title: `Matriz de ponderación · ${TITULO}`,
+        canActivate: [permisoGuard(PERMISO.matriz, PERMISO.priorizacionAprobar)],
+        loadComponent: () => import('./priorizacion/matriz/matriz-page').then((m) => m.MatrizPage),
+      },
+      {
         path: 'admin/requisitos',
         title: `Lista de chequeo · ${TITULO}`,
         canActivate: [permisoGuard(PERMISO.requisitos)],
