@@ -52,6 +52,9 @@ describe('RequisitosPage', () => {
         },
       ],
     });
+    p.ctrl.expectOne(`${URL}/cruces`).flush({
+      items: [{ codigo: 'BENEFICIOS_INCOMPATIBLES', nombre: 'Apoyos de transporte incompatibles' }],
+    });
     await p.asentar();
     return p;
   }

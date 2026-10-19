@@ -7,6 +7,7 @@ import { ApiError } from '../../../../core/api/api-error';
 import { Sesion } from '../../../../core/auth/sesion';
 import { Dialogo } from '../../../../shared/dialogo/dialogo';
 import {
+  AlertaCruce,
   Caso,
   DecisionValidacion,
   DocumentoCaso,
@@ -200,6 +201,16 @@ export class CasoPage implements OnInit {
   }
 
   // ---------------------------------------------------------------- documentos
+
+  /** La alerta del cruce con el que se contrasta el requisito, si el cruce existe. */
+  protected alertaDe(i: ItemCaso): AlertaCruce | null {
+    if (!i.cruceCodigo) return null;
+    return this.caso()?.alertas.find((a) => a.cruceCodigo === i.cruceCodigo) ?? null;
+  }
+
+  protected nombrePersona(p: 'PCD' | 'CUIDADOR'): string {
+    return p === 'PCD' ? 'la persona con discapacidad' : 'el cuidador';
+  }
 
   protected async verDocumento(d: DocumentoCaso): Promise<void> {
     const c = this.caso();

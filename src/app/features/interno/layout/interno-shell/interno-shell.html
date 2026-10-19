@@ -56,7 +56,9 @@
       <a routerLink="/interno/admin/roles" routerLinkActive="activo">Roles y permisos</a>
     }
 
-    @if (sesion.tieneAlguno(PERMISO.catalogos, PERMISO.parametros, PERMISO.requisitos)) {
+    @if (
+      sesion.tieneAlguno(PERMISO.catalogos, PERMISO.parametros, PERMISO.requisitos, PERMISO.cruces)
+    ) {
       <p class="grupo">Configuración del programa</p>
     }
     @if (sesion.tiene(PERMISO.catalogos)) {
@@ -65,6 +67,9 @@
     }
     @if (sesion.tiene(PERMISO.requisitos)) {
       <a routerLink="/interno/admin/requisitos" routerLinkActive="activo">Lista de chequeo</a>
+    }
+    @if (sesion.tiene(PERMISO.cruces)) {
+      <a routerLink="/interno/admin/cruces" routerLinkActive="activo">Archivos de cruce</a>
     }
     @if (sesion.tiene(PERMISO.parametros)) {
       <a routerLink="/interno/admin/parametros" routerLinkActive="activo">Parámetros y plazos</a>

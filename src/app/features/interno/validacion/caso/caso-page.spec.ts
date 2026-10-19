@@ -54,6 +54,7 @@ const caso = (c: Partial<Caso> = {}, items: ItemCaso[] = [item({})]): Caso => ({
   datos: { generoId: 7, celular: '3001234567', epsId: 9, recibeSubsidios: false },
   catalogos: { '7': 'Femenino', '9': 'Sanitas' },
   sensiblesOcultos: false,
+  alertas: [],
   version: 3,
   documentos: [
     {
@@ -311,5 +312,66 @@ describe('CasoPage', () => {
     const bloque = el.querySelector('[aria-labelledby="t-subsanacion"]')!;
     expect(bloque.textContent).toContain('Plazo vencido');
     expect(bloque.textContent).toContain('Soporte vencido');
+  });
+
+  it('muestra la alerta del cruce cuando la persona o su cuidador aparecen en el archivo (RF-VAL-03)', async () => {
+    const { el } = await montar(
+      caso(
+        {
+          alertas: [
+            {
+              cruceCodigo: 'BENEFICIOS_INCOMPATIBLES',
+              nombre: 'Apoyos de transporte incompatibles',
+              cargadoAt: '2026-10-05T10:00:00Z',
+              coincidencias: [{ persona: 'PCD', detalle: 'ESTE' }],
+            },
+          ],
+        },
+        [item({ cruceCodigo: 'BENEFICIOS_INCOMPATIBLES' })],
+      ),
+    );
+    const alerta = el.querySelector('.alerta-cruce');
+    expect(alerta?.getAttribute('role')).toBe('alert');
+    expect(alerta?.textContent).toContain('Apoyos de transporte incompatibles');
+    expect(alerta?.textContent).toContain('la persona con discapacidad: ESTE');
+  });
+
+  it('sin coincidencias en el archivo lo dice, sin alerta', async () => {
+    const sin = await montar(
+      caso(
+        {
+          alertas: [
+            {
+              cruceCodigo: 'BENEFICIOS_INCOMPATIBLES',
+              nombre: 'Apoyos de transporte incompatibles',
+              cargadoAt: '2026-10-05T10:00:00Z',
+              coincidencias: [],
+            },
+          ],
+        },
+        [item({ cruceCodigo: 'BENEFICIOS_INCOMPATIBLES' })],
+      ),
+    );
+    expect(sin.el.querySelector('.alerta-cruce')).toBeNull();
+    expect(sin.el.textContent).toContain('sin coincidencias');
+  });
+
+  it('sin archivo cargado del cruce pide verificar la fuente a mano', async () => {
+    const nada = await montar(
+      caso(
+        {
+          alertas: [
+            {
+              cruceCodigo: 'BENEFICIOS_INCOMPATIBLES',
+              nombre: null,
+              cargadoAt: null,
+              coincidencias: [],
+            },
+          ],
+        },
+        [item({ cruceCodigo: 'BENEFICIOS_INCOMPATIBLES' })],
+      ),
+    );
+    expect(nada.el.textContent).toContain('todavía no hay archivo cargado');
   });
 });

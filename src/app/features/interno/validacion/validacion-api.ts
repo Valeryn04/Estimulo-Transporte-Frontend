@@ -91,6 +91,13 @@ export class ValidacionApi {
     return this.http.get<{ items: Requisito[] }>(`${ADMIN}/requisitos`).pipe(map((r) => r.items));
   }
 
+  /** Cruces con archivo que un requisito puede usar. */
+  crucesDisponibles(): Observable<{ codigo: string; nombre: string }[]> {
+    return this.http
+      .get<{ items: { codigo: string; nombre: string }[] }>(`${ADMIN}/requisitos/cruces`)
+      .pipe(map((r) => r.items));
+  }
+
   crearRequisito(d: DatosRequisito): Observable<Requisito> {
     return this.http.post<Requisito>(`${ADMIN}/requisitos`, d);
   }

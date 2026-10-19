@@ -1,0 +1,30 @@
+.intro {
+  margin: 0 0 16px;
+  color: var(--color-muted);
+}
+
+.versiones {
+  padding-left: 20px;
+
+  li {
+    margin-bottom: 10px;
+  }
+
+  small {
+    display: block;
+    color: var(--color-muted);
+  }
+}
+
+.carga-nueva {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin: 0 0 16px;
+}
+
+.formato {
+  margin: 0 0 16px;
+  color: var(--color-muted);
+}

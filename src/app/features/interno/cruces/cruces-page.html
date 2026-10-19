@@ -1,0 +1,281 @@
+<div class="encabezado">
+  <h1>Archivos de cruce</h1>
+  <button type="button" class="boton" (click)="abrirNuevo()">Agregar cruce</button>
+</div>
+<p class="intro">
+  Cada cruce es una fuente externa (apoyos incompatibles, Transmetro, defunciones). Indique en qué
+  columna del archivo viene la identificación y cargue el CSV actualizado: las coincidencias salen
+  como alerta en la lista de chequeo del validador. La carga más reciente es la vigente.
+</p>
+
+@if (mensaje()) {
+  <p class="aviso exito" role="status">{{ mensaje() }}</p>
+}
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+
+@if (cargando()) {
+  <p role="status">Cargando cruces…</p>
+} @else {
+  <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Tabla de cruces">
+    <table class="tabla">
+      <caption class="solo-lectores">
+        Archivos de cruce
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Cruce</th>
+          <th scope="col">Columnas del archivo</th>
+          <th scope="col">Carga vigente</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (e of estructuras(); track e.id) {
+          <tr [class.inactivo]="!e.activo">
+            <th scope="row">
+              {{ e.nombre }}
+              @if (e.entidad) {
+                <small>{{ e.entidad }}</small>
+              }
+              <small>Busca a: {{ aplicaA[e.aplicaA] }}</small>
+            </th>
+            <td>
+              {{ e.columnaIdentificacion }}
+              @if (e.columnaDetalle) {
+                <small>Detalle: {{ e.columnaDetalle }}</small>
+              }
+            </td>
+            <td>
+              @if (e.vigente; as v) {
+                {{ v.filasValidas }} registro(s)
+                <small>{{ v.archivoNombre }} · {{ v.cargadoAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+                @if (v.filasError > 0) {
+                  <small>{{ v.filasError }} fila(s) con errores</small>
+                }
+              } @else {
+                Sin archivo cargado
+              }
+            </td>
+            <td>
+              <span class="etiqueta" [class.ok]="e.activo" [class.mal]="!e.activo">
+                {{ e.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+              <small>Versión {{ e.version }}</small>
+            </td>
+            <td class="acciones-fila">
+              <span class="grupo-acciones">
+                <button
+                  type="button"
+                  class="accion-icono"
+                  [title]="'Cargar archivo de ' + e.nombre"
+                  (click)="abrirCargas(e)"
+                >
+                  <app-icono nombre="documento" />
+                  <span class="solo-lectores">Cargas de archivo de {{ e.nombre }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="accion-icono"
+                  [title]="'Editar ' + e.nombre"
+                  (click)="abrirEditar(e)"
+                >
+                  <app-icono nombre="editar" />
+                  <span class="solo-lectores">Editar {{ e.nombre }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="accion-icono"
+                  [class.peligro]="e.activo"
+                  [title]="(e.activo ? 'Desactivar ' : 'Activar ') + e.nombre"
+                  (click)="cambiarActivo(e)"
+                >
+                  <app-icono [nombre]="e.activo ? 'apagar' : 'check'" />
+                  <span class="solo-lectores"
+                    >{{ e.activo ? 'Desactivar' : 'Activar' }} {{ e.nombre }}</span
+                  >
+                </button>
+                <button
+                  type="button"
+                  class="accion-icono"
+                  [title]="'Historial de ' + e.nombre"
+                  (click)="verHistorial(e)"
+                >
+                  <app-icono nombre="descargar" />
+                  <span class="solo-lectores">Historial de versiones de {{ e.nombre }}</span>
+                </button>
+              </span>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5">Todavía no hay cruces.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+<!-- Crear / editar -->
+<app-dialogo
+  [titulo]="actual() ? 'Editar cruce' : 'Agregar cruce'"
+  [abierto]="vista() === 'formulario'"
+  (cierra)="cerrar()"
+>
+  <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+    <app-campo idCampo="cruce-nombre" etiqueta="Nombre" [control]="form.controls.nombre">
+      <input appCampoControl type="text" formControlName="nombre" maxlength="100" />
+    </app-campo>
+    <app-campo
+      idCampo="cruce-entidad"
+      etiqueta="Entidad que entrega el archivo"
+      [control]="form.controls.entidad"
+    >
+      <input appCampoControl type="text" formControlName="entidad" maxlength="150" />
+    </app-campo>
+    <app-campo
+      idCampo="cruce-descripcion"
+      etiqueta="Para qué se usa"
+      [control]="form.controls.descripcion"
+    >
+      <textarea appCampoControl formControlName="descripcion" rows="2" maxlength="500"></textarea>
+    </app-campo>
+    <div class="rejilla">
+      <app-campo
+        idCampo="cruce-col-id"
+        etiqueta="Columna de identificación"
+        ayuda="Título exacto de la columna con el número de documento."
+        [control]="form.controls.columnaIdentificacion"
+      >
+        <input appCampoControl type="text" formControlName="columnaIdentificacion" maxlength="60" />
+      </app-campo>
+      <app-campo
+        idCampo="cruce-col-detalle"
+        etiqueta="Columna de detalle (opcional)"
+        ayuda="Lo que se muestra al validador, por ejemplo el nombre del beneficio."
+        [control]="form.controls.columnaDetalle"
+      >
+        <input appCampoControl type="text" formControlName="columnaDetalle" maxlength="60" />
+      </app-campo>
+    </div>
+    <app-campo idCampo="cruce-aplica" etiqueta="A quién se busca" [control]="form.controls.aplicaA">
+      <select appCampoControl formControlName="aplicaA">
+        @for (o of opciones; track o) {
+          <option [value]="o">{{ aplicaA[o] }}</option>
+        }
+      </select>
+    </app-campo>
+    @if (errorDialogo()) {
+      <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
+    }
+    <div class="acciones">
+      <button type="submit" class="boton" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando…' : 'Guardar' }}
+      </button>
+      <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>
+    </div>
+  </form>
+</app-dialogo>
+
+<!-- Cargas -->
+<app-dialogo
+  [titulo]="'Cargas de «' + (actual()?.nombre ?? '') + '»'"
+  [abierto]="vista() === 'cargas'"
+  (cierra)="cerrar()"
+>
+  <p class="formato">
+    Archivo CSV (comas o punto y coma) con títulos en la primera fila. Debe traer la columna «{{
+      actual()?.columnaIdentificacion
+    }}». Máximo 10 MB. Las filas con errores no se cargan y quedan en un reporte.
+  </p>
+  <div class="carga-nueva">
+    <label for="cruce-archivo">Archivo CSV</label>
+    <input
+      id="cruce-archivo"
+      type="file"
+      accept=".csv,.txt,text/csv"
+      [disabled]="subiendo()"
+      (change)="elegirArchivo($event)"
+    />
+    <button type="button" class="boton" [disabled]="subiendo()" (click)="subir()">
+      {{ subiendo() ? 'Cargando…' : 'Cargar' }}
+    </button>
+  </div>
+  @if (errorDialogo()) {
+    <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
+  }
+  <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Historial de cargas">
+    <table class="tabla">
+      <caption class="solo-lectores">
+        Historial de cargas
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Archivo</th>
+          <th scope="col">Cargado</th>
+          <th scope="col">Filas</th>
+          <th scope="col">Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of cargas(); track c.id) {
+          <tr>
+            <th scope="row">{{ c.archivoNombre }}</th>
+            <td>
+              {{ c.cargadoAt | date: 'dd/MM/yyyy HH:mm' }}
+              <small>{{ c.cargadoPor }}</small>
+            </td>
+            <td>
+              {{ c.filasValidas }} de {{ c.filasTotal }}
+              @if (c.filasError > 0) {
+                <button type="button" class="enlace" (click)="descargarErrores(c)">
+                  Descargar {{ c.filasError }} error(es)
+                </button>
+              }
+            </td>
+            <td>
+              <span class="etiqueta" [class.ok]="c.vigente">
+                {{ c.vigente ? 'Vigente' : 'Anterior' }}
+              </span>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4">Todavía no se ha cargado ningún archivo.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="acciones">
+    <button type="button" class="boton secundario" (click)="cerrar()">Cerrar</button>
+  </div>
+</app-dialogo>
+
+<!-- Historial de versiones -->
+<app-dialogo
+  [titulo]="'Historial de «' + (actual()?.nombre ?? '') + '»'"
+  [abierto]="vista() === 'historial'"
+  (cierra)="cerrar()"
+>
+  @if (errorDialogo()) {
+    <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
+  }
+  <ol class="versiones">
+    @for (v of versiones(); track v.version) {
+      <li>
+        <strong>Versión {{ v.version }}</strong> · {{ v.creadoAt | date: 'dd/MM/yyyy HH:mm' }}
+        @if (v.usuario) {
+          · {{ v.usuario }}
+        }
+        <small>{{ resumenVersion(v) }}</small>
+      </li>
+    }
+  </ol>
+  <div class="acciones">
+    <button type="button" class="boton secundario" (click)="cerrar()">Cerrar</button>
+  </div>
+</app-dialogo>

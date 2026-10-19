@@ -21,6 +21,7 @@ export const PERMISO = {
   parametros: 'parametros.administrar',
   plantillas: 'plantillas.administrar',
   requisitos: 'requisitos.administrar',
+  cruces: 'cruces.administrar',
   validacionVer: 'validacion.ver',
   validar: 'validacion.validar',
   asignarCasos: 'validacion.asignar',

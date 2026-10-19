@@ -116,6 +116,15 @@ export interface SubsanacionCaso {
   items: { nombre: string; observacion: string }[];
 }
 
+/** Coincidencias de la persona o su cuidador en un archivo de cruce (RF-VAL-03). */
+export interface AlertaCruce {
+  cruceCodigo: string;
+  nombre: string | null;
+  /** Fecha de la carga consultada; null si todavía no hay archivo cargado. */
+  cargadoAt: string | null;
+  coincidencias: { persona: 'PCD' | 'CUIDADOR'; detalle: string }[];
+}
+
 export interface Caso {
   solicitud: {
     id: number;
@@ -148,6 +157,7 @@ export interface Caso {
   version: number;
   documentos: DocumentoCaso[];
   items: ItemCaso[];
+  alertas: AlertaCruce[];
   decisiones: DecisionCaso[];
   subsanacion: SubsanacionCaso | null;
 }

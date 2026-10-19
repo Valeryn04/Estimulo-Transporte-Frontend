@@ -16,9 +16,6 @@ import { ValidacionApi } from '../validacion-api';
 
 type Vista = 'ninguna' | 'formulario' | 'historial';
 
-/** Cruces con archivos disponibles hoy (se amplían con la configuración de cargas de cruce). */
-const CRUCES = [{ codigo: 'BENEFICIOS_INCOMPATIBLES', nombre: 'Beneficios incompatibles (ESTE)' }];
-
 /**
  * Lista de chequeo de requisitos (RN-05, RF-ADM-04): los requisitos que el validador revisa en cada caso. Cada uno
  * puede apoyarse en un documento y en datos del formulario, que son lo único que la persona puede corregir si se le
@@ -42,7 +39,7 @@ export class RequisitosPage implements OnInit {
   protected readonly aplicaA = NOMBRE_APLICA_REQUISITO;
   protected readonly opciones = Object.keys(NOMBRE_APLICA_REQUISITO) as AplicaARequisito[];
   protected readonly secciones = SECCIONES_DATOS;
-  protected readonly cruces = CRUCES;
+  protected readonly cruces = signal<{ codigo: string; nombre: string }[]>([]);
 
   protected readonly vista = signal<Vista>('ninguna');
   protected readonly editando = signal<Requisito | null>(null);
@@ -72,6 +69,15 @@ export class RequisitosPage implements OnInit {
   ngOnInit(): void {
     void this.cargar();
     void this.cargarDocumentos();
+    void this.cargarCruces();
+  }
+
+  private async cargarCruces(): Promise<void> {
+    try {
+      this.cruces.set(await firstValueFrom(this.api.crucesDisponibles()));
+    } catch {
+      this.cruces.set([]);
+    }
   }
 
   private async cargar(): Promise<void> {

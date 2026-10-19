@@ -45,6 +45,12 @@ export const internoRoutes: Routes = [
           import('./validacion/requisitos/requisitos-page').then((m) => m.RequisitosPage),
       },
       {
+        path: 'admin/cruces',
+        title: `Archivos de cruce · ${TITULO}`,
+        canActivate: [permisoGuard(PERMISO.cruces)],
+        loadComponent: () => import('./cruces/cruces-page').then((m) => m.CrucesPage),
+      },
+      {
         path: 'admin/usuarios',
         title: `Usuarios · ${TITULO}`,
         canActivate: [permisoGuard(PERMISO.usuarios)],

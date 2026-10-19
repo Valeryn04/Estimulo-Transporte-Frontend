@@ -156,7 +156,7 @@
     >
       <select appCampoControl formControlName="cruceCodigo">
         <option [ngValue]="null">Ninguno</option>
-        @for (c of cruces; track c.codigo) {
+        @for (c of cruces(); track c.codigo) {
           <option [value]="c.codigo">{{ c.nombre }}</option>
         }
       </select>

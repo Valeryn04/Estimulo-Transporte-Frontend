@@ -190,6 +190,31 @@
         @if (i.descripcion) {
           <p class="descripcion">{{ i.descripcion }}</p>
         }
+        @if (alertaDe(i); as alerta) {
+          @if (alerta.coincidencias.length > 0) {
+            <div class="alerta-cruce" role="alert">
+              <strong>Alerta de cruce: {{ alerta.nombre }}</strong>
+              <ul>
+                @for (c of alerta.coincidencias; track c.persona) {
+                  <li>
+                    Aparece {{ nombrePersona(c.persona) }}{{ c.detalle ? ': ' + c.detalle : '' }}.
+                  </li>
+                }
+              </ul>
+              <small>Archivo cargado el {{ alerta.cargadoAt | date: 'dd/MM/yyyy' }}.</small>
+            </div>
+          } @else if (alerta.cargadoAt) {
+            <p class="vinculo">
+              Cruce «{{ alerta.nombre }}»: sin coincidencias (archivo del
+              {{ alerta.cargadoAt | date: 'dd/MM/yyyy' }}).
+            </p>
+          } @else {
+            <p class="vinculo">
+              Cruce «{{ alerta.nombre ?? alerta.cruceCodigo }}»: todavía no hay archivo cargado,
+              verifique esta fuente a mano.
+            </p>
+          }
+        }
         @if (documentoDe(i); as doc) {
           <p class="vinculo">
             Documento: {{ doc.nombre }}

@@ -21,7 +21,8 @@
       PERMISO.catalogos,
       PERMISO.parametros,
       PERMISO.plantillas,
-      PERMISO.requisitos
+      PERMISO.requisitos,
+      PERMISO.cruces
     )
   ) {
     <h2>Administración</h2>
@@ -54,6 +55,12 @@
         <a class="tarjeta" routerLink="/interno/admin/requisitos">
           <strong>Lista de chequeo</strong>
           <span>Requisitos que revisa el validador y qué puede corregir la persona.</span>
+        </a>
+      }
+      @if (sesion.tiene(PERMISO.cruces)) {
+        <a class="tarjeta" routerLink="/interno/admin/cruces">
+          <strong>Archivos de cruce</strong>
+          <span>Estructura y carga de los archivos de otras entidades.</span>
         </a>
       }
       @if (sesion.tiene(PERMISO.parametros)) {
