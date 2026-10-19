@@ -5,8 +5,24 @@
     incluye.
   </p>
 
+  @if (sesion.tiene(PERMISO.validacionVer)) {
+    <h2>Validación de solicitudes</h2>
+    <div class="atajos">
+      <a class="tarjeta" routerLink="/interno/validacion">
+        <strong>Bandeja de validación</strong>
+        <span>Casos pendientes: abra uno, revise la lista de chequeo y emita su decisión.</span>
+      </a>
+    </div>
+  }
+
   @if (
-    sesion.tieneAlguno(PERMISO.usuarios, PERMISO.catalogos, PERMISO.parametros, PERMISO.plantillas)
+    sesion.tieneAlguno(
+      PERMISO.usuarios,
+      PERMISO.catalogos,
+      PERMISO.parametros,
+      PERMISO.plantillas,
+      PERMISO.requisitos
+    )
   ) {
     <h2>Administración</h2>
     <div class="atajos">
@@ -32,6 +48,12 @@
         <a class="tarjeta" routerLink="/interno/admin/documentos">
           <strong>Documentos exigidos</strong>
           <span>Soportes que debe cargar el ciudadano.</span>
+        </a>
+      }
+      @if (sesion.tiene(PERMISO.requisitos)) {
+        <a class="tarjeta" routerLink="/interno/admin/requisitos">
+          <strong>Lista de chequeo</strong>
+          <span>Requisitos que revisa el validador y qué puede corregir la persona.</span>
         </a>
       }
       @if (sesion.tiene(PERMISO.parametros)) {

@@ -1,0 +1,215 @@
+<div class="encabezado">
+  <h1>Lista de chequeo de requisitos</h1>
+  <button type="button" class="boton" (click)="abrirNuevo()">Agregar requisito</button>
+</div>
+<p class="intro">
+  Son los requisitos que el validador revisa en cada caso. Cada uno puede apoyarse en un documento y
+  en datos del formulario: son lo único que la persona puede corregir si se le pide subsanar. Los
+  casos que ya empezaron conservan la lista con la que se tramitaron.
+</p>
+
+@if (mensaje()) {
+  <p class="aviso exito" role="status">{{ mensaje() }}</p>
+}
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+
+@if (cargando()) {
+  <p role="status">Cargando requisitos…</p>
+} @else {
+  <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Tabla de requisitos">
+    <table class="tabla">
+      <caption class="solo-lectores">
+        Requisitos de la lista de chequeo
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Requisito</th>
+          <th scope="col">Aplica a</th>
+          <th scope="col">Qué puede corregir la persona</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of requisitos(); track r.id) {
+          <tr [class.inactivo]="!r.activo">
+            <th scope="row">
+              {{ r.nombre }}
+              @if (r.descripcion) {
+                <small>{{ r.descripcion }}</small>
+              }
+              @if (r.fuenteSugerida) {
+                <small>Fuente: {{ r.fuenteSugerida }}</small>
+              }
+            </th>
+            <td>{{ aplicaA[r.aplicaA] }}</td>
+            <td>
+              {{ resumenCorreccion(r) }}
+              @if (r.cruceCodigo) {
+                <small>Se contrasta con el cruce «{{ r.cruceCodigo }}»</small>
+              }
+            </td>
+            <td>
+              <span class="etiqueta" [class.ok]="r.activo" [class.mal]="!r.activo">
+                {{ r.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+              <small>Versión {{ r.version }}</small>
+            </td>
+            <td class="acciones-fila">
+              <span class="grupo-acciones">
+                <button
+                  type="button"
+                  class="accion-icono"
+                  [title]="'Editar ' + r.nombre"
+                  (click)="abrirEditar(r)"
+                >
+                  <app-icono nombre="editar" />
+                  <span class="solo-lectores">Editar {{ r.nombre }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="accion-icono"
+                  [class.peligro]="r.activo"
+                  [title]="(r.activo ? 'Desactivar ' : 'Activar ') + r.nombre"
+                  (click)="cambiarActivo(r)"
+                >
+                  <app-icono [nombre]="r.activo ? 'apagar' : 'check'" />
+                  <span class="solo-lectores"
+                    >{{ r.activo ? 'Desactivar' : 'Activar' }} {{ r.nombre }}</span
+                  >
+                </button>
+                <button
+                  type="button"
+                  class="accion-icono"
+                  [title]="'Historial de ' + r.nombre"
+                  (click)="verHistorial(r)"
+                >
+                  <app-icono nombre="descargar" />
+                  <span class="solo-lectores">Historial de versiones de {{ r.nombre }}</span>
+                </button>
+              </span>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5">Todavía no hay requisitos.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+<!-- Crear / editar -->
+<app-dialogo
+  [titulo]="editando() ? 'Editar requisito' : 'Agregar requisito'"
+  [abierto]="vista() === 'formulario'"
+  (cierra)="cerrar()"
+>
+  <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+    <app-campo idCampo="req-nombre" etiqueta="Nombre" [control]="form.controls.nombre">
+      <input appCampoControl type="text" formControlName="nombre" maxlength="150" />
+    </app-campo>
+    <app-campo
+      idCampo="req-descripcion"
+      etiqueta="Qué se verifica"
+      [control]="form.controls.descripcion"
+    >
+      <textarea appCampoControl formControlName="descripcion" rows="2" maxlength="500"></textarea>
+    </app-campo>
+    <div class="rejilla">
+      <app-campo idCampo="req-aplica" etiqueta="Aplica a" [control]="form.controls.aplicaA">
+        <select appCampoControl formControlName="aplicaA">
+          @for (o of opciones; track o) {
+            <option [value]="o">{{ aplicaA[o] }}</option>
+          }
+        </select>
+      </app-campo>
+      <app-campo
+        idCampo="req-fuente"
+        etiqueta="Fuente que se sugiere consultar"
+        [control]="form.controls.fuenteSugerida"
+      >
+        <input appCampoControl type="text" formControlName="fuenteSugerida" maxlength="200" />
+      </app-campo>
+    </div>
+    <app-campo
+      idCampo="req-documento"
+      etiqueta="Documento que lo sustenta"
+      ayuda="Si el requisito falla, la persona podrá cargar de nuevo este documento."
+      [control]="form.controls.documentoId"
+    >
+      <select appCampoControl formControlName="documentoId">
+        <option [ngValue]="null">Ninguno</option>
+        @for (d of documentos(); track d.id) {
+          <option [ngValue]="d.id">{{ d.nombre }}</option>
+        }
+      </select>
+    </app-campo>
+    <app-campo
+      idCampo="req-cruce"
+      etiqueta="Se contrasta con un archivo de cruce"
+      ayuda="Las coincidencias del cruce salen como alerta para el validador."
+      [control]="form.controls.cruceCodigo"
+    >
+      <select appCampoControl formControlName="cruceCodigo">
+        <option [ngValue]="null">Ninguno</option>
+        @for (c of cruces; track c.codigo) {
+          <option [value]="c.codigo">{{ c.nombre }}</option>
+        }
+      </select>
+    </app-campo>
+    <fieldset class="datos-corregibles">
+      <legend>Datos del formulario que la persona podrá corregir</legend>
+      @for (s of secciones; track s.titulo) {
+        <p class="titulo-modulo">{{ s.titulo }}</p>
+        @for (c of s.campos; track c.campo) {
+          <label class="opcion">
+            <input
+              type="checkbox"
+              [checked]="marcado(c.campo)"
+              (change)="alternarCampo(c.campo, $any($event.target).checked)"
+            />
+            <span>{{ c.etiqueta }}</span>
+          </label>
+        }
+      }
+    </fieldset>
+    @if (errorDialogo()) {
+      <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
+    }
+    <div class="acciones">
+      <button type="submit" class="boton" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando…' : 'Guardar' }}
+      </button>
+      <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>
+    </div>
+  </form>
+</app-dialogo>
+
+<!-- Historial -->
+<app-dialogo
+  [titulo]="'Historial de «' + (editando()?.nombre ?? '') + '»'"
+  [abierto]="vista() === 'historial'"
+  (cierra)="cerrar()"
+>
+  @if (errorDialogo()) {
+    <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
+  }
+  <ol class="versiones">
+    @for (v of versiones(); track v.version) {
+      <li>
+        <strong>Versión {{ v.version }}</strong> · {{ v.creadoAt | date: 'dd/MM/yyyy HH:mm' }}
+        @if (v.usuario) {
+          · {{ v.usuario }}
+        }
+        <small>{{ resumenVersion(v) }}</small>
+      </li>
+    }
+  </ol>
+  <div class="acciones">
+    <button type="button" class="boton secundario" (click)="cerrar()">Cerrar</button>
+  </div>
+</app-dialogo>

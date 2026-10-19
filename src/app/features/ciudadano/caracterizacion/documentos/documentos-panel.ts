@@ -44,6 +44,12 @@ export class DocumentosPanel implements OnInit {
   private readonly api = inject(CaracterizacionApi);
 
   readonly editable = input.required<boolean>();
+
+  /** Con una subsanación vigente solo se pueden cargar los documentos señalados. */
+  protected puedeCargar(doc: { id: number }): boolean {
+    const lista = this.datos()?.documentosEditables;
+    return this.editable() && (lista === null || lista === undefined || lista.includes(doc.id));
+  }
   /** Avisa cada vez que cambia la lista de documentos, para que la pantalla actualice su resumen. */
   readonly actualizado = output<DocumentosSolicitud>();
 

@@ -26,6 +26,7 @@ const lista = (documentos: DocumentoSolicitud[], maxMb = 5): DocumentosSolicitud
   const cargados = obligatorios.filter((d) => d.estado === 'CARGADO').length;
   return {
     editable: true,
+    documentosEditables: null,
     reglas: { formatos: ['pdf', 'jpg', 'png'], maxMb },
     documentos,
     resumen: {

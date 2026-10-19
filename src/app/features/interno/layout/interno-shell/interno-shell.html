@@ -45,18 +45,26 @@
       >Inicio</a
     >
 
+    @if (sesion.tiene(PERMISO.validacionVer)) {
+      <p class="grupo">Validación de solicitudes</p>
+      <a routerLink="/interno/validacion" routerLinkActive="activo">Bandeja de validación</a>
+    }
+
     @if (sesion.tiene(PERMISO.usuarios)) {
       <p class="grupo">Seguridad y accesos</p>
       <a routerLink="/interno/admin/usuarios" routerLinkActive="activo">Usuarios</a>
       <a routerLink="/interno/admin/roles" routerLinkActive="activo">Roles y permisos</a>
     }
 
-    @if (sesion.tieneAlguno(PERMISO.catalogos, PERMISO.parametros)) {
+    @if (sesion.tieneAlguno(PERMISO.catalogos, PERMISO.parametros, PERMISO.requisitos)) {
       <p class="grupo">Configuración del programa</p>
     }
     @if (sesion.tiene(PERMISO.catalogos)) {
       <a routerLink="/interno/admin/catalogos" routerLinkActive="activo">Listas del formulario</a>
       <a routerLink="/interno/admin/documentos" routerLinkActive="activo">Documentos exigidos</a>
+    }
+    @if (sesion.tiene(PERMISO.requisitos)) {
+      <a routerLink="/interno/admin/requisitos" routerLinkActive="activo">Lista de chequeo</a>
     }
     @if (sesion.tiene(PERMISO.parametros)) {
       <a routerLink="/interno/admin/parametros" routerLinkActive="activo">Parámetros y plazos</a>

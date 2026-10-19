@@ -1,0 +1,198 @@
+<div class="encabezado">
+  <h1>Bandeja de validación</h1>
+</div>
+<p class="intro">
+  Casos pendientes de verificar, requisito por requisito. Al abrir un caso queda «en revisión» a su
+  nombre y nadie más puede trabajarlo mientras tanto.
+</p>
+
+@if (mensaje()) {
+  <p class="aviso exito" role="status">{{ mensaje() }}</p>
+}
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+
+<form
+  class="tarjeta filtros"
+  [formGroup]="filtros"
+  (ngSubmit)="buscar()"
+  role="search"
+  aria-label="Filtrar casos"
+>
+  <div class="rejilla">
+    <div class="campo-simple">
+      <label for="q">Buscar por radicado o nombre</label>
+      <input id="q" type="search" formControlName="q" />
+    </div>
+    <div class="campo-simple">
+      <label for="estado">Estado</label>
+      <select id="estado" formControlName="estado">
+        <option value="">Pendientes de revisar</option>
+        @for (e of estados; track e.valor) {
+          <option [value]="e.valor">{{ e.nombre }}</option>
+        }
+      </select>
+    </div>
+    <div class="campo-simple">
+      <label for="asignado">Asignado a</label>
+      <select id="asignado" formControlName="asignado">
+        <option value="">Todos los casos</option>
+        <option value="mios">Mis casos</option>
+        <option value="sin">Sin asignar</option>
+        @for (v of validadores(); track v.id) {
+          <option [value]="v.id">{{ v.nombres }}</option>
+        }
+      </select>
+    </div>
+  </div>
+  <label class="opcion">
+    <input type="checkbox" formControlName="vencidas" />
+    <span>
+      Solo los que superan el tiempo máximo de atención
+      @if (datos(); as d) {
+        ({{ d.tiempoMaxDias }} días)
+      }
+    </span>
+  </label>
+  <div class="acciones">
+    <button type="submit" class="boton">Buscar</button>
+    <button type="button" class="boton secundario" (click)="limpiar()">Limpiar</button>
+  </div>
+</form>
+
+@if (puedeAsignar() && seleccion().size > 0) {
+  <div class="barra-asignar" role="group" aria-label="Asignar los casos marcados">
+    <strong>{{ seleccion().size }} caso(s) marcado(s)</strong>
+    <div class="campo-simple">
+      <label for="validador">Validador</label>
+      <select id="validador" [formControl]="validadorElegido">
+        <option value="">Elija a una persona</option>
+        @for (v of validadores(); track v.id) {
+          <option [value]="v.id">{{ v.nombres }}</option>
+        }
+      </select>
+    </div>
+    <button
+      type="button"
+      class="boton"
+      [disabled]="asignando() || !validadorElegido.value"
+      (click)="asignar()"
+    >
+      Asignar
+    </button>
+    <button type="button" class="boton secundario" [disabled]="asignando()" (click)="asignar(true)">
+      Dejar sin asignar
+    </button>
+  </div>
+}
+
+@if (cargando() && !datos()) {
+  <p role="status">Cargando la bandeja…</p>
+} @else if (datos(); as d) {
+  <p class="total" role="status">{{ d.total }} caso(s).</p>
+  <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Tabla de casos por validar">
+    <table class="tabla">
+      <caption class="solo-lectores">
+        Casos pendientes de validación
+      </caption>
+      <thead>
+        <tr>
+          @if (puedeAsignar()) {
+            <th scope="col" class="marca">
+              <input
+                type="checkbox"
+                aria-label="Marcar todos los casos de esta página"
+                [checked]="todosMarcados()"
+                (change)="alternarTodos($any($event.target).checked)"
+              />
+            </th>
+          }
+          <th scope="col" [attr.aria-sort]="ariaSort('radicado')">
+            <button type="button" class="orden" (click)="ordenarPor('radicado')">Radicado</button>
+          </th>
+          <th scope="col" [attr.aria-sort]="ariaSort('fecha')">
+            <button type="button" class="orden" (click)="ordenarPor('fecha')">Fecha</button>
+          </th>
+          <th scope="col" [attr.aria-sort]="ariaSort('nombre')">
+            <button type="button" class="orden" (click)="ordenarPor('nombre')">
+              Persona con discapacidad
+            </button>
+          </th>
+          <th scope="col" [attr.aria-sort]="ariaSort('estado')">
+            <button type="button" class="orden" (click)="ordenarPor('estado')">Estado</button>
+          </th>
+          <th scope="col" class="num" [attr.aria-sort]="ariaSort('dias')">
+            <button type="button" class="orden" (click)="ordenarPor('dias')">Días</button>
+          </th>
+          <th scope="col">Asignado a</th>
+          <th scope="col">En revisión por</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of d.items; track c.solicitudId) {
+          <tr [class.supera]="c.superaTiempo">
+            @if (puedeAsignar()) {
+              <td class="marca">
+                <input
+                  type="checkbox"
+                  [attr.aria-label]="'Marcar el caso ' + c.radicado"
+                  [checked]="marcado(c.solicitudId)"
+                  (change)="alternar(c.solicitudId, $any($event.target).checked)"
+                />
+              </td>
+            }
+            <th scope="row">
+              <a [routerLink]="['/interno/validacion/caso', c.solicitudId]">{{ c.radicado }}</a>
+            </th>
+            <td>{{ c.radicadaAt | date: 'dd/MM/yyyy' }}</td>
+            <td>{{ c.pcdNombre }}</td>
+            <td>
+              <span class="etiqueta">{{ c.estado.nombre }}</span>
+              @if (c.subsanado) {
+                <span class="etiqueta ok">Subsanado</span>
+              }
+              @if (c.subsanacionVencida) {
+                <span class="etiqueta mal">Plazo vencido</span>
+              }
+            </td>
+            <td class="num">
+              {{ c.dias }}
+              @if (c.superaTiempo) {
+                <span class="etiqueta mal">Supera {{ d.tiempoMaxDias }}</span>
+              }
+            </td>
+            <td>{{ c.asignadoA?.nombre ?? '—' }}</td>
+            <td>{{ c.enRevisionPor?.nombre ?? '—' }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td [attr.colspan]="puedeAsignar() ? 8 : 7">No hay casos con esos filtros.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (totalPaginas() > 1) {
+    <nav class="paginacion" aria-label="Paginación">
+      <button
+        type="button"
+        class="boton secundario"
+        [disabled]="pagina() <= 1"
+        (click)="buscar(pagina() - 1)"
+      >
+        Anterior
+      </button>
+      <span>Página {{ pagina() }} de {{ totalPaginas() }}</span>
+      <button
+        type="button"
+        class="boton secundario"
+        [disabled]="pagina() >= totalPaginas()"
+        (click)="buscar(pagina() + 1)"
+      >
+        Siguiente
+      </button>
+    </nav>
+  }
+}

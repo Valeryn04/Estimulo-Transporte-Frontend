@@ -83,6 +83,24 @@ export interface Avance {
   completa: boolean;
 }
 
+/** Lo que se le pidió corregir a la persona (RF-CAR-06). */
+export interface SubsanacionCiudadano {
+  estado: 'ABIERTA' | 'VENCIDA' | 'RESPONDIDA';
+  venceAt: string;
+  respondidaAt: string | null;
+  /** Puede modificar lo señalado y enviar su respuesta. */
+  puedeResponder: boolean;
+  items: { nombre: string; observacion: string; documentoId: number | null; campos: string[] }[];
+  documentosEditables: number[];
+  camposEditables: string[];
+}
+
+export interface RespuestaSubsanacion {
+  estado: { codigo: string; nombre: string };
+  explicacion: string;
+  siguientePaso: string;
+}
+
 export interface Caracterizacion {
   solicitud: {
     vigencia: number;
@@ -96,6 +114,7 @@ export interface Caracterizacion {
   pcd: IdentificacionPersona & { correo: string };
   cuidador: IdentificacionPersona & { nombreEditable: boolean };
   datos: DatosCaracterizacion;
+  subsanacion: SubsanacionCiudadano | null;
   avance: Avance;
   version: number;
   guardadoAt: string | null;
@@ -151,6 +170,8 @@ export interface DocumentoSolicitud {
 
 export interface DocumentosSolicitud {
   editable: boolean;
+  /** Con una subsanación vigente, los únicos documentos que se pueden cargar (null = todos). */
+  documentosEditables: number[] | null;
   reglas: { formatos: FormatoArchivo[]; maxMb: number };
   documentos: DocumentoSolicitud[];
   resumen: { obligatorios: number; cargados: number; completo: boolean };
@@ -231,6 +252,15 @@ export class CaracterizacionApi {
 
   revision(): Observable<RevisionSolicitud> {
     return this.http.get<RevisionSolicitud>(`${this.base}/revision`, this.cabeceras());
+  }
+
+  /** Envía las correcciones pedidas por el validador (RF-CAR-06). */
+  responderSubsanacion(): Observable<RespuestaSubsanacion> {
+    return this.http.post<RespuestaSubsanacion>(
+      `${this.base}/subsanacion/responder`,
+      {},
+      this.cabeceras(),
+    );
   }
 
   radicar(): Observable<Radicacion> {

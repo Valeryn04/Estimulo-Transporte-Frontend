@@ -34,6 +34,7 @@ import {
   DocumentosSolicitud,
   Embarazo,
   Radicacion,
+  RespuestaSubsanacion,
   RevisionSolicitud,
   SesionCiudadano,
 } from '../../../core/publico/caracterizacion-api';
@@ -60,7 +61,7 @@ import {
 } from './caracterizacion-datos';
 import { DocumentosPanel } from './documentos/documentos-panel';
 
-type Paso = 'cargando' | 'acceso' | 'formulario' | 'radicada' | 'error';
+type Paso = 'cargando' | 'acceso' | 'formulario' | 'radicada' | 'subsanada' | 'error';
 type Guardado = 'inactivo' | 'pendiente' | 'guardando' | 'guardado' | 'error';
 export type SeccionVisible = CodigoSeccion | 'documentos' | 'revision';
 
@@ -164,6 +165,12 @@ export class CaracterizacionPage implements OnInit, OnDestroy {
   protected readonly enviando = signal(false);
   protected readonly errorEnvio = signal('');
   protected readonly radicacion = signal<Radicacion | null>(null);
+
+  // ---- subsanación (RF-CAR-06): solo se modifica lo que el validador señaló
+  protected readonly subsanacion = computed(() => this.c()?.subsanacion ?? null);
+  protected readonly modoSubsanacion = computed(() => this.subsanacion()?.puedeResponder === true);
+  protected readonly confirmandoSubsanacion = signal(false);
+  protected readonly respuestaSubsanacion = signal<RespuestaSubsanacion | null>(null);
 
   protected readonly form = new FormGroup({
     pcdNombre: textoControl([
@@ -364,7 +371,55 @@ export class CaracterizacionPage implements OnInit, OnDestroy {
     this.nombresServidor = { pcd: datos.pcd.nombre, cuidador: datos.cuidador.nombre };
     this.escribirDatos(datos);
     this.bloqueado.set(false);
+    this.limitarASubsanacion(datos);
     if (!this.pasos().includes(this.seccion())) this.seccion.set('datos-personales');
+  }
+
+  /** Con una subsanación vigente, todo lo que no se pidió corregir queda solo de lectura. */
+  private limitarASubsanacion(datos: Caracterizacion): void {
+    const sub = datos.subsanacion;
+    if (!sub?.puedeResponder) return;
+    const editables = new Set(sub.camposEditables);
+    for (const [campo, control] of Object.entries(this.form.controls)) {
+      if (!editables.has(campo)) control.disable({ emitEvent: false });
+    }
+  }
+
+  /** ¿Esta sección tiene algo que corregir? */
+  protected tieneSenalados(destino: SeccionVisible): boolean {
+    const sub = this.subsanacion();
+    if (!sub?.puedeResponder || destino === 'revision') return false;
+    if (destino === 'documentos') return sub.documentosEditables.length > 0;
+    return false;
+  }
+
+  protected pedirConfirmacionSubsanacion(): void {
+    this.errorEnvio.set('');
+    this.confirmandoSubsanacion.set(true);
+  }
+
+  /** La persona envía sus correcciones: el caso vuelve a revisión. */
+  protected async enviarSubsanacion(): Promise<void> {
+    this.enviando.set(true);
+    this.errorEnvio.set('');
+    try {
+      await this.guardarAhora();
+      this.respuestaSubsanacion.set(await firstValueFrom(this.api.responderSubsanacion()));
+      this.confirmandoSubsanacion.set(false);
+      this.paso.set('subsanada');
+      this.enfocarTitulo();
+    } catch (e) {
+      this.confirmandoSubsanacion.set(false);
+      this.errorEnvio.set(
+        e instanceof ApiError
+          ? e.errores.length > 0
+            ? e.errores.map((x) => x.mensaje).join(' ')
+            : e.message
+          : 'No pudimos enviar sus correcciones. Intente de nuevo.',
+      );
+    } finally {
+      this.enviando.set(false);
+    }
   }
 
   private enfocarTitulo(): void {
@@ -701,7 +756,10 @@ export class CaracterizacionPage implements OnInit, OnDestroy {
     this.seccion.set(destino);
     this.errorEnvio.set('');
     this.enfocarTitulo();
-    if (destino === 'revision') {
+    if (destino === 'revision' && this.subsanacion()) {
+      // En una subsanación no hay lista de pendientes de radicación: solo se envía la respuesta.
+      void this.guardarAhora();
+    } else if (destino === 'revision') {
       // Primero se guarda lo escrito, para que la revisión vea lo último.
       void this.guardarAhora().then(() => this.cargarRevision());
     } else {

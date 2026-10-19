@@ -20,4 +20,9 @@ export const PERMISO = {
   catalogos: 'catalogos.administrar',
   parametros: 'parametros.administrar',
   plantillas: 'plantillas.administrar',
+  requisitos: 'requisitos.administrar',
+  validacionVer: 'validacion.ver',
+  validar: 'validacion.validar',
+  asignarCasos: 'validacion.asignar',
+  datosSensibles: 'datos.sensibles.ver',
 } as const;

@@ -1,0 +1,31 @@
+.intro {
+  margin: 0 0 16px;
+  color: var(--color-muted);
+}
+
+.datos-corregibles {
+  max-height: 16rem;
+  padding: 8px 16px;
+  margin: 0 0 16px;
+  overflow-y: auto;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+
+  legend {
+    padding: 0 6px;
+    font-weight: 600;
+  }
+}
+
+.versiones {
+  padding-left: 20px;
+
+  li {
+    margin-bottom: 10px;
+  }
+
+  small {
+    display: block;
+    color: var(--color-muted);
+  }
+}

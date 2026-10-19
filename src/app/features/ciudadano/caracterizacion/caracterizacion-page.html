@@ -63,6 +63,44 @@
         </dl>
       </section>
 
+      @if (subsanacion(); as sub) {
+        <section class="tarjeta subsanacion" aria-labelledby="titulo-subsanacion">
+          @if (sub.estado === 'ABIERTA') {
+            <h2 id="titulo-subsanacion">Debe corregir lo siguiente</h2>
+            <p>
+              Al revisar su solicitud encontramos datos o documentos por corregir. Tiene plazo hasta
+              el <strong>{{ sub.venceAt | date: 'dd/MM/yyyy' : '-0500' }}</strong
+              >. Solo puede modificar lo que aparece aquí; lo demás queda bloqueado.
+            </p>
+            <ul class="pendientes">
+              @for (i of sub.items; track i.nombre) {
+                <li>
+                  <strong>{{ i.nombre }}:</strong> {{ i.observacion }}
+                  @if (i.documentoId !== null) {
+                    <span class="solo-lectores">(cargue de nuevo el documento)</span>
+                  }
+                </li>
+              }
+            </ul>
+            <p>
+              Cuando termine, vaya al último paso («Revisión y envío») y pulse
+              <strong>Enviar mis correcciones</strong>.
+            </p>
+          } @else if (sub.estado === 'VENCIDA') {
+            <h2 id="titulo-subsanacion">El plazo para corregir terminó</h2>
+            <p>
+              El plazo venció el {{ sub.venceAt | date: 'dd/MM/yyyy' : '-0500' }}. El funcionario
+              revisará su caso y le avisaremos por correo.
+            </p>
+          } @else {
+            <h2 id="titulo-subsanacion">Ya envió sus correcciones</h2>
+            <p>
+              Su solicitud volvió a revisión. Le avisaremos por correo cuando haya un resultado.
+            </p>
+          }
+        </section>
+      }
+
       @if (!editable()) {
         <p class="aviso advertencia" role="alert">
           <span>
@@ -646,7 +684,19 @@
               }
 
               @case ('revision') {
-                @if (cargandoRevision() && !revision()) {
+                @if (modoSubsanacion()) {
+                  <p class="aviso" role="status">
+                    <span>
+                      Revise que haya corregido todo lo que se le pidió. Al enviar, su solicitud
+                      vuelve a revisión y ya no podrá cambiar nada más.
+                    </span>
+                  </p>
+                  @if (errorEnvio()) {
+                    <p class="aviso error" role="alert">
+                      <span>{{ errorEnvio() }}</span>
+                    </p>
+                  }
+                } @else if (cargandoRevision() && !revision()) {
                   <p role="status">Revisando su solicitud…</p>
                 }
                 @if (errorEnvio()) {
@@ -654,7 +704,7 @@
                     <span>{{ errorEnvio() }}</span>
                   </p>
                 }
-                @if (revision(); as r) {
+                @if (!modoSubsanacion() && revision(); as r) {
                   @if (r.completo) {
                     <p class="aviso exito" role="status">
                       <span>
@@ -718,7 +768,17 @@
                 <app-icono nombre="adelante" />
               </button>
             }
-            @if (seccion() === 'revision' && editable()) {
+            @if (seccion() === 'revision' && modoSubsanacion()) {
+              <button
+                type="button"
+                class="boton enviar"
+                [disabled]="enviando()"
+                (click)="pedirConfirmacionSubsanacion()"
+              >
+                Enviar mis correcciones
+              </button>
+            }
+            @if (seccion() === 'revision' && editable() && !modoSubsanacion()) {
               <button
                 type="button"
                 class="boton enviar"
@@ -757,6 +817,48 @@
           </button>
         </div>
       </app-dialogo>
+
+      <app-dialogo
+        titulo="¿Enviar sus correcciones?"
+        [abierto]="confirmandoSubsanacion()"
+        (cierra)="confirmandoSubsanacion.set(false)"
+      >
+        <p>
+          Su solicitud volverá a revisión. Después de enviar <strong>no podrá cambiar</strong> los
+          datos ni los documentos.
+        </p>
+        <p>¿Revisó que corrigió todo lo que se le pidió?</p>
+        <div class="acciones">
+          <button type="button" class="boton" [disabled]="enviando()" (click)="enviarSubsanacion()">
+            {{ enviando() ? 'Enviando…' : 'Sí, enviar mis correcciones' }}
+          </button>
+          <button
+            type="button"
+            class="boton secundario"
+            (click)="confirmandoSubsanacion.set(false)"
+          >
+            Volver a revisar
+          </button>
+        </div>
+      </app-dialogo>
+    }
+  }
+
+  @case ('subsanada') {
+    @if (respuestaSubsanacion(); as r) {
+      <h1 #tituloEl tabindex="-1">Recibimos sus correcciones</h1>
+      <section class="tarjeta" aria-labelledby="titulo-subsanada">
+        <h2 id="titulo-subsanada">¿Qué sigue?</h2>
+        <p>
+          Estado: <span class="etiqueta ok">{{ r.estado.nombre }}</span>
+        </p>
+        <p>{{ r.explicacion }}</p>
+        <p><strong>Siguiente paso:</strong> {{ r.siguientePaso }}</p>
+        <p>Le enviamos un correo de confirmación con el enlace para consultar el estado.</p>
+      </section>
+      <div class="acciones no-imprimir">
+        <a class="boton" routerLink="/consulta">Consultar el estado de mi solicitud</a>
+      </div>
     }
   }
 

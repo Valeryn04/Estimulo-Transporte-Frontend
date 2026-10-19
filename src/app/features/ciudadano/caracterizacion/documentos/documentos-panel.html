@@ -99,7 +99,7 @@
             }
 
             <div class="acciones">
-              @if (editable()) {
+              @if (puedeCargar(doc)) {
                 <label class="boton chico" [class.desactivado]="subiendo()[doc.id] !== undefined">
                   {{ doc.archivo ? 'Reemplazar archivo' : 'Cargar archivo' }}
                   <input

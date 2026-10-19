@@ -119,6 +119,7 @@ const respuesta = (cambios: Partial<Caracterizacion> = {}): Caracterizacion => (
     nombreEditable: true,
   },
   datos: vacios(),
+  subsanacion: null,
   avance: avance(),
   version: 0,
   guardadoAt: null,
@@ -740,6 +741,117 @@ describe('CaracterizacionPage', () => {
       );
       await p.asentar();
       expect(p.q('.numero')?.textContent).toContain('EST-2026-000009');
+    });
+  });
+
+  describe('subsanación (RF-CAR-06)', () => {
+    const conSubsanacion = (cambios: Partial<NonNullable<Caracterizacion['subsanacion']>> = {}) => {
+      const base = respuesta();
+      return respuesta({
+        solicitud: {
+          ...base.solicitud,
+          estado: { codigo: 'EN_SUBSANACION', nombre: 'Por subsanar' },
+          editable: true,
+          radicado: 'EST-2026-000009',
+          radicadaAt: '2026-10-07T02:30:00Z',
+        },
+        subsanacion: {
+          estado: 'ABIERTA',
+          venceAt: '2026-10-20T04:59:59Z',
+          respondidaAt: null,
+          puedeResponder: true,
+          items: [
+            {
+              nombre: 'Soporte SISBÉN IV',
+              observacion: 'El soporte es de otro mes; cargue el vigente.',
+              documentoId: 4,
+              campos: [],
+            },
+            {
+              nombre: 'Datos de contacto',
+              observacion: 'El celular no responde.',
+              documentoId: null,
+              campos: ['celular'],
+            },
+          ],
+          documentosEditables: [4],
+          camposEditables: ['celular'],
+          ...cambios,
+        },
+      });
+    };
+
+    it('muestra lo que debe corregir, con la observación y el plazo', async () => {
+      const p = await montar(conSubsanacion());
+      const aviso = p.q('.subsanacion')!;
+      expect(aviso.textContent).toContain('Debe corregir lo siguiente');
+      expect(aviso.textContent).toContain('El soporte es de otro mes; cargue el vigente.');
+      expect(aviso.textContent).toContain('El celular no responde.');
+      expect(aviso.textContent).toContain('19/10/2026');
+    });
+
+    it('solo se puede modificar lo señalado: lo demás queda bloqueado', async () => {
+      const p = await montar(conSubsanacion());
+      expect(p.q<HTMLInputElement>('#car-celular')!.disabled).toBe(false);
+      expect(p.q<HTMLInputElement>('#car-telefonoFijo')!.disabled).toBe(true);
+      expect(p.q<HTMLSelectElement>('#car-generoId')!.disabled).toBe(true);
+      expect(p.q<HTMLInputElement>('#car-pcdNombre')!.disabled).toBe(true);
+    });
+
+    it('en el último paso envía las correcciones y muestra que volvió a revisión', async () => {
+      const p = await montar(conSubsanacion());
+      await p.paso('Revisión');
+      expect(p.q('.enviar')?.textContent).toContain('Enviar mis correcciones');
+      p.ctrl.expectNone(`${URL}/revision`);
+      p.q<HTMLButtonElement>('.enviar')!.click();
+      await p.asentar();
+      [...p.el.querySelectorAll<HTMLButtonElement>('dialog[open] button')]
+        .find((b) => b.textContent!.includes('Sí, enviar mis correcciones'))!
+        .click();
+      await p.asentar();
+      const r = p.ctrl.expectOne(`${URL}/subsanacion/responder`);
+      expect(r.request.method).toBe('POST');
+      r.flush({
+        estado: { codigo: 'SUBSANADA', nombre: 'Subsanada' },
+        explicacion: 'Recibimos sus correcciones. Su solicitud volvió a revisión.',
+        siguientePaso: 'Espere el resultado.',
+      });
+      await p.asentar();
+      expect(p.q('h1')?.textContent).toContain('Recibimos sus correcciones');
+      expect(p.el.textContent).toContain('Subsanada');
+    });
+
+    it('si falta algo, el servidor lo dice y la persona sigue en el formulario', async () => {
+      const p = await montar(conSubsanacion());
+      await p.paso('Revisión');
+      p.q<HTMLButtonElement>('.enviar')!.click();
+      await p.asentar();
+      [...p.el.querySelectorAll<HTMLButtonElement>('dialog[open] button')]
+        .find((b) => b.textContent!.includes('Sí, enviar mis correcciones'))!
+        .click();
+      await p.asentar();
+      p.ctrl
+        .expectOne(`${URL}/subsanacion/responder`)
+        .flush(
+          errorApi('VALIDACION', 'Revise', [
+            { campo: 'documento:4', mensaje: 'Cargue el documento corregido: Soporte SISBÉN IV' },
+          ]),
+          { status: 422, statusText: 'No procesable' },
+        );
+      await p.asentar();
+      expect(p.q('.aviso.error')?.textContent).toContain('Cargue el documento corregido');
+      expect(p.q('h1')?.textContent).not.toContain('Recibimos');
+    });
+
+    it('con el plazo vencido avisa que el funcionario revisará el caso y no deja enviar', async () => {
+      const vencida = conSubsanacion({ estado: 'VENCIDA', puedeResponder: false });
+      // Con el plazo vencido el servidor ya no deja editar nada.
+      vencida.solicitud.editable = false;
+      const p = await montar(vencida);
+      expect(p.q('.subsanacion')?.textContent).toContain('El plazo para corregir terminó');
+      await p.paso('Revisión');
+      expect(p.el.textContent).not.toContain('Enviar mis correcciones');
+      expect(p.q('.enviar')).toBeNull();
     });
   });
 });

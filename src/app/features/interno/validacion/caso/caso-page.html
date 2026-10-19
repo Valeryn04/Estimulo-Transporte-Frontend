@@ -1,0 +1,387 @@
+<p class="volver"><a routerLink="/interno/validacion">← Volver a la bandeja</a></p>
+
+@if (cargando()) {
+  <p role="status">Abriendo el caso…</p>
+} @else if (error() && !caso()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+} @else if (caso(); as c) {
+  <div class="encabezado">
+    <h1>Caso {{ c.solicitud.radicado }}</h1>
+    <span class="etiqueta">{{ c.solicitud.estado.nombre }}</span>
+  </div>
+
+  @if (aviso()) {
+    <p class="aviso" role="status">{{ aviso() }} Puede consultarlo, pero no modificarlo.</p>
+  }
+  @if (error()) {
+    <p class="aviso error" role="alert">{{ error() }}</p>
+  }
+  @if (c.sensiblesOcultos) {
+    <p class="aviso" role="note">
+      Su rol no tiene acceso a los datos sensibles (salud, etnia y condición socioeconómica): se
+      muestran ocultos y no puede abrir los documentos.
+    </p>
+  }
+
+  @if (resultado(); as r) {
+    <div class="aviso exito" role="status">
+      <strong>Decisión registrada.</strong> El caso quedó «{{ r.estado.nombre }}» y se notificó a la
+      persona por correo.
+      @if (r.venceAt) {
+        Plazo para responder: hasta el {{ r.venceAt | date: 'dd/MM/yyyy' }}.
+      }
+      <p><a class="boton" routerLink="/interno/validacion">Volver a la bandeja</a></p>
+    </div>
+  }
+
+  <section class="tarjeta" aria-labelledby="t-resumen">
+    <h2 id="t-resumen">Solicitante</h2>
+    <dl class="datos">
+      <div>
+        <dt>Persona con discapacidad</dt>
+        <dd>{{ c.pcd.nombre }} · {{ c.pcd.tipo }} {{ c.pcd.numero }}</dd>
+      </div>
+      <div>
+        <dt>Cuidador</dt>
+        <dd>{{ c.cuidador.nombre }} · {{ c.cuidador.tipo }} {{ c.cuidador.numero }}</dd>
+      </div>
+      <div>
+        <dt>Correo de notificaciones</dt>
+        <dd>{{ c.solicitud.correo }}</dd>
+      </div>
+      <div>
+        <dt>Residencia</dt>
+        <dd>
+          {{ c.solicitud.direccion ?? '—' }}
+          @if (c.solicitud.barrio || c.solicitud.localidad) {
+            <small>{{ c.solicitud.barrio }} {{ c.solicitud.localidad }}</small>
+          }
+        </dd>
+      </div>
+      <div>
+        <dt>Radicada</dt>
+        <dd>
+          {{ c.solicitud.radicadaAt | date: 'dd/MM/yyyy HH:mm' }} · hace
+          {{ c.solicitud.dias }} día(s)
+          @if (c.solicitud.superaTiempo) {
+            <span class="etiqueta mal">Supera el tiempo de atención</span>
+          }
+        </dd>
+      </div>
+      <div>
+        <dt>Revisión</dt>
+        <dd>
+          Ronda {{ c.validacion.ronda }}
+          @if (c.validacion.subsanado) {
+            <span class="etiqueta ok">Subsanado</span>
+          }
+          @if (c.validacion.enRevisionPor) {
+            · en revisión por {{ c.validacion.enRevisionPor }}
+          }
+          @if (c.validacion.asignadoA) {
+            · asignado a {{ c.validacion.asignadoA }}
+          }
+        </dd>
+      </div>
+    </dl>
+    @if (puedeEditar() && !resultado()) {
+      <p>
+        <button type="button" class="boton secundario" (click)="devolver()">
+          Devolver a la bandeja sin decidir
+        </button>
+      </p>
+    }
+  </section>
+
+  @if (c.subsanacion; as s) {
+    <section class="tarjeta" aria-labelledby="t-subsanacion">
+      <h2 id="t-subsanacion">
+        Subsanación
+        <span
+          class="etiqueta"
+          [class.mal]="s.estado === 'VENCIDA'"
+          [class.ok]="s.estado === 'RESPONDIDA'"
+        >
+          {{
+            s.estado === 'ABIERTA'
+              ? 'Esperando respuesta'
+              : s.estado === 'VENCIDA'
+                ? 'Plazo vencido'
+                : 'Respondida'
+          }}
+        </span>
+      </h2>
+      <p>
+        Plazo: hasta el {{ s.venceAt | date: 'dd/MM/yyyy' }}.
+        @if (s.estado === 'VENCIDA') {
+          La persona no respondió a tiempo: puede rechazar por falta de respuesta o apoyarse en la
+          lista de chequeo.
+        }
+      </p>
+      <ul>
+        @for (i of s.items; track i.nombre) {
+          <li>
+            <strong>{{ i.nombre }}:</strong> {{ i.observacion }}
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  <section class="tarjeta" aria-labelledby="t-datos">
+    <h2 id="t-datos">Datos de la caracterización</h2>
+    @for (s of secciones; track s.titulo) {
+      <h3>{{ s.titulo }}</h3>
+      <dl class="datos compacto">
+        @for (campo of s.campos; track campo.campo) {
+          <div>
+            <dt>{{ campo.etiqueta }}</dt>
+            <dd>{{ valor(campo.campo) }}</dd>
+          </div>
+        }
+      </dl>
+    }
+  </section>
+
+  <section class="tarjeta" aria-labelledby="t-docs">
+    <h2 id="t-docs">Documentos</h2>
+    <ul class="documentos">
+      @for (d of c.documentos; track d.id) {
+        <li>
+          <span class="nombre">
+            {{ d.nombre }}
+            @if (d.reemplazos > 0) {
+              <small>{{ d.reemplazos }} versión(es) anterior(es) conservada(s)</small>
+            }
+          </span>
+          @if (d.archivo; as a) {
+            <span class="meta">{{ a.nombre }} · {{ a.formato.toUpperCase() }}</span>
+            @if (d.puedeVer) {
+              <button type="button" class="boton secundario chico" (click)="verDocumento(d)">
+                Abrir
+                <span class="solo-lectores">{{ d.nombre }}</span>
+              </button>
+            }
+          } @else {
+            <span class="etiqueta mal">Sin cargar</span>
+          }
+        </li>
+      }
+    </ul>
+  </section>
+
+  <section class="tarjeta" aria-labelledby="t-lista">
+    <h2 id="t-lista">Lista de chequeo</h2>
+    <p class="intro">
+      Marque cada requisito con su resultado, la fuente que consultó y una observación. No se puede
+      aprobar con requisitos «no cumple» o «pendientes».
+      <strong>
+        {{ resumen().cumple }} cumple · {{ resumen().noCumple }} no cumple ·
+        {{ resumen().pendiente }} pendiente · {{ resumen().noAplica }} no aplica
+      </strong>
+    </p>
+    @for (i of c.items; track i.id) {
+      <fieldset
+        class="requisito"
+        [class.no-cumple]="i.resultado === 'NO_CUMPLE'"
+        [disabled]="!puedeEditar()"
+      >
+        <legend>{{ i.nombre }}</legend>
+        @if (i.descripcion) {
+          <p class="descripcion">{{ i.descripcion }}</p>
+        }
+        @if (documentoDe(i); as doc) {
+          <p class="vinculo">
+            Documento: {{ doc.nombre }}
+            @if (doc.puedeVer && doc.archivo) {
+              <button type="button" class="enlace" (click)="verDocumento(doc)">abrir</button>
+            }
+          </p>
+        }
+        @if (!i.subsanable) {
+          <p class="vinculo">
+            No se puede pedir subsanación de este requisito (no se apoya en un documento ni en datos
+            del formulario).
+          </p>
+        }
+        <div
+          class="resultados"
+          role="radiogroup"
+          [attr.aria-label]="'Resultado de ' + i.nombre"
+          [formGroup]="formDe(i)"
+        >
+          @for (r of resultados; track r) {
+            <label class="opcion">
+              <input
+                type="radio"
+                formControlName="resultado"
+                [value]="r"
+                (change)="guardarItem(i)"
+              />
+              <span>{{ nombreResultado[r] }}</span>
+            </label>
+          }
+        </div>
+        <div class="rejilla" [formGroup]="formDe(i)">
+          <div class="campo-simple">
+            <label [attr.for]="'fuente-' + i.id">Fuente consultada</label>
+            <input
+              [id]="'fuente-' + i.id"
+              type="text"
+              formControlName="fuente"
+              maxlength="200"
+              (blur)="guardarItem(i)"
+            />
+            @if (i.fuenteSugerida && puedeEditar()) {
+              <button type="button" class="enlace" (click)="usarFuenteSugerida(i)">
+                Usar «{{ i.fuenteSugerida }}»
+              </button>
+            }
+          </div>
+          <div class="campo-simple">
+            <label [attr.for]="'evidencia-' + i.id">Evidencia de la verificación</label>
+            <input
+              [id]="'evidencia-' + i.id"
+              type="text"
+              formControlName="evidencia"
+              maxlength="1000"
+              (blur)="guardarItem(i)"
+            />
+          </div>
+        </div>
+        <div class="campo-simple" [formGroup]="formDe(i)">
+          <label [attr.for]="'obs-' + i.id">Observación</label>
+          <textarea
+            [id]="'obs-' + i.id"
+            rows="2"
+            formControlName="observacion"
+            maxlength="1000"
+            (blur)="guardarItem(i)"
+          ></textarea>
+        </div>
+        <p class="estado-guardado" role="status">
+          @if (guardando().has(i.id)) {
+            Guardando…
+          } @else if (guardados().has(i.id)) {
+            Guardado
+          } @else if (i.registradoPor) {
+            Registrado por {{ i.registradoPor }}
+          }
+        </p>
+        @if (errorItem()[i.id]) {
+          <p class="aviso error" role="alert">{{ errorItem()[i.id] }}</p>
+        }
+      </fieldset>
+    }
+  </section>
+
+  @if (puedeEditar() && !resultado()) {
+    <section class="tarjeta" aria-labelledby="t-decision">
+      <h2 id="t-decision">Decisión</h2>
+      <form [formGroup]="formDecision" (ngSubmit)="pedirConfirmacion()" novalidate>
+        <div class="opciones-decision" role="radiogroup" aria-label="Decisión">
+          @for (d of decisiones; track d) {
+            <label class="opcion">
+              <input
+                type="radio"
+                formControlName="decision"
+                [value]="d"
+                (change)="elegirDecision(d)"
+              />
+              <span>{{ nombreDecision[d] }}</span>
+            </label>
+          }
+        </div>
+        @if (decisionElegida() === 'SUBSANAR') {
+          <div class="resumen-subsanar">
+            <strong>Se le pedirá a la persona corregir:</strong>
+            <ul>
+              @for (i of porCorregir(); track i.id) {
+                <li>{{ i.nombre }}: {{ i.observacion || '(falta la observación)' }}</li>
+              } @empty {
+                <li>Ninguno todavía: marque requisitos como «no cumple» o «pendiente».</li>
+              }
+            </ul>
+            <p class="intro">
+              Solo podrá modificar lo señalado. El plazo y las rondas se configuran en los
+              parámetros.
+              {{ c.validacion.subsanacionesPrevias }} de {{ c.validacion.maxRondas }} ronda(s)
+              usada(s).
+            </p>
+          </div>
+        }
+        <div class="campo-simple">
+          <label for="motivacion">
+            Motivación
+            @if (decisionElegida() === 'APROBAR') {
+              <span class="opcional">(opcional)</span>
+            }
+          </label>
+          <textarea
+            id="motivacion"
+            rows="4"
+            formControlName="motivacion"
+            maxlength="2000"
+          ></textarea>
+          <p class="ayuda-campo">
+            @if (decisionElegida() === 'RECHAZAR') {
+              Explique con claridad qué requisitos no se cumplen: va en el correo a la persona,
+              junto con los recursos que proceden.
+            } @else if (decisionElegida() === 'SUBSANAR') {
+              Explique brevemente por qué se pide la corrección.
+            }
+          </p>
+        </div>
+        @if (erroresDecision().length > 0) {
+          <div class="aviso error" role="alert">
+            <ul>
+              @for (m of erroresDecision(); track m) {
+                <li>{{ m }}</li>
+              }
+            </ul>
+          </div>
+        }
+        <div class="acciones">
+          <button type="submit" class="boton" [disabled]="decidiendo()">Registrar decisión</button>
+        </div>
+      </form>
+    </section>
+  }
+
+  @if (c.decisiones.length > 0) {
+    <section class="tarjeta" aria-labelledby="t-hist">
+      <h2 id="t-hist">Decisiones registradas</h2>
+      <ol class="historial">
+        @for (d of c.decisiones; track d.id) {
+          <li>
+            <strong>{{ nombreDecision[d.decision] }}</strong> · ronda {{ d.ronda }} ·
+            {{ d.decididoPor }} · {{ d.decididoAt | date: 'dd/MM/yyyy HH:mm' }}
+            <p>{{ d.motivacion }}</p>
+          </li>
+        }
+      </ol>
+    </section>
+  }
+
+  <app-dialogo
+    titulo="Confirmar la decisión"
+    [abierto]="confirmando()"
+    (cierra)="confirmando.set(false)"
+  >
+    @if (decisionElegida(); as d) {
+      <p>
+        Va a registrar: <strong>{{ nombreDecision[d] }}</strong
+        >. Se enviará un correo a la persona y la decisión quedará en el expediente y en la
+        bitácora; no se puede deshacer.
+      </p>
+    }
+    <div class="acciones">
+      <button type="button" class="boton" [disabled]="decidiendo()" (click)="decidir()">
+        {{ decidiendo() ? 'Registrando…' : 'Sí, registrar' }}
+      </button>
+      <button type="button" class="boton secundario" (click)="confirmando.set(false)">
+        Revisar de nuevo
+      </button>
+    </div>
+  </app-dialogo>
+}

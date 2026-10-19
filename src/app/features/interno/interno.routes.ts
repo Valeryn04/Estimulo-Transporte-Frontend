@@ -26,6 +26,25 @@ export const internoRoutes: Routes = [
           import('./no-autorizado/no-autorizado-page').then((m) => m.NoAutorizadoPage),
       },
       {
+        path: 'validacion',
+        title: `Bandeja de validación · ${TITULO}`,
+        canActivate: [permisoGuard(PERMISO.validacionVer)],
+        loadComponent: () => import('./validacion/bandeja/bandeja-page').then((m) => m.BandejaPage),
+      },
+      {
+        path: 'validacion/caso/:id',
+        title: `Caso en revisión · ${TITULO}`,
+        canActivate: [permisoGuard(PERMISO.validacionVer)],
+        loadComponent: () => import('./validacion/caso/caso-page').then((m) => m.CasoPage),
+      },
+      {
+        path: 'admin/requisitos',
+        title: `Lista de chequeo · ${TITULO}`,
+        canActivate: [permisoGuard(PERMISO.requisitos)],
+        loadComponent: () =>
+          import('./validacion/requisitos/requisitos-page').then((m) => m.RequisitosPage),
+      },
+      {
         path: 'admin/usuarios',
         title: `Usuarios · ${TITULO}`,
         canActivate: [permisoGuard(PERMISO.usuarios)],
