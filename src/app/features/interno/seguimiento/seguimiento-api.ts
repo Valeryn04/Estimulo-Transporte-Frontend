@@ -46,6 +46,37 @@ export class SeguimientoApi {
       .pipe(map((r) => r.items));
   }
 
+  exportarBitacora(
+    formato: 'XLSX' | 'PDF',
+    f: Omit<FiltroBitacora, 'pagina' | 'tamano'>,
+  ): Observable<Blob> {
+    return this.http.get(`${ADMIN}/bitacora/exportar`, {
+      params: parametros({ ...f, formato }),
+      responseType: 'blob',
+    });
+  }
+
+  corregirCorreo(
+    solicitudId: number,
+    d: { correo: string; justificacion: string },
+    soporte: File,
+  ): Observable<{ reenviados: number }> {
+    const form = new FormData();
+    form.append('datos', JSON.stringify(d));
+    form.append('archivo', soporte, soporte.name);
+    return this.http.post<{ reenviados: number }>(
+      `${ADMIN}/expedientes/${solicitudId}/correo`,
+      form,
+    );
+  }
+
+  reenviarComunicacion(solicitudId: number, correoId: number): Observable<{ mensaje: string }> {
+    return this.http.post<{ mensaje: string }>(
+      `${ADMIN}/expedientes/${solicitudId}/comunicaciones/${correoId}/reenviar`,
+      {},
+    );
+  }
+
   buscarExpedientes(q: string): Observable<CoincidenciaExpediente[]> {
     return this.http
       .get<{ items: CoincidenciaExpediente[] }>(`${ADMIN}/expedientes`, { params: { q } })

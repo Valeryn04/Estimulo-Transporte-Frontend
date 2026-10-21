@@ -19,10 +19,12 @@ const expediente = (c: Partial<ExpedienteNovedades> = {}): ExpedienteNovedades =
     asignadoDia: '2026-10-05',
   },
   novedades: [],
+  actualizaciones: [],
   revocatorias: [],
   causales: {
     bloqueo: [{ id: 11, nombre: 'Reporte de pérdida de la tarjeta' }],
     revocatoria: [{ id: 21, nombre: 'Uso indebido' }],
+    finalizacion: [{ id: 31, nombre: 'Renuncia voluntaria al beneficio' }],
   },
   ...c,
 });

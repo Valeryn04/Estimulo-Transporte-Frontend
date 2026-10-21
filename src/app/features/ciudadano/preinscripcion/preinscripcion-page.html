@@ -98,6 +98,7 @@
           <app-campo
             idCampo="pcd-numero"
             etiqueta="Número de identificación"
+            ayuda="Escriba el número sin puntos ni espacios."
             [control]="form.controls.pcdNumero"
           >
             <input
@@ -110,7 +111,6 @@
             />
           </app-campo>
         </div>
-        <p class="nota-campo">Escriba el número sin puntos ni espacios.</p>
       </fieldset>
 
       <fieldset class="seccion">
@@ -150,6 +150,7 @@
           <app-campo
             idCampo="cui-numero"
             etiqueta="Número de identificación"
+            ayuda="Escriba el número sin puntos ni espacios."
             [control]="form.controls.cuidadorNumero"
           >
             <input
@@ -162,7 +163,6 @@
             />
           </app-campo>
         </div>
-        <p class="nota-campo">Escriba el número sin puntos ni espacios.</p>
       </fieldset>
 
       <fieldset class="seccion">
@@ -285,6 +285,7 @@
         />
       </div>
 
+      <app-turnstile />
       <div class="acciones">
         <button type="submit" class="boton" [disabled]="enviando()">
           {{ enviando() ? 'Enviando…' : 'Enviar preinscripción' }}

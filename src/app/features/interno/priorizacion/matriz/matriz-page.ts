@@ -19,6 +19,7 @@ import {
   VariableMatriz,
 } from '../modelos-priorizacion';
 import { PriorizacionApi } from '../priorizacion-api';
+import { Ayuda } from '../../../../shared/ayuda/ayuda';
 
 type Vista = 'ninguna' | 'simulacion' | 'decision';
 const MAX_CRITERIOS = 4;
@@ -74,7 +75,7 @@ const nuevaVariable = (v?: VariableMatriz) =>
  */
 @Component({
   selector: 'app-matriz-page',
-  imports: [DatePipe, DecimalPipe, ReactiveFormsModule, Dialogo],
+  imports: [DatePipe, DecimalPipe, ReactiveFormsModule, Dialogo, Ayuda],
   templateUrl: './matriz-page.html',
   styleUrl: './matriz-page.scss',
 })

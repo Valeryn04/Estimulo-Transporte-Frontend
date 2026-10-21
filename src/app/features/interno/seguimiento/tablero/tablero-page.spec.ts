@@ -21,6 +21,8 @@ const tablero = (extra: Partial<Tablero> = {}): Tablero => ({
   embudo: {
     preinscritos: 120,
     caracterizados: 100,
+    enVerificacion: 12,
+    porSubsanar: 8,
     validados: 80,
     rechazados: 10,
     priorizados: 70,
@@ -37,6 +39,8 @@ const tablero = (extra: Partial<Tablero> = {}): Tablero => ({
     disponible: 25000000,
     porcentaje: 50,
     cupos: 100,
+    cuposUsados: 50,
+    cuposEjecucion: 50,
   },
   tiemposPromedioDias: { validacion: 2.5, priorizacion: null, asignacion: 4, entrega: 1 },
   satisfaccion: 82.5,
@@ -62,6 +66,19 @@ describe('TableroPage', () => {
     expect(por('listaEspera')).toBe('20');
     expect(por('rechazados')).toBe('10');
     expect(el.querySelector('h2')?.textContent).toContain('vigencia 2026');
+  });
+
+  it('muestra los casos en verificación y por subsanar', async () => {
+    const { el } = await montar();
+    const por = (clave: string) =>
+      el.querySelector(`[data-etapa="${clave}"] .valor`)?.textContent?.trim();
+    expect(por('enVerificacion')).toBe('12');
+    expect(por('porSubsanar')).toBe('8');
+  });
+
+  it('muestra los cupos en uso frente a los de la vigencia', async () => {
+    const { el } = await montar();
+    expect(el.textContent).toContain('Cupos en uso: 50 de 100 (50 %)');
   });
 
   it('muestra el avance contra la meta y la ejecución presupuestal', async () => {

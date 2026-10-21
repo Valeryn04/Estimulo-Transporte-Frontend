@@ -18,22 +18,28 @@ legend {
 .obl {
   color: var(--color-error);
 }
-.ayuda {
-  margin: 0 0 8px;
-  color: var(--color-muted);
-  font-size: 0.9rem;
+.fila-etiqueta {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
 }
-// Ayuda y error van debajo del control.
+
+.fila-etiqueta label {
+  display: inline-block;
+}
+
+legend {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+// Error debajo del control.
 .pie {
   margin-top: 6px;
 
-  .ayuda,
   .error {
     margin: 0;
-  }
-
-  .ayuda + .error {
-    margin-top: 4px;
   }
 }
 .error {

@@ -94,6 +94,33 @@ describe('BitacoraPage', () => {
     await asentar();
   });
 
+  it('exporta la bitácora con los filtros escritos solo a quien puede exportar', async () => {
+    globalThis.URL.createObjectURL = () => 'blob:prueba';
+    globalThis.URL.revokeObjectURL = () => undefined;
+    const p = montarPantalla(BitacoraPage, {}, ['bitacora.ver', 'reportes.exportar']);
+    p.ctrl.expectOne(`${URL}/modulos`).flush({ items: [] });
+    p.ctrl.expectOne(esBitacora).flush(pagina());
+    await p.asentar();
+    p.escribir('#radicado', 'EST-2026-000001');
+    [...p.el.querySelectorAll<HTMLButtonElement>('.acciones button')]
+      .find((b) => b.textContent?.includes('Excel'))!
+      .click();
+    const r = p.ctrl.expectOne((q) => q.url === `${URL}/exportar`);
+    expect(r.request.params.get('formato')).toBe('XLSX');
+    expect(r.request.params.get('radicado')).toBe('EST-2026-000001');
+    expect(r.request.responseType).toBe('blob');
+    r.flush(new Blob(['x']));
+    await p.asentar();
+  });
+
+  it('sin permiso de exportación no hay botones de exportar', async () => {
+    const { el } = await montar();
+    expect([...el.querySelectorAll('.acciones button')].map((b) => b.textContent?.trim())).toEqual([
+      'Buscar',
+      'Limpiar',
+    ]);
+  });
+
   it('pasa de página', async () => {
     const { el, ctrl, asentar } = await montar(pagina({ total: 60 }));
     expect(el.textContent).toContain('Página 1 de 3');

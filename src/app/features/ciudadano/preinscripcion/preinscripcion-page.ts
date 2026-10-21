@@ -22,6 +22,7 @@ import { CampoControl } from '../../../shared/campo-control';
 import { Direccion } from '../../../shared/direccion/direccion';
 import { aplicarErroresApi, igualA, valorDe } from '../../../shared/forms';
 import { PATRON_NOMBRE, numeroSegunTipo, soloDigitos } from '../../../shared/identificacion';
+import { TurnstileCasilla } from '../../../shared/turnstile/turnstile';
 
 /** Campos que se muestran en el resumen de errores, en el orden del formulario. */
 const CAMPOS = [
@@ -52,7 +53,7 @@ interface ErrorResumen {
  */
 @Component({
   selector: 'app-preinscripcion-page',
-  imports: [ReactiveFormsModule, RouterLink, Campo, CampoControl, Direccion],
+  imports: [ReactiveFormsModule, RouterLink, Campo, CampoControl, Direccion, TurnstileCasilla],
   templateUrl: './preinscripcion-page.html',
   styleUrl: './preinscripcion-page.scss',
 })

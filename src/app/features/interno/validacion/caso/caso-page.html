@@ -387,6 +387,17 @@
             @if (decisionElegida() === 'APROBAR') {
               <span class="opcional">(opcional)</span>
             }
+            @if (decisionElegida() === 'RECHAZAR') {
+              <app-ayuda
+                etiqueta="Motivación"
+                texto="Explique con claridad qué requisitos no se cumplen: va en el correo a la persona, junto con los recursos que proceden."
+              />
+            } @else if (decisionElegida() === 'SUBSANAR') {
+              <app-ayuda
+                etiqueta="Motivación"
+                texto="Explique brevemente por qué se pide la corrección."
+              />
+            }
           </label>
           <textarea
             id="motivacion"
@@ -394,14 +405,6 @@
             formControlName="motivacion"
             maxlength="2000"
           ></textarea>
-          <p class="ayuda-campo">
-            @if (decisionElegida() === 'RECHAZAR') {
-              Explique con claridad qué requisitos no se cumplen: va en el correo a la persona,
-              junto con los recursos que proceden.
-            } @else if (decisionElegida() === 'SUBSANAR') {
-              Explique brevemente por qué se pide la corrección.
-            }
-          </p>
         </div>
         @if (erroresDecision().length > 0) {
           <div class="aviso error" role="alert">

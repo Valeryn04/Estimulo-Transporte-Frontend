@@ -288,7 +288,7 @@
               <td>
                 <button type="button" class="enlace" (click)="entregaId.set(x.id)">
                   {{
-                    x.estado === 'PENDIENTE_ENTREGA' && puedeAsignar()
+                    (x.estado === 'PENDIENTE_ENTREGA' || x.entregas < x.personas) && puedeAsignar()
                       ? 'Registrar entrega'
                       : x.estado === 'PENDIENTE_ACTIVACION' && puedeAsignar()
                         ? 'Activar'

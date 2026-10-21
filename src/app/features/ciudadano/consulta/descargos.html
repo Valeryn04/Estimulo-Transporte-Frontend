@@ -1,0 +1,58 @@
+@if (revocatoria(); as r) {
+  <section class="tarjeta" aria-labelledby="titulo-revocatoria">
+    <h2 id="titulo-revocatoria">Trámite sobre su beneficio</h2>
+    @if (mensaje()) {
+      <p class="aviso exito" role="status">{{ mensaje() }}</p>
+    }
+    <p>
+      Se está estudiando la revocatoria de su beneficio por esta causal:
+      <strong>{{ r.causal }}</strong
+      >.
+    </p>
+    @if (r.razones) {
+      <h3>Razones que se le trasladaron</h3>
+      <p class="razones">{{ r.razones }}</p>
+    }
+    @if (r.presentoDescargos) {
+      <p class="aviso exito" role="status">
+        Recibimos sus descargos. Serán tenidos en cuenta en la decisión, que le comunicaremos por
+        correo.
+      </p>
+    } @else if (r.puedePresentarDescargos) {
+      <p>
+        Usted tiene derecho a presentar sus descargos y las pruebas que considere hasta el
+        <strong>{{ r.venceDescargosAt | date: 'dd/MM/yyyy HH:mm' : '-0500' }}</strong
+        >.
+      </p>
+      @if (error()) {
+        <p class="aviso error" role="alert">{{ error() }}</p>
+      }
+      <form [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+        <app-campo
+          idCampo="descargos-texto"
+          etiqueta="Sus descargos"
+          ayuda="Cuéntenos su versión de los hechos (mínimo 10 caracteres)."
+          [control]="form.controls.texto"
+        >
+          <textarea appCampoControl formControlName="texto" rows="5" maxlength="4000"></textarea>
+        </app-campo>
+        <div class="campo-simple">
+          <label for="descargos-archivo">Prueba o documento (opcional, PDF, JPG o PNG)</label>
+          <input
+            id="descargos-archivo"
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            (change)="elegirArchivo($event)"
+          />
+        </div>
+        <div class="acciones">
+          <button type="submit" class="boton" [disabled]="enviando()">
+            {{ enviando() ? 'Enviando…' : 'Enviar mis descargos' }}
+          </button>
+        </div>
+      </form>
+    } @else if (r.estado === 'EN_TRASLADO') {
+      <p class="aviso" role="note">El plazo para presentar descargos terminó.</p>
+    }
+  </section>
+}

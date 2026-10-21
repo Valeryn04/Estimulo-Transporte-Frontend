@@ -12,11 +12,12 @@ import { AuthApi } from '../../../../core/auth/auth-api';
 import { Sesion } from '../../../../core/auth/sesion';
 import { Campo } from '../../../../shared/campo';
 import { CampoControl } from '../../../../shared/campo-control';
+import { TurnstileCasilla } from '../../../../shared/turnstile/turnstile';
 
 /** Ingreso de funcionarios con usuario y contraseña (RF-ADM-01, RNF-05). */
 @Component({
   selector: 'app-login-page',
-  imports: [ReactiveFormsModule, Campo, CampoControl],
+  imports: [ReactiveFormsModule, Campo, CampoControl, TurnstileCasilla],
   templateUrl: './login-page.html',
 })
 export class LoginPage {

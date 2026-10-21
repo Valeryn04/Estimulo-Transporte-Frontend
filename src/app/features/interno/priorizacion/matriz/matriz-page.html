@@ -246,11 +246,13 @@
         </button>
 
         <fieldset class="desempate" formArrayName="desempate">
-          <legend>Criterios de desempate, en orden</legend>
-          <p class="ayuda">
-            Si dos casos tienen el mismo puntaje se aplican en este orden; si siguen empatados,
-            decide el número de radicado.
-          </p>
+          <legend>
+            Criterios de desempate, en orden
+            <app-ayuda
+              etiqueta="Criterios de desempate"
+              texto="Si dos casos tienen el mismo puntaje se aplican en este orden; si siguen empatados, decide el número de radicado."
+            />
+          </legend>
           @for (c of form.controls.desempate.controls; track $index) {
             <div class="campo-simple">
               <label [for]="'d-' + $index">Criterio {{ $index + 1 }}</label>

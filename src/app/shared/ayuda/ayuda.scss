@@ -1,0 +1,55 @@
+:host {
+  display: inline-flex;
+}
+
+.ayuda-envoltura {
+  position: relative;
+  display: inline-flex;
+  font-weight: 400;
+}
+
+.ayuda-boton {
+  display: inline-flex;
+  padding: 2px;
+  color: var(--color-muted);
+  cursor: help;
+  background: none;
+  border: 0;
+  border-radius: 50%;
+
+  app-icono {
+    width: 1.05em;
+    height: 1.05em;
+  }
+
+  &:hover,
+  &[aria-expanded='true'] {
+    color: var(--color-primary, currentcolor);
+  }
+}
+
+.tooltip {
+  position: absolute;
+  inset-block-start: calc(100% + 6px);
+  inset-inline-start: -8px;
+  z-index: 20;
+  width: max-content;
+  max-width: min(20rem, 80vw);
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--color-surface, #fff);
+  pointer-events: none;
+  visibility: hidden;
+  background: var(--color-text, #222);
+  border-radius: var(--radius);
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.ayuda-envoltura:hover .tooltip,
+.ayuda-envoltura:focus-within .tooltip,
+.tooltip.visible {
+  visibility: visible;
+  opacity: 1;
+}

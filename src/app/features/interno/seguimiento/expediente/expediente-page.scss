@@ -74,3 +74,26 @@
     box-shadow: none;
   }
 }
+
+.comunicaciones {
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--color-line);
+  }
+}
+
+.cuerpo-correo {
+  padding: 8px;
+  overflow-x: auto;
+  font-family: inherit;
+  white-space: pre-wrap;
+  background: var(--color-surface-alt, rgb(0 0 0 / 4%));
+  border-radius: var(--radius);
+}
+
+details {
+  margin-bottom: 8px;
+}

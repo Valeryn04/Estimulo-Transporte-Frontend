@@ -489,13 +489,6 @@ main :is(p, li, dd, dt, small, label, h1, h2, h3, .aviso) {
   }
 }
 
-// Aclaración que acompaña a una fila de campos (por ejemplo, cómo escribir el número de identificación).
-.nota-campo {
-  margin: -8px 0 16px;
-  font-size: 0.9rem;
-  color: var(--color-muted);
-}
-
 // El elemento raíz mide lo que mide el contenido: así el portal puede informar su alto cuando está incrustado en otra
 // página (un elemento en línea no se puede medir ni observar).
 app-root {

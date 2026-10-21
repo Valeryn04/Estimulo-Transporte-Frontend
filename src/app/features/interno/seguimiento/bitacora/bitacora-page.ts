@@ -4,7 +4,9 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiError } from '../../../../core/api/api-error';
-import { SeguimientoApi } from '../seguimiento-api';
+import { SeguimientoApi, descargar } from '../seguimiento-api';
+import { PERMISO } from '../../../../core/auth/modelos';
+import { Sesion } from '../../../../core/auth/sesion';
 import { PaginaBitacora } from '../modelos-seguimiento';
 
 /**
@@ -19,6 +21,9 @@ import { PaginaBitacora } from '../modelos-seguimiento';
 })
 export class BitacoraPage implements OnInit {
   private readonly api = inject(SeguimientoApi);
+  private readonly sesion = inject(Sesion);
+  protected readonly puedeExportar = computed(() => this.sesion.tiene(PERMISO.reportesExportar));
+  protected readonly exportando = signal(false);
 
   protected readonly datos = signal<PaginaBitacora | null>(null);
   protected readonly modulos = signal<string[]>([]);
@@ -76,6 +81,33 @@ export class BitacoraPage implements OnInit {
       this.error.set(e instanceof ApiError ? e.message : 'No pudimos consultar la bitácora.');
     } finally {
       this.cargando.set(false);
+    }
+  }
+
+  /** Exporta la bitácora con los mismos filtros que se ven en pantalla. */
+  protected async exportar(formato: 'XLSX' | 'PDF'): Promise<void> {
+    this.exportando.set(true);
+    this.error.set('');
+    const f = this.filtros.getRawValue();
+    try {
+      const archivo = await firstValueFrom(
+        this.api.exportarBitacora(formato, {
+          radicado: f.radicado.trim() || undefined,
+          usuario: f.usuario.trim() || undefined,
+          modulo: f.modulo || undefined,
+          accion: f.accion.trim() || undefined,
+          desde: f.desde || undefined,
+          hasta: f.hasta || undefined,
+        }),
+      );
+      descargar(
+        archivo,
+        `bitacora-${new Date().toISOString().slice(0, 10)}.${formato === 'XLSX' ? 'xlsx' : 'pdf'}`,
+      );
+    } catch (e) {
+      this.error.set(e instanceof ApiError ? e.message : 'No pudimos exportar la bitácora.');
+    } finally {
+      this.exportando.set(false);
     }
   }
 

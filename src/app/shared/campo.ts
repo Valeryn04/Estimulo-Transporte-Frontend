@@ -1,6 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, effect, input, signal } from '@angular/core';
 import { AbstractControl, Validators } from '@angular/forms';
+import { Ayuda } from './ayuda/ayuda';
 
 const MENSAJES: Record<string, (valor: unknown) => string> = {
   required: () => 'complete este dato',
@@ -42,12 +43,12 @@ export function textoError(
 }
 
 /**
- * Campo de formulario accesible: etiqueta, ayuda, control proyectado y mensaje de error que dice
+ * Campo de formulario accesible: etiqueta, ayuda (tooltip con el icono «?»), control proyectado y mensaje de error que dice
  * exactamente qué corregir (RNF-04). Con `tipo="grupo"` se dibuja como fieldset (radios y casillas).
  */
 @Component({
   selector: 'app-campo',
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, Ayuda],
   templateUrl: './campo.html',
   styleUrl: './campo.scss',
 })

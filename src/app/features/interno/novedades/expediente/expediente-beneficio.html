@@ -75,6 +75,23 @@
       </table>
     </div>
 
+    @if (d.actualizaciones.length > 0) {
+      <h3>Actualizaciones de datos</h3>
+      <ul class="revocatorias">
+        @for (a of d.actualizaciones; track a.id) {
+          <li>
+            <strong>{{ nombreDato[a.dato] }}</strong
+            >: de «{{ valoresDe(a.anterior) }}» a «{{ valoresDe(a.nuevo) }}» · {{ a.responsable }} ·
+            {{ a.creadaAt | date: 'dd/MM/yyyy' }}
+            <button type="button" class="enlace" (click)="verEvidenciaDatos(a)">
+              {{ a.evidencia.nombre }}
+            </button>
+            <small>{{ a.justificacion }}</small>
+          </li>
+        }
+      </ul>
+    }
+
     @if (d.revocatorias.length > 0) {
       <h3>Revocatorias</h3>
       <ul class="revocatorias">
@@ -91,7 +108,13 @@
     }
 
     @if (puedeGestionar() && tiposPosibles().length > 0) {
-      <h3>Registrar una novedad</h3>
+      <h3>
+        Registrar una novedad
+        <app-ayuda
+          etiqueta="Registrar una novedad"
+          texto="Se envía un correo a la persona con la novedad, la causal y la fecha efectiva."
+        />
+      </h3>
       <form [formGroup]="form" (ngSubmit)="registrar()" novalidate>
         <div class="rejilla">
           <div class="campo-simple">
@@ -157,9 +180,6 @@
             (change)="elegirEvidencia($event)"
           />
         </div>
-        <p class="ayuda">
-          Se envía un correo a la persona con la novedad, la causal y la fecha efectiva.
-        </p>
         <div class="acciones">
           <button type="submit" class="boton" [disabled]="guardando()">
             {{ guardando() ? 'Guardando…' : 'Registrar la novedad' }}
@@ -169,11 +189,13 @@
     }
 
     @if (puedeRevocar()) {
-      <h3>Iniciar una revocatoria</h3>
-      <p class="ayuda">
-        La revocatoria sigue el debido proceso: traslado de las razones, descargos y acto
-        administrativo motivado. Solo con el acto el beneficio se finaliza.
-      </p>
+      <h3>
+        Iniciar una revocatoria
+        <app-ayuda
+          etiqueta="Iniciar una revocatoria"
+          texto="La revocatoria sigue el debido proceso: traslado de las razones, descargos y acto administrativo motivado. Solo con el acto el beneficio se finaliza."
+        />
+      </h3>
       <form [formGroup]="formRev" (ngSubmit)="iniciarRevocatoria()" novalidate>
         <div class="campo-simple">
           <label for="rev-causal">Causal</label>
@@ -211,6 +233,17 @@
           </button>
         </div>
       </form>
+    }
+
+    @if (puedeFinalizar()) {
+      <app-actualizar-datos [beneficioId]="d.beneficio.id" (hecho)="alHacer($event)" />
+      <app-finalizar-beneficio
+        [beneficioId]="d.beneficio.id"
+        [causales]="d.causales.finalizacion"
+        [hoy]="d.beneficio.hoy"
+        [desde]="d.beneficio.asignadoDia"
+        (hecho)="alHacer('Beneficio finalizado. El cupo quedó libre y se avisó a la persona.')"
+      />
     }
   } @else if (!error()) {
     <p role="status">Cargando…</p>

@@ -1,0 +1,15 @@
+<span class="ayuda-envoltura">
+  <button
+    type="button"
+    class="ayuda-boton"
+    [attr.aria-label]="'Ayuda: ' + etiqueta()"
+    [attr.aria-expanded]="abierta()"
+    [attr.aria-controls]="idTooltip()"
+    (click)="abierta.set(!abierta())"
+  >
+    <app-icono nombre="ayuda" />
+  </button>
+  <span class="tooltip" role="tooltip" [id]="idTooltip()" [class.visible]="abierta()">{{
+    texto()
+  }}</span>
+</span>

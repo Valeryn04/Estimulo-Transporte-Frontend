@@ -1,0 +1,63 @@
+<h3>
+  Finalizar el beneficio
+  <app-ayuda
+    etiqueta="Finalizar el beneficio"
+    texto="Por fallecimiento, renuncia, fin de vigencia o pérdida de requisitos. El cupo queda libre para reasignar, se avisa a la persona por correo y no se puede deshacer."
+  />
+</h3>
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+<form [formGroup]="form" (ngSubmit)="finalizar()" novalidate>
+  <div class="rejilla">
+    <app-campo idCampo="fin-causal" etiqueta="Causal" [control]="form.controls.causalId">
+      <select appCampoControl formControlName="causalId">
+        <option [ngValue]="null">Elija una causal</option>
+        @for (c of causales(); track c.id) {
+          <option [ngValue]="c.id">{{ c.nombre }}</option>
+        }
+      </select>
+    </app-campo>
+    <app-campo
+      idCampo="fin-fecha"
+      etiqueta="Fecha efectiva"
+      [control]="form.controls.fechaEfectiva"
+    >
+      <input appCampoControl type="date" formControlName="fechaEfectiva" [min]="desde()" />
+    </app-campo>
+  </div>
+  <app-campo
+    idCampo="fin-obs"
+    etiqueta="Justificación"
+    ayuda="Explique la razón de la finalización (mínimo 10 caracteres). Queda en la bitácora y en el correo a la persona."
+    [control]="form.controls.observacion"
+  >
+    <textarea appCampoControl formControlName="observacion" rows="2" maxlength="1000"></textarea>
+  </app-campo>
+  <div class="campo-simple">
+    <label for="fin-archivo">Soporte (PDF, JPG o PNG)</label>
+    <input
+      id="fin-archivo"
+      type="file"
+      accept=".pdf,.jpg,.jpeg,.png"
+      (change)="elegirArchivo($event)"
+    />
+  </div>
+  <app-campo
+    idCampo="fin-confirmo"
+    etiqueta="Confirmación"
+    tipo="grupo"
+    [control]="form.controls.confirmo"
+    [mensajes]="{ required: 'confirme que desea finalizar el beneficio' }"
+  >
+    <label class="casilla">
+      <input type="checkbox" formControlName="confirmo" />
+      Entiendo que el cupo se libera y que esta acción no se puede deshacer
+    </label>
+  </app-campo>
+  <div class="acciones">
+    <button type="submit" class="boton secundario" [disabled]="guardando()">
+      {{ guardando() ? 'Finalizando…' : 'Finalizar el beneficio' }}
+    </button>
+  </div>
+</form>

@@ -66,6 +66,37 @@ const expediente = (extra: Partial<Expediente> = {}): Expediente => ({
       nuevo: null,
     },
   ],
+  decisiones: [
+    {
+      ronda: 1,
+      decision: 'APROBAR',
+      motivacion: 'Cumple todos los requisitos.',
+      listaDeChequeo: [
+        { requisito: 'Documento de identidad', resultado: 'CUMPLE', observacion: '' },
+      ],
+      fecha: '2026-10-03T10:00:00Z',
+      usuario: 'validador',
+    },
+  ],
+  subsanaciones: [],
+  novedades: [],
+  entregas: [],
+  comunicaciones: [
+    {
+      id: 7,
+      tipo: 'CARACTERIZACION_RADICADA',
+      asunto: 'Solicitud radicada',
+      cuerpo: 'Recibimos su caracterización.',
+      destinatario: 'a***@correo.com',
+      estado: 'REBOTADO',
+      fecha: '2026-10-02T09:01:00Z',
+      entregadoAt: null,
+      reboteMotivo: 'Buzón inexistente',
+      reenvioDe: null,
+      reenviado: false,
+    },
+  ],
+  alertaRebote: true,
   sensiblesOcultos: true,
   ...extra,
 });
@@ -139,6 +170,80 @@ describe('ExpedientePage', () => {
     b.flush({ items: [] });
     await p.asentar();
     expect(p.el.textContent).toContain('No encontramos expedientes');
+  });
+
+  describe('comunicaciones y correos rebotados (RF-COM-03)', () => {
+    async function abrir(permisos: string[]) {
+      const p = montarPantalla(ExpedientePage, { solicitudId: '5' }, permisos);
+      p.ctrl.expectOne(`${URL}/5`).flush(expediente());
+      await p.asentar();
+      return p;
+    }
+    const archivo = (el: HTMLElement) => {
+      const input = el.querySelector<HTMLInputElement>('#exp-soporte')!;
+      Object.defineProperty(input, 'files', {
+        value: [new File(['%PDF-1.4'], 'soporte.pdf', { type: 'application/pdf' })],
+        configurable: true,
+      });
+      input.dispatchEvent(new Event('change'));
+    };
+
+    it('muestra el contenido de cada comunicación, su estado y la alerta de rebote', async () => {
+      const p = await abrir(['expediente.ver']);
+      expect(p.el.querySelector('.aviso.error')?.textContent).toContain('rebotaron');
+      expect(p.el.querySelector('.comunicaciones')?.textContent).toContain('Rebotado');
+      expect(p.el.querySelector('.cuerpo-correo')?.textContent).toContain(
+        'Recibimos su caracterización',
+      );
+      expect(p.el.textContent).toContain('Buzón inexistente');
+      // Sin permiso de gestión no hay acciones para corregir el correo.
+      expect(p.el.querySelector('#exp-correo')).toBeNull();
+    });
+
+    it('muestra las decisiones de verificación con su lista de chequeo', async () => {
+      const p = await abrir(['expediente.ver']);
+      expect(p.el.querySelector('#t-dec')?.textContent).toContain('Verificación de requisitos');
+      expect(p.el.querySelector('details')?.textContent).toContain('Documento de identidad');
+    });
+
+    it('corrige el correo con soporte, reenvía lo rebotado y recarga el expediente', async () => {
+      const p = await abrir(['expediente.ver', 'novedades.gestionar']);
+      p.escribir('#exp-correo', 'corregido@correo.com');
+      p.escribir('#exp-just', 'La persona confirmó su correo por teléfono.');
+      p.enviar('form[aria-label], form.no-imprimir');
+      await p.asentar();
+      p.ctrl.expectNone((r) => r.method === 'POST');
+      expect(
+        [...p.el.querySelectorAll('.aviso.error')].some((a) => a.textContent?.includes('soporte')),
+      ).toBe(true);
+      archivo(p.el);
+      p.enviar('form.no-imprimir');
+      const r = p.ctrl.expectOne(`${URL}/5/correo`);
+      expect(JSON.parse((r.request.body as FormData).get('datos') as string)).toEqual({
+        correo: 'corregido@correo.com',
+        justificacion: 'La persona confirmó su correo por teléfono.',
+      });
+      r.flush({ reenviados: 1 }, { status: 201, statusText: 'Creado' });
+      await p.asentar();
+      p.ctrl.expectOne(`${URL}/5`).flush(expediente({ alertaRebote: false }));
+      await p.asentar();
+      expect(p.el.querySelector('.aviso.exito')?.textContent).toContain(
+        '1 comunicación(es) reenviada',
+      );
+      expect(p.el.querySelector('.aviso.error')).toBeNull();
+    });
+
+    it('reenvía una comunicación rebotada al correo ya corregido', async () => {
+      const p = await abrir(['expediente.ver', 'novedades.gestionar']);
+      p.el.querySelector<HTMLButtonElement>('.comunicaciones .enlace')!.click();
+      p.ctrl
+        .expectOne(`${URL}/5/comunicaciones/7/reenviar`)
+        .flush({ mensaje: 'ok' }, { status: 202, statusText: 'Aceptado' });
+      await p.asentar();
+      p.ctrl.expectOne(`${URL}/5`).flush(expediente({ alertaRebote: false }));
+      await p.asentar();
+      expect(p.el.querySelector('.aviso.exito')?.textContent).toContain('cola de envío');
+    });
   });
 
   it('imprime el expediente', async () => {

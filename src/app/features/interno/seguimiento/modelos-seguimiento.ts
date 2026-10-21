@@ -68,6 +68,20 @@ export interface EventoCronologia {
   nuevo: unknown;
 }
 
+export interface Comunicacion {
+  id: number;
+  tipo: string;
+  asunto: string;
+  cuerpo: string;
+  destinatario: string;
+  estado: 'PENDIENTE' | 'ENVIADO' | 'ENTREGADO' | 'REBOTADO' | 'FALLIDO';
+  fecha: string;
+  entregadoAt: string | null;
+  reboteMotivo: string | null;
+  reenvioDe: number | null;
+  reenviado: boolean;
+}
+
 export interface Expediente {
   solicitudId: number;
   radicado: string | null;
@@ -91,6 +105,39 @@ export interface Expediente {
     origen: string;
     cargadoAt: string;
   }[];
+  decisiones: {
+    ronda: number;
+    decision: 'APROBAR' | 'SUBSANAR' | 'RECHAZAR';
+    motivacion: string;
+    listaDeChequeo: { requisito: string; resultado: string; observacion: string }[];
+    fecha: string;
+    usuario: string;
+  }[];
+  subsanaciones: {
+    pedidaAt: string;
+    venceAt: string;
+    estado: string;
+    respondidaAt: string | null;
+    items: { requisito: string; observacion: string }[];
+  }[];
+  novedades: {
+    tipo: string;
+    causal: string | null;
+    fechaEfectiva: string;
+    observacion: string;
+    responsable: string;
+  }[];
+  entregas: {
+    rol: string;
+    tarjeta: string;
+    fechaEntrega: string;
+    receptor: string;
+    funcionario: string;
+    vigente: boolean;
+  }[];
+  comunicaciones: Comunicacion[];
+  /** Hay comunicaciones rebotadas sin reenviar. */
+  alertaRebote: boolean;
   otrasVigencias: { solicitudId: number; radicado: string | null; estado: string; anio: number }[];
   cronologia: EventoCronologia[];
   sensiblesOcultos: boolean;
@@ -104,6 +151,8 @@ export interface Tablero {
   embudo: {
     preinscritos: number;
     caracterizados: number;
+    enVerificacion: number;
+    porSubsanar: number;
     validados: number;
     rechazados: number;
     priorizados: number;
@@ -120,6 +169,8 @@ export interface Tablero {
     disponible: number;
     porcentaje: number;
     cupos: number;
+    cuposUsados: number;
+    cuposEjecucion: number;
   } | null;
   tiemposPromedioDias: {
     validacion: number | null;

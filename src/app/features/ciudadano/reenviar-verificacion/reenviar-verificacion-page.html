@@ -38,6 +38,7 @@
       <app-campo
         idCampo="re-numero"
         etiqueta="Número de identificación"
+        ayuda="Escriba el número sin puntos ni espacios."
         [control]="form.controls.numero"
       >
         <input
@@ -50,7 +51,7 @@
         />
       </app-campo>
     </div>
-    <p class="nota-campo">Escriba el número sin puntos ni espacios.</p>
+    <app-turnstile />
     <div class="acciones">
       <button type="submit" class="boton" [disabled]="enviando()">
         {{ enviando() ? 'Enviando…' : 'Enviar el enlace' }}

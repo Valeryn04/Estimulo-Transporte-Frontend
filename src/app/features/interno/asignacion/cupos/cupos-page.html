@@ -223,17 +223,18 @@
           <textarea appCampoControl formControlName="motivo" rows="3" maxlength="1000"></textarea>
         </app-campo>
         <div class="campo-simple">
-          <label for="cupos-soporte">Soporte (PDF, JPG o PNG)</label>
+          <label for="cupos-soporte"
+            >Soporte (PDF, JPG o PNG)
+            <app-ayuda
+              etiqueta="Soporte"
+              texto="Obligatorio al cambiar los cupos o el presupuesto: por ejemplo, el acto de adición presupuestal."
+          /></label>
           <input
             id="cupos-soporte"
             type="file"
             accept=".pdf,.jpg,.jpeg,.png"
             (change)="elegirSoporte($event)"
           />
-          <small class="ayuda"
-            >Obligatorio al cambiar los cupos o el presupuesto: por ejemplo, el acto de adición
-            presupuestal.</small
-          >
         </div>
         <div class="acciones">
           <button type="submit" class="boton" [disabled]="guardando()">

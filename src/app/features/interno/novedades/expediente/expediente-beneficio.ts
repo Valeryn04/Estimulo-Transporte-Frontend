@@ -10,12 +10,17 @@ import { Dialogo } from '../../../../shared/dialogo/dialogo';
 import { aplicarErroresApi } from '../../../../shared/forms';
 import { NOMBRE_ESTADO_BENEFICIO } from '../../asignacion/modelos-asignacion';
 import {
+  ActualizacionDatos,
   ExpedienteNovedades,
+  NOMBRE_DATO,
   NOMBRE_ESTADO_REVOCATORIA,
   Novedad,
   TipoNovedad,
 } from '../modelos-novedades';
 import { NovedadesApi } from '../novedades-api';
+import { Ayuda } from '../../../../shared/ayuda/ayuda';
+import { ActualizarDatos } from './actualizar-datos';
+import { FinalizarBeneficio } from './finalizar-beneficio';
 
 /**
  * Expediente de novedades de un beneficio: la secuencia completa de bloqueos, suspensiones y reactivaciones con sus
@@ -23,7 +28,17 @@ import { NovedadesApi } from '../novedades-api';
  */
 @Component({
   selector: 'app-expediente-beneficio',
-  imports: [DatePipe, ReactiveFormsModule, RouterLink, Campo, CampoControl, Dialogo],
+  imports: [
+    DatePipe,
+    ReactiveFormsModule,
+    RouterLink,
+    Campo,
+    CampoControl,
+    Dialogo,
+    Ayuda,
+    FinalizarBeneficio,
+    ActualizarDatos,
+  ],
   templateUrl: './expediente-beneficio.html',
   styleUrl: './expediente-beneficio.scss',
 })
@@ -44,6 +59,10 @@ export class ExpedienteBeneficio {
   protected readonly estados = NOMBRE_ESTADO_BENEFICIO;
   protected readonly estadoRev = NOMBRE_ESTADO_REVOCATORIA;
   protected readonly tipo = signal<TipoNovedad>('BLOQUEO');
+  protected readonly nombreDato = NOMBRE_DATO;
+  protected readonly puedeFinalizar = computed(
+    () => this.puedeGestionar() && this.datos()?.beneficio.estado !== 'FINALIZADO',
+  );
 
   /** Lo que se puede hacer según el estado: bloquear o suspender un beneficio activo, reactivar uno detenido. */
   protected readonly tiposPosibles = computed<{ valor: TipoNovedad; nombre: string }[]>(() => {
@@ -216,6 +235,33 @@ export class ExpedienteBeneficio {
       }
     } finally {
       this.guardando.set(false);
+    }
+  }
+
+  /** Se vuelve a cargar el beneficio después de finalizarlo o de actualizar un dato. */
+  protected async alHacer(mensaje: string): Promise<void> {
+    const d = this.datos();
+    if (!d) return;
+    await this.cargar(d.beneficio.id);
+    this.mensaje.set(mensaje);
+    this.cambio.emit();
+  }
+
+  protected valoresDe(v: Record<string, string | null>): string {
+    return Object.values(v)
+      .filter((x) => x)
+      .join(' · ');
+  }
+
+  protected async verEvidenciaDatos(a: ActualizacionDatos): Promise<void> {
+    this.error.set('');
+    try {
+      const blob = await firstValueFrom(this.api.evidenciaDatos(a.id));
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener');
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (e) {
+      this.error.set(e instanceof ApiError ? e.message : 'No pudimos abrir el soporte.');
     }
   }
 

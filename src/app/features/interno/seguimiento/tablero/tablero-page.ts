@@ -37,6 +37,8 @@ export class TableroPage implements OnInit {
     return [
       { clave: 'preinscritos', nombre: 'Preinscritos', valor: e.preinscritos },
       { clave: 'caracterizados', nombre: 'Caracterizados', valor: e.caracterizados },
+      { clave: 'enVerificacion', nombre: 'En verificación', valor: e.enVerificacion },
+      { clave: 'porSubsanar', nombre: 'Por subsanar', valor: e.porSubsanar },
       { clave: 'validados', nombre: 'Validados', valor: e.validados },
       { clave: 'priorizados', nombre: 'Priorizados', valor: e.priorizados },
       { clave: 'asignados', nombre: 'Asignados', valor: e.asignados },

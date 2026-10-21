@@ -58,6 +58,7 @@
           <app-campo
             idCampo="co-numero"
             etiqueta="Número de identificación"
+            ayuda="Escriba el número sin puntos ni espacios."
             [control]="identificacion.controls.numero"
           >
             <input
@@ -70,7 +71,7 @@
             />
           </app-campo>
         </div>
-        <p class="nota-campo">Escriba el número sin puntos ni espacios.</p>
+        <app-turnstile />
         <div class="acciones">
           <button type="submit" class="boton" [disabled]="trabajando()">
             {{ trabajando() ? 'Enviando…' : 'Enviar código a mi correo' }}
@@ -204,6 +205,8 @@
       <p class="aviso" role="note">
         <span>{{ e.aviso }}</span>
       </p>
+
+      <app-descargos [token]="tokenSesion()" />
 
       <section aria-labelledby="titulo-comunicaciones">
         <h2 id="titulo-comunicaciones">Comunicaciones enviadas a su correo</h2>

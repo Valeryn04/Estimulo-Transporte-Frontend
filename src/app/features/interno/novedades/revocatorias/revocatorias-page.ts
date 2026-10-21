@@ -16,6 +16,7 @@ import {
   RevocatoriaResumen,
 } from '../modelos-novedades';
 import { NovedadesApi } from '../novedades-api';
+import { Ayuda } from '../../../../shared/ayuda/ayuda';
 
 /**
  * Revocatorias con debido proceso (RF-NOV-02): inicio con causal y evidencia, traslado de las razones, descargos y acto
@@ -24,7 +25,7 @@ import { NovedadesApi } from '../novedades-api';
  */
 @Component({
   selector: 'app-revocatorias-page',
-  imports: [DatePipe, ReactiveFormsModule, RouterLink, Dialogo],
+  imports: [DatePipe, ReactiveFormsModule, RouterLink, Dialogo, Ayuda],
   templateUrl: './revocatorias-page.html',
   styleUrl: './revocatorias-page.scss',
 })

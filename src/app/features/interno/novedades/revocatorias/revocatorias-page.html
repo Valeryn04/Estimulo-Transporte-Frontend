@@ -154,8 +154,13 @@
 
     @if (puedeGestionar() && r.estado !== 'DECIDIDA') {
       @if (r.estado === 'INICIADA') {
-        <h3>Traslado de las razones a la persona</h3>
-        <p class="ayuda">Se le envía por correo y se abre el plazo para presentar descargos.</p>
+        <h3>
+          Traslado de las razones a la persona
+          <app-ayuda
+            etiqueta="Traslado de las razones a la persona"
+            texto="Se le envía por correo y se abre el plazo para presentar descargos."
+          />
+        </h3>
         <div class="campo-simple">
           <label for="rev-traslado">Razones que se comunican</label>
           <textarea
@@ -203,9 +208,13 @@
             </button>
           </div>
         } @else {
-          <p class="ayuda">Registre los descargos que presente la persona dentro del plazo.</p>
           <div class="campo-simple">
-            <label for="rev-descargos">Descargos recibidos</label>
+            <label for="rev-descargos"
+              >Descargos recibidos
+              <app-ayuda
+                etiqueta="Descargos recibidos"
+                texto="Registre los descargos que presente la persona dentro del plazo."
+            /></label>
             <textarea
               id="rev-descargos"
               rows="3"
@@ -236,11 +245,17 @@
       }
 
       @if (r.puedeDecidir) {
-        <h3>Acto administrativo que decide</h3>
-        <p class="ayuda">
-          Se debe decidir dentro de {{ r.plazoDecisionDias }} días. Al revocar, el beneficio se
-          finaliza y el cupo queda libre para reasignar.
-        </p>
+        <h3>
+          Acto administrativo que decide
+          <app-ayuda
+            etiqueta="Acto administrativo que decide"
+            [texto]="
+              'Se debe decidir dentro de ' +
+              r.plazoDecisionDias +
+              ' días. Al revocar, el beneficio se finaliza y el cupo queda libre para reasignar.'
+            "
+          />
+        </h3>
         <div class="rejilla">
           <div class="campo-simple">
             <label for="rev-resultado">Decisión</label>

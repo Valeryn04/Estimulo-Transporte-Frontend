@@ -63,6 +63,15 @@ export interface Comunicacion {
   entrega: string;
 }
 
+export interface RevocatoriaPersona {
+  causal: string;
+  estado: 'INICIADA' | 'EN_TRASLADO' | 'CON_DESCARGOS';
+  razones: string | null;
+  venceDescargosAt: string | null;
+  puedePresentarDescargos: boolean;
+  presentoDescargos: boolean;
+}
+
 /** La solicitud se indica con la identificación de la persona con discapacidad o con el número de radicado. */
 export type IdentificacionConsulta =
   { tipoIdentificacionId: number; numero: string } | { radicado: string };
@@ -123,6 +132,28 @@ export class PublicoApi {
 
   accederPorEnlace(token: string): Observable<SesionConsulta> {
     return this.http.post<SesionConsulta>(`${this.base}/consulta/enlace`, { token });
+  }
+
+  /** Trámite de revocatoria en curso de la persona: razones, plazo y si puede presentar descargos. */
+  revocatoria(token: string): Observable<{ revocatoria: RevocatoriaPersona | null }> {
+    return this.http.get<{ revocatoria: RevocatoriaPersona | null }>(
+      `${this.base}/consulta/revocatoria`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+  }
+
+  /** La persona presenta sus descargos (texto y, si quiere, un archivo). */
+  presentarDescargos(
+    token: string,
+    texto: string,
+    archivo: File | null,
+  ): Observable<{ mensaje: string }> {
+    const form = new FormData();
+    form.append('texto', texto);
+    if (archivo) form.append('archivo', archivo, archivo.name);
+    return this.http.post<{ mensaje: string }>(`${this.base}/consulta/descargos`, form, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
   }
 
   /** Estado de la solicitud con la sesión que entregó el código o el enlace seguro. */

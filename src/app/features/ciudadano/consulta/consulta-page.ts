@@ -27,6 +27,8 @@ import { Icono } from '../../../shared/icono/icono';
 import { CampoControl } from '../../../shared/campo-control';
 import { valorDe } from '../../../shared/forms';
 import { numeroSegunTipo, soloDigitos } from '../../../shared/identificacion';
+import { Descargos } from './descargos';
+import { TurnstileCasilla } from '../../../shared/turnstile/turnstile';
 
 type Paso = 'cargando' | 'identificar' | 'codigo' | 'resultado';
 type Modo = 'documento' | 'radicado';
@@ -38,7 +40,16 @@ type Modo = 'documento' | 'radicado';
  */
 @Component({
   selector: 'app-consulta-page',
-  imports: [DatePipe, ReactiveFormsModule, RouterLink, Campo, CampoControl, Icono],
+  imports: [
+    DatePipe,
+    ReactiveFormsModule,
+    RouterLink,
+    Campo,
+    CampoControl,
+    Icono,
+    TurnstileCasilla,
+    Descargos,
+  ],
   templateUrl: './consulta-page.html',
   styleUrl: './consulta-page.scss',
 })
@@ -57,6 +68,7 @@ export class ConsultaPage implements OnInit {
   protected readonly aviso = signal('');
   protected readonly trabajando = signal(false);
   protected readonly estado = signal<EstadoSolicitud | null>(null);
+  protected readonly tokenSesion = signal('');
   /** Cómo indica la persona su solicitud: con su documento o con el número de radicado (RF-PRE-05). */
   protected readonly modo = signal<Modo>('documento');
   private identificada: IdentificacionConsulta | null = null;
@@ -126,6 +138,7 @@ export class ConsultaPage implements OnInit {
 
   private async mostrarEstado(sesionToken: string): Promise<void> {
     this.estado.set(await firstValueFrom(this.api.consultar(sesionToken)));
+    this.tokenSesion.set(sesionToken);
     // Con la misma sesión la persona puede seguir con la caracterización sin validar de nuevo.
     this.sesion.establecer(sesionToken);
     this.paso.set('resultado');

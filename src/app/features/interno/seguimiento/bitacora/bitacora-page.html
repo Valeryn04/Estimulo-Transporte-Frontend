@@ -51,6 +51,24 @@
   <div class="acciones">
     <button type="submit" class="boton">Buscar</button>
     <button type="button" class="boton secundario" (click)="limpiar()">Limpiar</button>
+    @if (puedeExportar()) {
+      <button
+        type="button"
+        class="boton secundario"
+        [disabled]="exportando()"
+        (click)="exportar('XLSX')"
+      >
+        Exportar a Excel
+      </button>
+      <button
+        type="button"
+        class="boton secundario"
+        [disabled]="exportando()"
+        (click)="exportar('PDF')"
+      >
+        Exportar a PDF
+      </button>
+    }
   </div>
 </form>
 

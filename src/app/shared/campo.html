@@ -1,5 +1,10 @@
 <!-- Un solo <ng-content>: si estuviera dentro de cada rama, Angular solo proyectaría en la última. -->
 <ng-template #cuerpo><ng-content /></ng-template>
+<ng-template #tooltip>
+  @if (ayuda()) {
+    <app-ayuda [texto]="ayuda()" [etiqueta]="etiqueta()" [idTooltip]="idCampo() + '-ayuda'" />
+  }
+</ng-template>
 @if (tipo() === 'grupo') {
   <fieldset class="campo" [attr.aria-describedby]="descripcion()">
     <legend>
@@ -7,10 +12,8 @@
       @if (obligatorio()) {
         <span class="obl" aria-hidden="true">*</span>
       }
+      <ng-container [ngTemplateOutlet]="tooltip" />
     </legend>
-    @if (ayuda()) {
-      <p class="ayuda" [id]="idCampo() + '-ayuda'">{{ ayuda() }}</p>
-    }
     <ng-container [ngTemplateOutlet]="cuerpo" />
     @if (mostrarError()) {
       <p class="error" [id]="idCampo() + '-error'" role="alert">{{ mensajeError() }}</p>
@@ -18,23 +21,20 @@
   </fieldset>
 } @else {
   <div class="campo">
-    <label [attr.for]="idCampo()">
-      {{ etiqueta() }}
-      @if (obligatorio()) {
-        <span class="obl" aria-hidden="true">*</span>
-        <span class="solo-lectores">(obligatorio)</span>
-      }
-    </label>
+    <div class="fila-etiqueta">
+      <label [attr.for]="idCampo()">
+        {{ etiqueta() }}
+        @if (obligatorio()) {
+          <span class="obl" aria-hidden="true">*</span>
+          <span class="solo-lectores">(obligatorio)</span>
+        }
+      </label>
+      <ng-container [ngTemplateOutlet]="tooltip" />
+    </div>
     <div class="control"><ng-container [ngTemplateOutlet]="cuerpo" /></div>
-    <!-- La ayuda y el error van DEBAJO del control: así, en una fila, todos los controles quedan a la misma altura. -->
-    @if (ayuda() || mostrarError()) {
+    @if (mostrarError()) {
       <div class="pie">
-        @if (ayuda()) {
-          <p class="ayuda" [id]="idCampo() + '-ayuda'">{{ ayuda() }}</p>
-        }
-        @if (mostrarError()) {
-          <p class="error" [id]="idCampo() + '-error'" role="alert">{{ mensajeError() }}</p>
-        }
+        <p class="error" [id]="idCampo() + '-error'" role="alert">{{ mensajeError() }}</p>
       </div>
     }
   </div>

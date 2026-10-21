@@ -1,0 +1,117 @@
+<h3>
+  Actualizar datos de la persona
+  <app-ayuda
+    etiqueta="Actualizar datos"
+    texto="Cambio de dirección, de correo o de cuidador. Exige soporte y justificación, y se conserva el valor anterior."
+  />
+</h3>
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+<form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+  <div class="campo-simple">
+    <label for="dat-dato">Qué se actualiza</label>
+    <select id="dat-dato" formControlName="dato" (change)="ajustar()">
+      <option value="DIRECCION">Dirección de residencia</option>
+      <option value="CORREO">Correo electrónico</option>
+      @if (conCuidador()) {
+        <option value="CUIDADOR">Cuidador</option>
+      }
+    </select>
+  </div>
+
+  @if (dato() === 'DIRECCION') {
+    <app-direccion
+      idCampo="dat-direccion"
+      etiqueta="Nueva dirección"
+      [control]="form.controls.direccion"
+    />
+    <div class="rejilla">
+      <app-campo idCampo="dat-localidad" etiqueta="Localidad" [control]="form.controls.localidadId">
+        <select appCampoControl formControlName="localidadId">
+          <option [ngValue]="null">Seleccione</option>
+          @for (l of catalogos()?.localidades ?? []; track l.id) {
+            <option [ngValue]="l.id">{{ l.nombre }}</option>
+          }
+        </select>
+      </app-campo>
+      <app-campo
+        idCampo="dat-barrio"
+        etiqueta="Barrio"
+        [ayuda]="form.controls.localidadId.value ? '' : 'Primero elija la localidad.'"
+        [control]="form.controls.barrioId"
+      >
+        <select appCampoControl formControlName="barrioId">
+          <option [ngValue]="null">Seleccione</option>
+          @for (b of barrios(); track b.id) {
+            <option [ngValue]="b.id">{{ b.nombre }}</option>
+          }
+        </select>
+      </app-campo>
+    </div>
+  } @else if (dato() === 'CORREO') {
+    <app-campo
+      idCampo="dat-correo"
+      etiqueta="Nuevo correo electrónico"
+      ayuda="A este correo llegarán desde ahora todas las comunicaciones del programa."
+      [control]="form.controls.correo"
+    >
+      <input appCampoControl type="email" formControlName="correo" autocomplete="off" />
+    </app-campo>
+  } @else {
+    <div class="rejilla">
+      <app-campo
+        idCampo="dat-tipo"
+        etiqueta="Tipo de identificación del nuevo cuidador"
+        [control]="form.controls.tipoIdentificacionId"
+      >
+        <select appCampoControl formControlName="tipoIdentificacionId">
+          <option [ngValue]="null">Seleccione</option>
+          @for (t of catalogos()?.tiposIdentificacion ?? []; track t.id) {
+            <option [ngValue]="t.id">{{ t.codigo }} – {{ t.nombre }}</option>
+          }
+        </select>
+      </app-campo>
+      <app-campo
+        idCampo="dat-numero"
+        etiqueta="Número de identificación"
+        ayuda="Sin puntos ni espacios. La persona no puede tener otro beneficio vigente."
+        [control]="form.controls.numeroIdentificacion"
+      >
+        <input
+          appCampoControl
+          type="text"
+          formControlName="numeroIdentificacion"
+          autocomplete="off"
+          maxlength="25"
+        />
+      </app-campo>
+    </div>
+    <app-campo idCampo="dat-nombre" etiqueta="Nombre completo" [control]="form.controls.nombre">
+      <input appCampoControl type="text" formControlName="nombre" autocomplete="off" />
+    </app-campo>
+  }
+
+  <app-campo
+    idCampo="dat-just"
+    etiqueta="Justificación"
+    ayuda="Explique el cambio (mínimo 10 caracteres). Queda en la bitácora."
+    [control]="form.controls.justificacion"
+  >
+    <textarea appCampoControl formControlName="justificacion" rows="2" maxlength="1000"></textarea>
+  </app-campo>
+  <div class="campo-simple">
+    <label for="dat-archivo">Soporte (PDF, JPG o PNG)</label>
+    <input
+      id="dat-archivo"
+      type="file"
+      accept=".pdf,.jpg,.jpeg,.png"
+      (change)="elegirArchivo($event)"
+    />
+  </div>
+  <div class="acciones">
+    <button type="submit" class="boton secundario" [disabled]="guardando()">
+      {{ guardando() ? 'Guardando…' : 'Guardar el cambio' }}
+    </button>
+  </div>
+</form>

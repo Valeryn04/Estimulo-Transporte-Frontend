@@ -15,6 +15,7 @@ import {
   ItemDistribucion,
   NOMBRE_AJUSTE,
 } from '../modelos-asignacion';
+import { Ayuda } from '../../../../shared/ayuda/ayuda';
 
 const filaDistribucion = (itemId: number | null = null, cupos: number | null = null) =>
   new FormGroup({
@@ -33,7 +34,7 @@ type Distribucion = FormArray<ReturnType<typeof filaDistribucion>>;
  */
 @Component({
   selector: 'app-cupos-page',
-  imports: [CurrencyPipe, DatePipe, DecimalPipe, ReactiveFormsModule, Campo, CampoControl],
+  imports: [CurrencyPipe, DatePipe, DecimalPipe, ReactiveFormsModule, Campo, CampoControl, Ayuda],
   templateUrl: './cupos-page.html',
   styleUrl: './cupos-page.scss',
 })

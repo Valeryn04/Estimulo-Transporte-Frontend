@@ -203,6 +203,171 @@
     </table>
   </section>
 
+  @if (mensaje()) {
+    <p class="aviso exito no-imprimir" role="status">{{ mensaje() }}</p>
+  }
+  @if (error()) {
+    <p class="aviso error no-imprimir" role="alert">{{ error() }}</p>
+  }
+
+  @if (x.decisiones.length > 0) {
+    <section class="tarjeta" aria-labelledby="t-dec">
+      <h2 id="t-dec">Verificación de requisitos</h2>
+      @for (d of x.decisiones; track $index) {
+        <details>
+          <summary>
+            Ronda {{ d.ronda }} · <strong>{{ d.decision }}</strong> · {{ d.usuario }} ·
+            {{ d.fecha | date: 'dd/MM/yyyy HH:mm' }}
+          </summary>
+          <p>{{ d.motivacion }}</p>
+          <ul>
+            @for (i of d.listaDeChequeo; track $index) {
+              <li>
+                {{ i.requisito }}: <strong>{{ i.resultado }}</strong>
+                @if (i.observacion) {
+                  <small>{{ i.observacion }}</small>
+                }
+              </li>
+            }
+          </ul>
+        </details>
+      }
+      @for (s of x.subsanaciones; track $index) {
+        <p>
+          Subsanación pedida el {{ s.pedidaAt | date: 'dd/MM/yyyy' }}, plazo hasta el
+          {{ s.venceAt | date: 'dd/MM/yyyy' }}:
+          {{ s.estado === 'RESPONDIDA' ? 'respondida' : 'sin respuesta' }}.
+        </p>
+      }
+    </section>
+  }
+
+  @if (x.entregas.length > 0 || x.novedades.length > 0) {
+    <section class="tarjeta" aria-labelledby="t-ben">
+      <h2 id="t-ben">Entrega y novedades del beneficio</h2>
+      @if (x.entregas.length > 0) {
+        <ul>
+          @for (e of x.entregas; track $index) {
+            <li>
+              Tarjeta {{ e.tarjeta }} ({{
+                e.rol === 'PCD' ? 'persona con discapacidad' : 'cuidador'
+              }}), entregada el {{ e.fechaEntrega }} a {{ e.receptor }} por {{ e.funcionario }}
+              @if (!e.vigente) {
+                <small>(ya no está vigente)</small>
+              }
+            </li>
+          }
+        </ul>
+      }
+      @if (x.novedades.length > 0) {
+        <ul>
+          @for (n of x.novedades; track $index) {
+            <li>
+              <strong>{{ n.tipo }}</strong> desde el {{ n.fechaEfectiva }}
+              @if (n.causal) {
+                · {{ n.causal }}
+              }
+              · {{ n.responsable }}
+              @if (n.observacion) {
+                <small>{{ n.observacion }}</small>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+
+  <section class="tarjeta" aria-labelledby="t-com">
+    <h2 id="t-com">Comunicaciones enviadas</h2>
+    @if (x.alertaRebote) {
+      <p class="aviso error" role="alert">
+        Hay comunicaciones que rebotaron y no se han reenviado: la persona no las recibió. Corrija
+        el correo para reenviarlas.
+      </p>
+    }
+    <ul class="comunicaciones">
+      @for (c of x.comunicaciones; track c.id) {
+        <li>
+          <details>
+            <summary>
+              {{ c.fecha | date: 'dd/MM/yyyy HH:mm' }} · {{ c.asunto }} ·
+              <span
+                class="etiqueta"
+                [class.mal]="c.estado === 'REBOTADO' || c.estado === 'FALLIDO'"
+                >{{ nombreEstadoCorreo[c.estado] }}</span
+              >
+              @if (c.reenvioDe) {
+                <small>(reenvío)</small>
+              }
+              @if (c.reenviado) {
+                <small>(reenviado)</small>
+              }
+            </summary>
+            <p>
+              <small>Para: {{ c.destinatario }}</small>
+            </p>
+            @if (c.reboteMotivo) {
+              <p>
+                <small>Motivo del rebote: {{ c.reboteMotivo }}</small>
+              </p>
+            }
+            <pre class="cuerpo-correo">{{ c.cuerpo }}</pre>
+          </details>
+          @if (puedeCorregirCorreo() && c.estado === 'REBOTADO' && !c.reenviado) {
+            <button type="button" class="enlace no-imprimir" (click)="reenviar(c)">
+              Reenviar al correo registrado
+            </button>
+          }
+        </li>
+      } @empty {
+        <li>Sin comunicaciones.</li>
+      }
+    </ul>
+
+    @if (puedeCorregirCorreo()) {
+      <form class="no-imprimir" [formGroup]="formCorreo" (ngSubmit)="corregirCorreo()" novalidate>
+        <h3>
+          Corregir el correo de la persona
+          <app-ayuda
+            etiqueta="Corregir el correo"
+            texto="Cuando una comunicación rebota, actualice el correo con su soporte: las comunicaciones rebotadas se reenvían con su texto original."
+          />
+        </h3>
+        <div class="rejilla">
+          <app-campo
+            idCampo="exp-correo"
+            etiqueta="Nuevo correo"
+            [control]="formCorreo.controls.correo"
+          >
+            <input appCampoControl type="email" formControlName="correo" autocomplete="off" />
+          </app-campo>
+          <app-campo
+            idCampo="exp-just"
+            etiqueta="Justificación"
+            [control]="formCorreo.controls.justificacion"
+          >
+            <input appCampoControl type="text" formControlName="justificacion" maxlength="1000" />
+          </app-campo>
+        </div>
+        <div class="campo-simple">
+          <label for="exp-soporte">Soporte (PDF, JPG o PNG)</label>
+          <input
+            id="exp-soporte"
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            (change)="elegirSoporte($event)"
+          />
+        </div>
+        <div class="acciones">
+          <button type="submit" class="boton secundario" [disabled]="guardando()">
+            {{ guardando() ? 'Guardando…' : 'Actualizar y reenviar' }}
+          </button>
+        </div>
+      </form>
+    }
+  </section>
+
   <section class="tarjeta" aria-labelledby="t-cron">
     <h2 id="t-cron">Cronología</h2>
     <ol class="cronologia">

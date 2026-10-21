@@ -1,6 +1,6 @@
 import { EstadoBeneficio } from '../asignacion/modelos-asignacion';
 
-export type TipoNovedad = 'BLOQUEO' | 'SUSPENSION' | 'LEVANTAMIENTO';
+export type TipoNovedad = 'BLOQUEO' | 'SUSPENSION' | 'LEVANTAMIENTO' | 'FINALIZACION';
 
 export interface ResumenBeneficio {
   beneficioId: number;
@@ -85,6 +85,7 @@ export interface Revocatoria extends RevocatoriaResumen {
 export interface Causales {
   bloqueo: { id: number; nombre: string }[];
   revocatoria: { id: number; nombre: string }[];
+  finalizacion: { id: number; nombre: string }[];
 }
 
 export interface ExpedienteNovedades {
@@ -97,6 +98,7 @@ export interface ExpedienteNovedades {
     asignadoDia: string;
   };
   novedades: Novedad[];
+  actualizaciones: ActualizacionDatos[];
   revocatorias: RevocatoriaResumen[];
   causales: Causales;
 }
@@ -127,3 +129,39 @@ export interface DatosNovedad {
   observacion: string;
   levantamientoProgramado?: string;
 }
+
+export type DatoActualizable = 'DIRECCION' | 'CORREO' | 'CUIDADOR';
+
+export const NOMBRE_DATO: Record<DatoActualizable, string> = {
+  DIRECCION: 'Dirección de residencia',
+  CORREO: 'Correo electrónico',
+  CUIDADOR: 'Cuidador',
+};
+
+export interface ActualizacionDatos {
+  id: number;
+  dato: DatoActualizable;
+  anterior: Record<string, string | null>;
+  nuevo: Record<string, string | null>;
+  justificacion: string;
+  evidencia: { nombre: string; tamanoBytes: number };
+  responsable: string;
+  creadaAt: string;
+}
+
+export type DatosActualizacion =
+  | {
+      dato: 'DIRECCION';
+      justificacion: string;
+      direccion: string;
+      localidadId: number;
+      barrioId: number;
+    }
+  | { dato: 'CORREO'; justificacion: string; correo: string }
+  | {
+      dato: 'CUIDADOR';
+      justificacion: string;
+      tipoIdentificacionId: number;
+      numeroIdentificacion: string;
+      nombre: string;
+    };

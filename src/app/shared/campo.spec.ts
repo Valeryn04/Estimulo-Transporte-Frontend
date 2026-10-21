@@ -22,6 +22,19 @@ class Anfitrion {
   control = new FormControl('', [Validators.required, Validators.minLength(10)]);
 }
 
+@Component({
+  selector: 'app-sin-ayuda-prueba',
+  imports: [Campo, CampoControl, ReactiveFormsModule],
+  template: `
+    <app-campo idCampo="nombre" etiqueta="Nombre" [control]="control">
+      <input appCampoControl [formControl]="control" />
+    </app-campo>
+  `,
+})
+class SinAyuda {
+  control = new FormControl('');
+}
+
 describe('Campo', () => {
   it('conecta etiqueta, ayuda y error con el campo para lectores de pantalla', async () => {
     const fixture = TestBed.createComponent(Anfitrion);
@@ -33,6 +46,38 @@ describe('Campo', () => {
     expect(input.getAttribute('aria-required')).toBe('true');
     expect(input.getAttribute('aria-describedby')).toBe('celular-ayuda');
     expect(el.querySelector('.error')).toBeNull();
+  });
+
+  it('la ayuda es un tooltip con icono: aparece al tocar el botón y se cierra con Escape o al tocar afuera', async () => {
+    const fixture = TestBed.createComponent(Anfitrion);
+    await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+    const boton = el.querySelector<HTMLButtonElement>('.ayuda-boton')!;
+    const tooltip = el.querySelector('[role="tooltip"]')!;
+    expect(boton.getAttribute('aria-label')).toBe('Ayuda: Número de celular');
+    expect(boton.getAttribute('aria-expanded')).toBe('false');
+    expect(tooltip.textContent).toContain('10 dígitos');
+    expect(tooltip.classList.contains('visible')).toBe(false);
+    // El botón no está dentro de la etiqueta: tocarlo no debe activar el campo.
+    expect(el.querySelector('label')?.contains(boton)).toBe(false);
+    boton.click();
+    await fixture.whenStable();
+    expect(boton.getAttribute('aria-expanded')).toBe('true');
+    expect(tooltip.classList.contains('visible')).toBe(true);
+    boton.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await fixture.whenStable();
+    expect(tooltip.classList.contains('visible')).toBe(false);
+    boton.click();
+    await fixture.whenStable();
+    document.body.click();
+    await fixture.whenStable();
+    expect(tooltip.classList.contains('visible')).toBe(false);
+  });
+
+  it('sin ayuda no dibuja el botón', async () => {
+    const fixture = TestBed.createComponent(SinAyuda);
+    await fixture.whenStable();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.ayuda-boton')).toBeNull();
   });
 
   it('muestra el campo y la corrección esperada solo después de tocarlo', async () => {

@@ -10,7 +10,8 @@ export type Catalogo =
   | 'ESCOLARIDAD'
   | 'OCUPACION'
   | 'CAUSAL_BLOQUEO'
-  | 'CAUSAL_REVOCATORIA';
+  | 'CAUSAL_REVOCATORIA'
+  | 'CAUSAL_FINALIZACION';
 
 /** Nombres con los que se muestran las listas en el portal interno. */
 export const NOMBRE_CATALOGO: Record<Catalogo, string> = {
@@ -26,6 +27,7 @@ export const NOMBRE_CATALOGO: Record<Catalogo, string> = {
   OCUPACION: 'Ocupaciones',
   CAUSAL_BLOQUEO: 'Causales de bloqueo',
   CAUSAL_REVOCATORIA: 'Causales de revocatoria',
+  CAUSAL_FINALIZACION: 'Causales de finalización',
 };
 
 export interface ResumenCatalogo {

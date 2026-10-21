@@ -5,6 +5,7 @@ import { API_BASE } from '../../../core/api/api';
 import { EstadoBeneficio } from '../asignacion/modelos-asignacion';
 import {
   AlertaCruce,
+  DatosActualizacion,
   DatosNovedad,
   EstadoAlertaCruce,
   EstadoRevocatoria,
@@ -52,6 +53,26 @@ export class NovedadesApi {
     evidencia: File,
   ): Observable<ExpedienteNovedades> {
     return this.multipart(`${NOVEDADES}/beneficios/${beneficioId}/novedades`, d, evidencia);
+  }
+
+  finalizar(
+    beneficioId: number,
+    d: { causalId: number; fechaEfectiva: string; observacion: string },
+    soporte: File,
+  ): Observable<ExpedienteNovedades> {
+    return this.multipart(`${NOVEDADES}/beneficios/${beneficioId}/finalizar`, d, soporte);
+  }
+
+  actualizarDatos(
+    beneficioId: number,
+    d: DatosActualizacion,
+    soporte: File,
+  ): Observable<ExpedienteNovedades> {
+    return this.multipart(`${NOVEDADES}/beneficios/${beneficioId}/datos`, d, soporte);
+  }
+
+  evidenciaDatos(id: number): Observable<Blob> {
+    return this.http.get(`${NOVEDADES}/datos/${id}/evidencia`, { responseType: 'blob' });
   }
 
   evidenciaNovedad(id: number): Observable<Blob> {
