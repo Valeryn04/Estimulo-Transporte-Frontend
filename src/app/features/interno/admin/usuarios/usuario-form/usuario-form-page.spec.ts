@@ -185,14 +185,14 @@ describe('UsuarioFormPage', () => {
     enviar();
     for (const r of ctrl.match((x) => x.url.endsWith('/admin/usuarios/disponibilidad'))) {
       r.flush({
-        usuario: { disponible: true, usadoPor: null },
-        correo: { disponible: false, usadoPor: 'maria.gomez', estado: 'ACTIVO' },
+        usuario: { disponible: true },
+        correo: { disponible: false },
       });
     }
     await asentar(fixture);
     ctrl.expectNone((r) => r.method === 'POST');
     expect(el.querySelector('#correo-error')?.textContent).toContain(
-      'ya lo usa la cuenta «maria.gomez»',
+      'este correo ya está registrado',
     );
   });
 
