@@ -149,3 +149,14 @@
     padding: 4px;
   }
 }
+
+@media (max-width: 760px) {
+  .datos,
+  .flecha {
+    display: none;
+  }
+
+  .disparador {
+    padding: 4px;
+  }
+}

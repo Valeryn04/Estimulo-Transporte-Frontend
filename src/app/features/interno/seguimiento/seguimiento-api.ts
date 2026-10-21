@@ -46,6 +46,12 @@ export class SeguimientoApi {
       .pipe(map((r) => r.items));
   }
 
+  accionesBitacora(): Observable<string[]> {
+    return this.http
+      .get<{ items: string[] }>(`${ADMIN}/bitacora/acciones`)
+      .pipe(map((r) => r.items));
+  }
+
   exportarBitacora(
     formato: 'XLSX' | 'PDF',
     f: Omit<FiltroBitacora, 'pagina' | 'tamano'>,

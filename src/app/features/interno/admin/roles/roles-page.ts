@@ -9,6 +9,7 @@ import { aplicarErroresApi } from '../../../../shared/forms';
 import { Icono } from '../../../../shared/icono/icono';
 import { AdminApi } from '../admin-api';
 import { Permiso, Rol } from '../modelos';
+import { Pestanas } from '../../../../shared/pestanas/pestanas';
 
 /** Código del rol que siempre tiene todos los permisos y no se modifica. */
 const ROL_ADMINISTRADOR = 'ADMINISTRADOR';
@@ -19,7 +20,7 @@ const ROL_ADMINISTRADOR = 'ADMINISTRADOR';
  */
 @Component({
   selector: 'app-roles-page',
-  imports: [ReactiveFormsModule, Campo, CampoControl, Dialogo, Icono],
+  imports: [ReactiveFormsModule, Campo, CampoControl, Dialogo, Icono, Pestanas],
   templateUrl: './roles-page.html',
   styleUrl: './roles-page.scss',
 })
@@ -41,11 +42,11 @@ export class RolesPage implements OnInit {
   protected readonly form = new FormGroup({
     nombre: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.minLength(3), Validators.maxLength(60)],
+      validators: [Validators.required, Validators.minLength(3), Validators.maxLength(40)],
     }),
     descripcion: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.minLength(3), Validators.maxLength(250)],
+      validators: [Validators.required, Validators.minLength(3), Validators.maxLength(150)],
     }),
   });
 
@@ -90,6 +91,15 @@ export class RolesPage implements OnInit {
 
   protected descripcionPermiso(codigo: string): string {
     return this.permisos().find((p) => p.codigo === codigo)?.descripcion ?? codigo;
+  }
+
+  /** Áreas del programa en las que el rol puede actuar, para verlas de un vistazo en la tabla. */
+  protected modulosDe(r: Rol): string {
+    if (r.permisos.length === 0) return 'Sin permisos todavía';
+    const modulos = new Set(
+      r.permisos.map((p) => this.permisos().find((x) => x.codigo === p)?.modulo ?? 'Otros'),
+    );
+    return [...modulos].join(' · ');
   }
 
   protected resumenPermisos(r: Rol): string {

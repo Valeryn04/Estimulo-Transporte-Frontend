@@ -1,7 +1,6 @@
 import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiError } from '../../../../core/api/api-error';
 import { PERMISO } from '../../../../core/auth/modelos';
@@ -16,6 +15,7 @@ import {
   NOMBRE_ESTADO_BENEFICIO,
   Propuesta,
 } from '../modelos-asignacion';
+import { Pestanas } from '../../../../shared/pestanas/pestanas';
 
 type Pestana = 'propuesta' | 'beneficiarios';
 type Dialogos = 'ninguno' | 'omisiones' | 'espera';
@@ -32,9 +32,9 @@ type Dialogos = 'ninguno' | 'omisiones' | 'espera';
     DatePipe,
     DecimalPipe,
     ReactiveFormsModule,
-    RouterLink,
     Dialogo,
     EntregaBeneficio,
+    Pestanas,
   ],
   templateUrl: './asignacion-page.html',
   styleUrl: './asignacion-page.scss',

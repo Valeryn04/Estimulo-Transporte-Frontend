@@ -1,3 +1,4 @@
+<app-pestanas seccion="priorizacion" />
 <div class="encabezado">
   <h1>Matriz de ponderación</h1>
   @if (puedeAdministrar() && !hayAbierta()) {
@@ -408,7 +409,7 @@
             <tr>
               <td class="num">{{ f.posicionSimulada }}</td>
               <th scope="row">
-                {{ f.radicado }}
+                <span class="radicado">{{ f.radicado }}</span>
                 <small>{{ f.pcdNombre }}</small>
                 @if (f.faltantes.length > 0) {
                   <small>Falta: {{ f.faltantes.join(', ') }}</small>

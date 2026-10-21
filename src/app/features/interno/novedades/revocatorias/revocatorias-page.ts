@@ -1,7 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiError } from '../../../../core/api/api-error';
 import { PERMISO } from '../../../../core/auth/modelos';
@@ -17,6 +16,7 @@ import {
 } from '../modelos-novedades';
 import { NovedadesApi } from '../novedades-api';
 import { Ayuda } from '../../../../shared/ayuda/ayuda';
+import { Pestanas } from '../../../../shared/pestanas/pestanas';
 
 /**
  * Revocatorias con debido proceso (RF-NOV-02): inicio con causal y evidencia, traslado de las razones, descargos y acto
@@ -25,7 +25,7 @@ import { Ayuda } from '../../../../shared/ayuda/ayuda';
  */
 @Component({
   selector: 'app-revocatorias-page',
-  imports: [DatePipe, ReactiveFormsModule, RouterLink, Dialogo, Ayuda],
+  imports: [DatePipe, ReactiveFormsModule, Dialogo, Ayuda, Pestanas],
   templateUrl: './revocatorias-page.html',
   styleUrl: './revocatorias-page.scss',
 })

@@ -8,6 +8,8 @@ import { SeguimientoApi, descargar } from '../seguimiento-api';
 import { PERMISO } from '../../../../core/auth/modelos';
 import { Sesion } from '../../../../core/auth/sesion';
 import { PaginaBitacora } from '../modelos-seguimiento';
+import { nombreAccion, nombreModulo } from '../nombres';
+import { Pestanas } from '../../../../shared/pestanas/pestanas';
 
 /**
  * Bitácora de auditoría (RF-SEG-01): quién hizo qué y cuándo, con filtros por expediente, usuario, módulo, acción y
@@ -15,7 +17,7 @@ import { PaginaBitacora } from '../modelos-seguimiento';
  */
 @Component({
   selector: 'app-bitacora-page',
-  imports: [DatePipe, JsonPipe, ReactiveFormsModule, RouterLink],
+  imports: [DatePipe, JsonPipe, ReactiveFormsModule, RouterLink, Pestanas],
   templateUrl: './bitacora-page.html',
   styleUrl: './bitacora-page.scss',
 })
@@ -27,6 +29,9 @@ export class BitacoraPage implements OnInit {
 
   protected readonly datos = signal<PaginaBitacora | null>(null);
   protected readonly modulos = signal<string[]>([]);
+  protected readonly acciones = signal<string[]>([]);
+  protected readonly nombreModulo = nombreModulo;
+  protected readonly nombreAccion = nombreAccion;
   protected readonly cargando = signal(false);
   protected readonly error = signal('');
   protected readonly pagina = signal(1);
@@ -51,7 +56,12 @@ export class BitacoraPage implements OnInit {
 
   private async cargarModulos(): Promise<void> {
     try {
-      this.modulos.set(await firstValueFrom(this.api.modulosBitacora()));
+      const [m, a] = await Promise.all([
+        firstValueFrom(this.api.modulosBitacora()),
+        firstValueFrom(this.api.accionesBitacora()),
+      ]);
+      this.modulos.set(m);
+      this.acciones.set(a);
     } catch {
       this.modulos.set([]);
     }

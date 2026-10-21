@@ -1,6 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiError } from '../../../../core/api/api-error';
 import { PERMISO } from '../../../../core/auth/modelos';
@@ -9,6 +8,7 @@ import { EstadoBeneficio, NOMBRE_ESTADO_BENEFICIO } from '../../asignacion/model
 import { ExpedienteBeneficio } from '../expediente/expediente-beneficio';
 import { ResumenBeneficio } from '../modelos-novedades';
 import { NovedadesApi } from '../novedades-api';
+import { Pestanas } from '../../../../shared/pestanas/pestanas';
 
 /**
  * Novedades de los beneficios (RF-NOV-01): bloqueos, suspensiones y reactivaciones, y el inicio de las revocatorias.
@@ -16,7 +16,7 @@ import { NovedadesApi } from '../novedades-api';
  */
 @Component({
   selector: 'app-novedades-page',
-  imports: [ReactiveFormsModule, RouterLink, ExpedienteBeneficio],
+  imports: [ReactiveFormsModule, ExpedienteBeneficio, Pestanas],
   templateUrl: './novedades-page.html',
   styleUrl: './novedades-page.scss',
 })

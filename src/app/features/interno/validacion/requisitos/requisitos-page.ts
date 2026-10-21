@@ -13,6 +13,7 @@ import { DocumentoRequerido, VersionRegistro } from '../../admin/config/modelos-
 import { SECCIONES_DATOS } from '../caso/datos-caso';
 import { AplicaARequisito, NOMBRE_APLICA_REQUISITO, Requisito } from '../modelos-validacion';
 import { ValidacionApi } from '../validacion-api';
+import { Pestanas } from '../../../../shared/pestanas/pestanas';
 
 type Vista = 'ninguna' | 'formulario' | 'historial';
 
@@ -23,7 +24,7 @@ type Vista = 'ninguna' | 'formulario' | 'historial';
  */
 @Component({
   selector: 'app-requisitos-page',
-  imports: [DatePipe, ReactiveFormsModule, Campo, CampoControl, Dialogo, Icono],
+  imports: [DatePipe, ReactiveFormsModule, Campo, CampoControl, Dialogo, Icono, Pestanas],
   templateUrl: './requisitos-page.html',
   styleUrl: './requisitos-page.scss',
 })

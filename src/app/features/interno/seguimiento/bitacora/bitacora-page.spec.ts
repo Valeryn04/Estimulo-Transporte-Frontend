@@ -50,6 +50,7 @@ describe('BitacoraPage', () => {
   async function montar(datos = pagina()) {
     const p = montarPantalla(BitacoraPage, {}, ['bitacora.ver']);
     p.ctrl.expectOne(`${URL}/modulos`).flush({ items: ['asignacion', 'preinscripcion'] });
+    p.ctrl.expectOne(`${URL}/acciones`).flush({ items: ['BENEFICIO_ASIGNADO', 'LOGIN_OK'] });
     p.ctrl.expectOne(esBitacora).flush(datos);
     await p.asentar();
     return p;
@@ -59,7 +60,7 @@ describe('BitacoraPage', () => {
     const { el } = await montar();
     const filas = el.querySelectorAll('tbody tr');
     expect(filas).toHaveLength(2);
-    expect(filas[0]?.textContent).toContain('BENEFICIO_ASIGNADO');
+    expect(filas[0]?.textContent).toContain('Beneficio asignado');
     expect(filas[0]?.textContent).toContain('asignador');
     expect(filas[0]?.querySelector('a')?.textContent).toContain('EST-2026-000001');
     expect(filas[1]?.textContent).toContain('Sistema o ciudadano');
@@ -99,6 +100,7 @@ describe('BitacoraPage', () => {
     globalThis.URL.revokeObjectURL = () => undefined;
     const p = montarPantalla(BitacoraPage, {}, ['bitacora.ver', 'reportes.exportar']);
     p.ctrl.expectOne(`${URL}/modulos`).flush({ items: [] });
+    p.ctrl.expectOne(`${URL}/acciones`).flush({ items: [] });
     p.ctrl.expectOne(esBitacora).flush(pagina());
     await p.asentar();
     p.escribir('#radicado', 'EST-2026-000001');
@@ -137,6 +139,7 @@ describe('BitacoraPage', () => {
   it('muestra el error de la API', async () => {
     const p = montarPantalla(BitacoraPage, {}, ['bitacora.ver']);
     p.ctrl.expectOne(`${URL}/modulos`).flush({ items: [] });
+    p.ctrl.expectOne(`${URL}/acciones`).flush({ items: [] });
     p.ctrl.expectOne(esBitacora).flush(errorApi('VALIDACION', 'Desde: use el formato AAAA-MM-DD'), {
       status: 422,
       statusText: 'No procesable',

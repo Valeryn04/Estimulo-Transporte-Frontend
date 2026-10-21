@@ -9,6 +9,7 @@ import { Icono } from '../../../../shared/icono/icono';
 import { aplicarErroresApi } from '../../../../shared/forms';
 import { ConfigApi } from '../config/config-api';
 import { AplicaA, DocumentoRequerido, NOMBRE_APLICA_A } from '../config/modelos-config';
+import { Pestanas } from '../../../../shared/pestanas/pestanas';
 
 /**
  * Documentos exigidos al ciudadano (RN-05, RN-06, RF-CAR-03): los de la persona con discapacidad, los del
@@ -16,7 +17,7 @@ import { AplicaA, DocumentoRequerido, NOMBRE_APLICA_A } from '../config/modelos-
  */
 @Component({
   selector: 'app-documentos-page',
-  imports: [ReactiveFormsModule, Campo, CampoControl, Dialogo, Icono],
+  imports: [ReactiveFormsModule, Campo, CampoControl, Dialogo, Icono, Pestanas],
   templateUrl: './documentos-page.html',
   styleUrl: './documentos-page.scss',
 })

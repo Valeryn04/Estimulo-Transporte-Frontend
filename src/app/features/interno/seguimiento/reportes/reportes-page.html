@@ -1,3 +1,4 @@
+<app-pestanas seccion="seguimiento" />
 <div class="encabezado">
   <h1>Reportes</h1>
 </div>
@@ -15,6 +16,7 @@
 
 <form
   class="tarjeta filtros"
+  data-manual
   [formGroup]="filtros"
   (ngSubmit)="consultar()"
   aria-label="Filtros del reporte"

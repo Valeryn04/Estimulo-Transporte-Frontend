@@ -6,11 +6,12 @@ import { ApiError } from '../../../../core/api/api-error';
 import { Icono } from '../../../../shared/icono/icono';
 import { ConfigApi } from '../config/config-api';
 import { PlantillaResumen } from '../config/modelos-config';
+import { Pestanas } from '../../../../shared/pestanas/pestanas';
 
 /** Plantillas de correo del programa (RF-COM-02): lista de las plantillas editables. */
 @Component({
   selector: 'app-plantillas-page',
-  imports: [DatePipe, RouterLink, Icono],
+  imports: [DatePipe, RouterLink, Icono, Pestanas],
   templateUrl: './plantillas-page.html',
   styleUrl: './plantillas-page.scss',
 })

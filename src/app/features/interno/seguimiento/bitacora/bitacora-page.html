@@ -1,3 +1,4 @@
+<app-pestanas seccion="seguimiento" />
 <div class="encabezado">
   <h1>Bitácora de auditoría</h1>
 </div>
@@ -31,13 +32,18 @@
       <select id="modulo" formControlName="modulo">
         <option value="">Todos</option>
         @for (m of modulos(); track m) {
-          <option [value]="m">{{ m }}</option>
+          <option [value]="m">{{ nombreModulo(m) }}</option>
         }
       </select>
     </div>
     <div class="campo-simple">
-      <label for="accion">Acción (empieza por)</label>
-      <input id="accion" type="search" formControlName="accion" placeholder="BENEFICIO_" />
+      <label for="accion">Acción</label>
+      <select id="accion" formControlName="accion">
+        <option value="">Todas</option>
+        @for (a of acciones(); track a) {
+          <option [value]="a">{{ nombreAccion(a) }}</option>
+        }
+      </select>
     </div>
     <div class="campo-simple">
       <label for="desde">Desde</label>
@@ -101,8 +107,8 @@
             <td>{{ e.fecha | date: 'dd/MM/yyyy HH:mm:ss' }}</td>
             <td>{{ e.usuario ?? 'Sistema o ciudadano' }}</td>
             <td>
-              <strong>{{ e.accion }}</strong>
-              <small>{{ e.modulo }}</small>
+              <strong>{{ nombreAccion(e.accion) }}</strong>
+              <small>{{ nombreModulo(e.modulo) }}</small>
             </td>
             <td>
               @if (e.radicado) {

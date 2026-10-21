@@ -1,8 +1,6 @@
+<app-pestanas seccion="asignacion" />
 <div class="encabezado">
   <h1>Asignación del beneficio</h1>
-  @if (puedeCupos()) {
-    <a class="boton secundario" routerLink="/interno/admin/cupos">Cupos y presupuesto</a>
-  }
 </div>
 <p class="intro">
   La asignación sigue el orden de prioridad. Cada caso debe caber en los cupos y el presupuesto
@@ -133,7 +131,7 @@
               }
               <td class="num">{{ f.posicion }}</td>
               <th scope="row">
-                {{ f.radicado }}
+                <span class="radicado">{{ f.radicado }}</span>
                 <small>{{ f.radicadaAt | date: 'dd/MM/yyyy' }}</small>
               </th>
               <td>
@@ -250,7 +248,9 @@
         <tbody>
           @for (x of b.items; track x.id) {
             <tr>
-              <th scope="row">{{ x.radicado }}</th>
+              <th scope="row">
+                <span class="radicado">{{ x.radicado }}</span>
+              </th>
               <td>
                 {{ x.pcdNombre }}
                 <small>{{ x.personas === 2 ? 'Con cuidador' : 'Sin cuidador' }}</small>
@@ -293,7 +293,9 @@
                       : x.estado === 'PENDIENTE_ACTIVACION' && puedeAsignar()
                         ? 'Activar'
                         : 'Ver entrega'
-                  }}<span class="solo-lectores"> de {{ x.radicado }}</span>
+                  }}<span class="solo-lectores">
+                    de <span class="radicado">{{ x.radicado }}</span></span
+                  >
                 </button>
                 <small>{{ x.entregas }} de {{ x.personas }} tarjeta(s)</small>
               </td>
@@ -352,7 +354,10 @@
       @for (s of saltados(); track s.solicitudId; let i = $index) {
         <div class="campo-simple">
           <label [for]="'causa-' + i">
-            {{ s.radicado }} · {{ s.pcdNombre }} ({{ s.puntajeFinal | number: '1.0-2' }} puntos)
+            <span class="radicado">{{ s.radicado }}</span> · {{ s.pcdNombre }} ({{
+              s.puntajeFinal | number: '1.0-2'
+            }}
+            puntos)
           </label>
           <textarea [id]="'causa-' + i" rows="2" [formControlName]="i" maxlength="500"></textarea>
         </div>

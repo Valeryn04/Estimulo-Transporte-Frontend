@@ -1,3 +1,4 @@
+<app-pestanas seccion="accesos" />
 <div class="encabezado">
   <h1>Roles y permisos</h1>
   <button type="button" class="boton" (click)="abrirNuevo()">Crear rol</button>
@@ -41,9 +42,12 @@
               <span class="etiqueta" [class.ok]="!r.sistema">
                 {{ r.sistema ? 'Del sistema' : 'Propio' }}
               </span>
-              <small>{{ r.descripcion }}</small>
+              <small class="recorte" [title]="r.descripcion">{{ r.descripcion }}</small>
             </th>
-            <td class="permisos">{{ resumenPermisos(r) }}</td>
+            <td class="permisos">
+              <strong>{{ r.permisos.length }} permiso(s)</strong>
+              <small class="recorte" [title]="resumenPermisos(r)">{{ modulosDe(r) }}</small>
+            </td>
             <td class="num">{{ r.usuarios }}</td>
             <td class="acciones-fila">
               <span class="grupo-acciones">
@@ -98,7 +102,7 @@
       [ayuda]="nombreFijo() ? 'El nombre de un rol del sistema no se puede cambiar.' : ''"
       [control]="form.controls.nombre"
     >
-      <input appCampoControl type="text" formControlName="nombre" maxlength="60" />
+      <input appCampoControl type="text" formControlName="nombre" maxlength="40" />
     </app-campo>
     <app-campo
       idCampo="rol-descripcion"
@@ -106,7 +110,7 @@
       ayuda="Qué hace quien tiene este rol."
       [control]="form.controls.descripcion"
     >
-      <textarea appCampoControl formControlName="descripcion" rows="3" maxlength="250"></textarea>
+      <textarea appCampoControl formControlName="descripcion" rows="3" maxlength="150"></textarea>
     </app-campo>
 
     <fieldset class="permisos-rol">

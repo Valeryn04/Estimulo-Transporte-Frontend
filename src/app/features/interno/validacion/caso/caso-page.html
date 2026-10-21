@@ -6,7 +6,9 @@
   <p class="aviso error" role="alert">{{ error() }}</p>
 } @else if (caso(); as c) {
   <div class="encabezado">
-    <h1>Caso {{ c.solicitud.radicado }}</h1>
+    <h1>
+      Caso <span class="radicado">{{ c.solicitud.radicado }}</span>
+    </h1>
     <span class="etiqueta">{{ c.solicitud.estado.nombre }}</span>
   </div>
 

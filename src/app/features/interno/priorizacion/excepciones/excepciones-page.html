@@ -1,3 +1,4 @@
+<app-pestanas seccion="priorizacion" />
 <div class="encabezado">
   <h1>Excepciones de priorización</h1>
 </div>
@@ -49,7 +50,7 @@
         @for (e of items(); track e.id) {
           <tr>
             <th scope="row">
-              {{ e.radicado }}
+              <span class="radicado">{{ e.radicado }}</span>
               <small>{{ e.pcdNombre }}</small>
             </th>
             <td class="num">
@@ -83,14 +84,20 @@
             <td class="acciones-fila">
               <span class="grupo-acciones">
                 <button type="button" class="enlace" (click)="verEvidencia(e)">
-                  Ver evidencia<span class="solo-lectores"> de {{ e.radicado }}</span>
+                  Ver evidencia<span class="solo-lectores">
+                    de <span class="radicado">{{ e.radicado }}</span></span
+                  >
                 </button>
                 @if (puedeDecidirEsta(e)) {
                   <button type="button" class="enlace" (click)="abrirDecision(e, 'APROBAR')">
-                    Aprobar<span class="solo-lectores"> la excepción de {{ e.radicado }}</span>
+                    Aprobar<span class="solo-lectores">
+                      la excepción de <span class="radicado">{{ e.radicado }}</span></span
+                    >
                   </button>
                   <button type="button" class="enlace" (click)="abrirDecision(e, 'RECHAZAR')">
-                    Rechazar<span class="solo-lectores"> la excepción de {{ e.radicado }}</span>
+                    Rechazar<span class="solo-lectores">
+                      la excepción de <span class="radicado">{{ e.radicado }}</span></span
+                    >
                   </button>
                 }
               </span>

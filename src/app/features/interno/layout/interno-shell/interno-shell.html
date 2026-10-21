@@ -22,6 +22,7 @@
     <span class="sistema">Estímulo Social de Transporte<br />Portal interno</span>
   </div>
   <div class="acciones-barra">
+    <app-campana />
     <app-menu-usuario (cerrarSesion)="cerrarSesion()" />
   </div>
 </header>
@@ -44,109 +45,16 @@
     <a routerLink="/interno" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }"
       >Inicio</a
     >
-
-    @if (sesion.tiene(PERMISO.validacionVer)) {
-      <p class="grupo">Validación de solicitudes</p>
-      <a routerLink="/interno/validacion" routerLinkActive="activo">Bandeja de validación</a>
-    }
-
-    @if (sesion.tiene(PERMISO.novedadesVer)) {
-      <p class="grupo">Novedades y revocatoria</p>
-      <a
-        routerLink="/interno/novedades"
-        routerLinkActive="activo"
-        [routerLinkActiveOptions]="{ exact: true }"
-        >Novedades de los beneficios</a
-      >
-      <a routerLink="/interno/novedades/revocatorias" routerLinkActive="activo">Revocatorias</a>
-      <a routerLink="/interno/novedades/alertas" routerLinkActive="activo">Alertas de cruce</a>
-    }
-    @if (sesion.tieneAlguno(PERMISO.encuestasAdministrar, PERMISO.encuestasResultados)) {
-      <a routerLink="/interno/encuestas" routerLinkActive="activo">Encuestas de satisfacción</a>
-    }
-
-    @if (
-      sesion.tieneAlguno(
-        PERMISO.tableroVer,
-        PERMISO.expedienteVer,
-        PERMISO.reportesVer,
-        PERMISO.biConsultar,
-        PERMISO.bitacoraVer
-      )
-    ) {
-      <p class="grupo">Seguimiento y control</p>
-      @if (sesion.tiene(PERMISO.tableroVer)) {
-        <a routerLink="/interno/tablero" routerLinkActive="activo">Tablero de control</a>
+    @for (g of grupos(); track g.nombre) {
+      <p class="grupo">{{ g.nombre }}</p>
+      @for (e of g.entradas; track e.ruta) {
+        <a
+          [routerLink]="e.ruta"
+          [class.activo]="e.activa"
+          [attr.aria-current]="e.activa ? 'page' : null"
+          >{{ e.texto }}</a
+        >
       }
-      @if (sesion.tiene(PERMISO.expedienteVer)) {
-        <a routerLink="/interno/expedientes" routerLinkActive="activo">Expediente integral</a>
-      }
-      @if (sesion.tieneAlguno(PERMISO.reportesVer, PERMISO.biConsultar)) {
-        <a routerLink="/interno/reportes" routerLinkActive="activo">Reportes</a>
-      }
-      @if (sesion.tiene(PERMISO.bitacoraVer)) {
-        <a routerLink="/interno/bitacora" routerLinkActive="activo">Bitácora de auditoría</a>
-      }
-    }
-
-    @if (sesion.tieneAlguno(PERMISO.asignacionVer, PERMISO.cupos)) {
-      <p class="grupo">Asignación</p>
-      <a routerLink="/interno/asignacion" routerLinkActive="activo">Asignación del beneficio</a>
-      <a routerLink="/interno/admin/cupos" routerLinkActive="activo">Cupos y presupuesto</a>
-    }
-
-    @if (sesion.tieneAlguno(PERMISO.priorizacionVer, PERMISO.matriz, PERMISO.priorizacionAprobar)) {
-      <p class="grupo">Priorización</p>
-    }
-    @if (sesion.tiene(PERMISO.priorizacionVer)) {
-      <a
-        routerLink="/interno/priorizacion"
-        routerLinkActive="activo"
-        [routerLinkActiveOptions]="{ exact: true }"
-        >Listado priorizado</a
-      >
-      <a routerLink="/interno/priorizacion/excepciones" routerLinkActive="activo">Excepciones</a>
-    }
-    @if (sesion.tieneAlguno(PERMISO.matriz, PERMISO.priorizacionAprobar)) {
-      <a routerLink="/interno/admin/matriz" routerLinkActive="activo">Matriz de ponderación</a>
-    }
-
-    @if (sesion.tiene(PERMISO.usuarios)) {
-      <p class="grupo">Seguridad y accesos</p>
-      <a routerLink="/interno/admin/usuarios" routerLinkActive="activo">Usuarios</a>
-      <a routerLink="/interno/admin/roles" routerLinkActive="activo">Roles y permisos</a>
-    }
-
-    @if (
-      sesion.tieneAlguno(PERMISO.catalogos, PERMISO.parametros, PERMISO.requisitos, PERMISO.cruces)
-    ) {
-      <p class="grupo">Configuración del programa</p>
-    }
-    @if (sesion.tiene(PERMISO.catalogos)) {
-      <a routerLink="/interno/admin/catalogos" routerLinkActive="activo">Listas del formulario</a>
-      <a routerLink="/interno/admin/documentos" routerLinkActive="activo">Documentos exigidos</a>
-    }
-    @if (sesion.tiene(PERMISO.requisitos)) {
-      <a routerLink="/interno/admin/requisitos" routerLinkActive="activo">Lista de chequeo</a>
-    }
-    @if (sesion.tiene(PERMISO.cruces)) {
-      <a routerLink="/interno/admin/cruces" routerLinkActive="activo">Archivos de cruce</a>
-    }
-    @if (sesion.tiene(PERMISO.parametros)) {
-      <a routerLink="/interno/admin/parametros" routerLinkActive="activo">Parámetros y plazos</a>
-      <a routerLink="/interno/admin/vigencias" routerLinkActive="activo">Vigencias y cupos</a>
-    }
-
-    @if (sesion.tiene(PERMISO.parametros) || sesion.tiene(PERMISO.plantillas)) {
-      <p class="grupo">Comunicaciones y datos personales</p>
-    }
-    @if (sesion.tiene(PERMISO.plantillas)) {
-      <a routerLink="/interno/admin/plantillas" routerLinkActive="activo">Plantillas de correo</a>
-    }
-    @if (sesion.tiene(PERMISO.parametros)) {
-      <a routerLink="/interno/admin/autorizacion" routerLinkActive="activo"
-        >Autorización de datos personales</a
-      >
     }
   </nav>
 

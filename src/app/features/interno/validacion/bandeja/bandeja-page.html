@@ -143,7 +143,9 @@
               </td>
             }
             <th scope="row">
-              <a [routerLink]="['/interno/validacion/caso', c.solicitudId]">{{ c.radicado }}</a>
+              <a [routerLink]="['/interno/validacion/caso', c.solicitudId]"
+                ><span class="radicado">{{ c.radicado }}</span></a
+              >
             </th>
             <td>{{ c.radicadaAt | date: 'dd/MM/yyyy' }}</td>
             <td>{{ c.pcdNombre }}</td>

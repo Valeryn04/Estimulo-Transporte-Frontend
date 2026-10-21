@@ -1,3 +1,4 @@
+<app-pestanas seccion="programa" />
 <div class="encabezado">
   <h1>Parámetros y plazos</h1>
 </div>
@@ -44,12 +45,14 @@
         <tbody>
           @for (p of g.items; track p.clave) {
             <tr>
-              <th scope="row">
+              <th scope="row" class="desc">
                 {{ p.descripcion }}
                 <small>{{ p.clave }} · {{ rango(p) }}</small>
               </th>
               <td>
-                <strong class="valor">{{ p.vigente.valor }}</strong>
+                <strong class="valor recorte" [title]="p.vigente.valor">{{
+                  p.vigente.valor
+                }}</strong>
                 @if (p.pendienteDefinicion) {
                   <span class="etiqueta aviso-pendiente">Por confirmar</span>
                 }

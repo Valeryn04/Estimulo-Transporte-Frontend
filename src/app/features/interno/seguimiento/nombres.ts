@@ -1,0 +1,75 @@
+/** Nombres que ve la persona para los módulos y acciones que guarda la bitácora. */
+const MODULOS: Record<string, string> = {
+  caracterizacion: 'Caracterización',
+  catalogos: 'Listas del formulario',
+  consulta: 'Consulta ciudadana',
+  documentos: 'Documentos',
+  preinscripcion: 'Preinscripción',
+  radicacion: 'Radicación',
+  roles: 'Roles',
+  seguimiento: 'Seguimiento y reportes',
+  seguridad: 'Seguridad',
+  usuarios: 'Usuarios',
+  validacion: 'Validación',
+  requisitos: 'Lista de chequeo',
+  cruces: 'Cruces',
+  priorizacion: 'Priorización',
+  asignacion: 'Asignación',
+  novedades: 'Novedades',
+  encuestas: 'Encuestas',
+  parametros: 'Parámetros',
+  autorizacion: 'Autorización de datos',
+  plantillas: 'Plantillas de correo',
+};
+
+const ACCIONES: Record<string, string> = {
+  LOGIN_OK: 'Inicio de sesión',
+  LOGIN_FALLIDO: 'Intento de ingreso fallido',
+  LOGIN_BLOQUEADO: 'Cuenta bloqueada por intentos fallidos',
+  LOGOUT: 'Cierre de sesión',
+  SESION_REUTILIZADA: 'Sesión reutilizada (alerta de seguridad)',
+  PASSWORD_CAMBIADA: 'Contraseña cambiada',
+  USUARIO_PASSWORD_RESTABLECIDA: 'Contraseña de un usuario restablecida',
+  USUARIO_DADO_DE_BAJA: 'Usuario dado de baja',
+  SOLICITUD_PREINSCRITA: 'Preinscripción registrada',
+  CORREO_VERIFICADO: 'Correo verificado',
+  VERIFICACION_REENVIADA: 'Enlace de verificación reenviado',
+  CONSULTA_CODIGO_SOLICITADO: 'Código de consulta solicitado',
+  CONSULTA_CODIGO_FALLIDO: 'Código de consulta incorrecto',
+  CONSULTA_ACCESO: 'Acceso a la consulta de estado',
+  SOLICITUD_RADICADA: 'Solicitud radicada',
+  CARACTERIZACION_RADICADA: 'Caracterización radicada',
+  VALIDACION_ITEM_REGISTRADO: 'Requisito de la lista de chequeo marcado',
+  VALIDACION_DECIDIDA: 'Decisión de validación',
+  VALIDACION_DOCUMENTO_CONSULTADO: 'Documento consultado por el validador',
+  PARAMETRO_VERSION_CREADA: 'Parámetro modificado',
+  VARIABLE_PRIORIZACION_REGISTRADA: 'Dato de priorización registrado',
+  PRIORIZACION_CALCULADA: 'Puntaje calculado',
+  PRIORIZACION_MASIVA: 'Cálculo masivo de puntajes',
+  BENEFICIO_ASIGNADO: 'Beneficio asignado',
+  CASO_EN_LISTA_ESPERA: 'Caso en lista de espera',
+  CUPO_LIBERADO: 'Cupo liberado',
+  ENTREGA_REGISTRADA: 'Entrega de tarjeta registrada',
+  BENEFICIO_ACTIVADO: 'Beneficio activado',
+  NOVEDAD_REGISTRADA: 'Novedad registrada',
+  BENEFICIO_FINALIZADO: 'Beneficio finalizado',
+  DATOS_ACTUALIZADOS: 'Datos del beneficiario actualizados',
+  CORREO_ACTUALIZADO: 'Correo de la persona actualizado',
+  COMUNICACION_REENVIADA: 'Comunicación reenviada',
+  SUBSANACION_RECORDATORIO: 'Recordatorio de subsanación enviado',
+  SUBSANACION_VENCIDA: 'Subsanación vencida: no cumple por vencimiento',
+  DESCARGOS_CIUDADANO: 'Descargos presentados por la persona',
+  REPORTE_EXPORTADO: 'Reporte exportado',
+  BITACORA_CONSULTADA: 'Bitácora consultada',
+  BITACORA_EXPORTADA: 'Bitácora exportada',
+  EXPEDIENTE_CONSULTADO: 'Expediente consultado',
+  BI_CONSULTADO: 'Eventos de BI descargados',
+};
+
+const frase = (codigo: string): string => {
+  const t = codigo.toLowerCase().replaceAll('_', ' ');
+  return t.charAt(0).toUpperCase() + t.slice(1);
+};
+
+export const nombreModulo = (m: string): string => MODULOS[m] ?? frase(m);
+export const nombreAccion = (a: string): string => ACCIONES[a] ?? frase(a);

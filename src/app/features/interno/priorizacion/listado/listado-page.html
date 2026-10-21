@@ -1,3 +1,4 @@
+<app-pestanas seccion="priorizacion" />
 <div class="encabezado">
   <h1>Listado priorizado</h1>
   @if (puedeCalcular()) {
@@ -43,7 +44,10 @@
     <strong>No se pudieron calcular:</strong>
     <ul>
       @for (o of omitidos(); track o.radicado) {
-        <li>{{ o.radicado }}: {{ o.motivo }}</li>
+        <li>
+          <span class="radicado">{{ o.radicado }}</span
+          >: {{ o.motivo }}
+        </li>
       }
     </ul>
   </div>
@@ -123,7 +127,7 @@
           <tr>
             <td class="num">{{ f.posicion }}</td>
             <th scope="row">
-              {{ f.radicado }}
+              <span class="radicado">{{ f.radicado }}</span>
               <small>{{ f.radicadaAt | date: 'dd/MM/yyyy' }}</small>
             </th>
             <td>
@@ -149,11 +153,15 @@
             <td class="acciones-fila">
               <span class="grupo-acciones">
                 <button type="button" class="enlace" (click)="verPuntaje(f)">
-                  Ver puntaje<span class="solo-lectores"> de {{ f.radicado }}</span>
+                  Ver puntaje<span class="solo-lectores">
+                    de <span class="radicado">{{ f.radicado }}</span></span
+                  >
                 </button>
                 @if (puedeProponer() && !f.excepcionPendiente) {
                   <button type="button" class="enlace" (click)="abrirExcepcion(f)">
-                    Proponer ajuste<span class="solo-lectores"> a {{ f.radicado }}</span>
+                    Proponer ajuste<span class="solo-lectores">
+                      a <span class="radicado">{{ f.radicado }}</span></span
+                    >
                   </button>
                 }
               </span>

@@ -17,6 +17,7 @@ import {
   ResultadosEncuesta,
   TipoPregunta,
 } from './modelos-encuestas';
+import { Pestanas } from '../../../shared/pestanas/pestanas';
 
 type Vista = 'ninguna' | 'formulario' | 'resultados' | 'publicar';
 
@@ -39,7 +40,7 @@ const nuevaPregunta = (p?: Partial<Pregunta>) =>
  */
 @Component({
   selector: 'app-encuestas-page',
-  imports: [DatePipe, DecimalPipe, ReactiveFormsModule, Campo, CampoControl, Dialogo],
+  imports: [DatePipe, DecimalPipe, ReactiveFormsModule, Campo, CampoControl, Dialogo, Pestanas],
   templateUrl: './encuestas-page.html',
   styleUrl: './encuestas-page.scss',
 })

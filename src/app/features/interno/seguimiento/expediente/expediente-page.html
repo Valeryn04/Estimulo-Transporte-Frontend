@@ -1,3 +1,4 @@
+<app-pestanas seccion="seguimiento" />
 @if (!hayExpediente()) {
   <div class="encabezado">
     <h1>Expediente integral</h1>
@@ -9,6 +10,7 @@
 
   <form
     class="tarjeta filtros"
+    data-manual
     (submit)="$event.preventDefault(); buscar()"
     role="search"
     aria-label="Buscar un expediente"

@@ -1,0 +1,46 @@
+<button
+  type="button"
+  class="disparador"
+  aria-controls="panel-alertas"
+  [attr.aria-expanded]="abierto()"
+  (click)="alternar()"
+>
+  <app-icono nombre="campana" />
+  @if (cuenta() > 0) {
+    <span class="contador" aria-hidden="true">{{ cuenta() > 99 ? '99+' : cuenta() }}</span>
+  }
+  <span class="solo-lectores"
+    >Alertas: {{ cuenta() === 0 ? 'ninguna sin leer' : cuenta() + ' sin leer' }}</span
+  >
+</button>
+
+@if (abierto()) {
+  <div id="panel-alertas" class="panel" role="region" aria-label="Alertas">
+    <div class="cabecera">
+      <strong>Alertas</strong>
+      @if (cuenta() > 1) {
+        <button type="button" class="enlace" (click)="marcarTodas()">
+          Marcar todas como leídas
+        </button>
+      }
+    </div>
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+    @if (cuenta() === 0) {
+      <p class="vacio">No tiene alertas sin leer.</p>
+    } @else {
+      <ul>
+        @for (a of alertas(); track a.id) {
+          <li>
+            <button type="button" class="alerta" (click)="abrir(a)">
+              <strong>{{ a.titulo }}</strong>
+              <span class="mensaje">{{ a.mensaje }}</span>
+              <small>{{ a.creadaAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+}

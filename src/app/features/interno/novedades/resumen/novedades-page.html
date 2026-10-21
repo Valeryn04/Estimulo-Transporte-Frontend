@@ -1,9 +1,6 @@
+<app-pestanas seccion="novedades" />
 <div class="encabezado">
   <h1>Novedades de los beneficios</h1>
-  <span class="grupo-botones">
-    <a class="boton secundario" routerLink="/interno/novedades/revocatorias">Revocatorias</a>
-    <a class="boton secundario" routerLink="/interno/novedades/alertas">Alertas de cruce</a>
-  </span>
 </div>
 <p class="intro">
   Bloquee, suspenda o reactive un beneficio dejando causal, fecha efectiva, evidencia y la
@@ -64,7 +61,9 @@
       <tbody>
         @for (b of d.items; track b.beneficioId) {
           <tr>
-            <th scope="row">{{ b.radicado }}</th>
+            <th scope="row">
+              <span class="radicado">{{ b.radicado }}</span>
+            </th>
             <td>{{ b.pcdNombre }}</td>
             <td>
               <span
@@ -82,7 +81,9 @@
             <td>
               <button type="button" class="enlace" (click)="abierto.set(b.beneficioId)">
                 {{ puedeGestionar() ? 'Gestionar' : 'Ver'
-                }}<span class="solo-lectores"> las novedades de {{ b.radicado }}</span>
+                }}<span class="solo-lectores">
+                  las novedades de <span class="radicado">{{ b.radicado }}</span></span
+                >
               </button>
             </td>
           </tr>

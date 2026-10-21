@@ -336,7 +336,7 @@ input[type='radio'] {
   }
 }
 
-main :is(p, li, dd, dt, small, label, h1, h2, h3, .aviso) {
+main :is(p, li, dd, dt, small, label, h1, h2, h3, .aviso):not(.tabla *) {
   overflow-wrap: anywhere;
 }
 
@@ -383,7 +383,6 @@ main :is(p, li, dd, dt, small, label, h1, h2, h3, .aviso) {
 .tabla {
   width: 100%;
   border-collapse: collapse;
-  min-width: 720px;
 
   th,
   td {
@@ -391,22 +390,56 @@ main :is(p, li, dd, dt, small, label, h1, h2, h3, .aviso) {
     text-align: left;
     vertical-align: top;
     border-bottom: 1px solid var(--color-line);
+    // Las palabras no se parten letra por letra: una columna nunca queda más angosta que su palabra más larga.
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: none;
+  }
+
+  // Los textos largos (descripciones, observaciones) se acotan para que ninguna columna acapare la tabla.
+  td {
+    max-width: 26rem;
   }
 
   thead th {
     background: var(--govco-azul-claro);
     font-size: 0.85rem;
     color: var(--alc-azul);
+    white-space: nowrap;
   }
 
   tbody th {
+    min-width: 11rem;
     font-weight: 600;
+  }
+
+  // Varias acciones de texto en una celda: cada una en su lugar, con aire entre ellas.
+  .enlace {
+    display: inline-block;
+    margin: 0 14px 4px 0;
+  }
+
+  // Radicados, fechas y acciones se leen de corrido.
+  a,
+  time,
+  .etiqueta,
+  .num,
+  .acciones-fila {
+    white-space: nowrap;
   }
 
   small {
     display: block;
     font-weight: 400;
     color: var(--color-muted);
+  }
+
+  // Descripción larga: se recorta a tres líneas; el texto completo está en el atributo title.
+  .recorte {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   tr.inactivo {
@@ -470,6 +503,159 @@ main :is(p, li, dd, dt, small, label, h1, h2, h3, .aviso) {
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 16px;
+}
+
+// ---- Elementos comunes que no tenían estilo propio ----
+// Botón con apariencia de enlace (acciones dentro de tablas y textos).
+.enlace {
+  display: inline;
+  padding: 2px 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--govco-azul);
+  text-align: left;
+  text-decoration: underline;
+  background: none;
+  border: 0;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: var(--govco-azul-oscuro);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.grupo-botones {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.casilla {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.error-campo {
+  display: block;
+  margin-top: 4px;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--color-error);
+}
+
+.intro {
+  max-width: 70ch;
+  margin: 0 0 16px;
+  color: var(--color-muted);
+}
+
+// Carga de archivos: zona clara y botón de elegir archivo con el estilo de los demás botones.
+input[type='file'] {
+  width: 100%;
+  padding: 8px;
+  font: inherit;
+  color: var(--color-text);
+  background: #f8fafc;
+  border: 2px dashed #6b7280;
+  border-radius: var(--radius);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--govco-azul);
+  }
+
+  &::file-selector-button {
+    margin-right: 12px;
+    padding: 8px 16px;
+    font: inherit;
+    font-weight: 600;
+    color: var(--govco-azul);
+    background: #fff;
+    border: 2px solid var(--govco-azul);
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+
+  &:hover::file-selector-button {
+    color: #fff;
+    background: var(--govco-azul);
+  }
+}
+
+details {
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+
+  summary {
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  &[open] summary {
+    margin-bottom: 8px;
+  }
+}
+
+pre {
+  max-width: 100%;
+  padding: 10px 12px;
+  overflow-x: auto;
+  font-family: inherit;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+  background: #f4f6f8;
+  border-radius: var(--radius);
+}
+
+// Campos en línea dentro de una barra de filtros: se reparten el ancho y ocupan la altura de sus etiquetas.
+.filtros .rejilla {
+  align-items: end;
+}
+
+// Los números de radicado se leen completos: no se parten en los guiones.
+.radicado {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+// Pestañas de una sección (varias pantallas relacionadas en una sola entrada del menú).
+.pestanas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 0 20px;
+  border-bottom: 2px solid var(--color-line);
+
+  a {
+    padding: 10px 16px;
+    margin-bottom: -2px;
+    font-weight: 600;
+    color: var(--govco-azul-oscuro);
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+    border-radius: var(--radius) var(--radius) 0 0;
+
+    &:hover {
+      background: var(--govco-azul-claro);
+    }
+
+    &.activa {
+      color: var(--govco-azul);
+      border-bottom-color: var(--govco-azul);
+    }
+  }
 }
 
 // Al imprimir el comprobante solo se deja el contenido.

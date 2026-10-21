@@ -1,6 +1,6 @@
+<app-pestanas seccion="novedades" />
 <div class="encabezado">
   <h1>Revocatorias</h1>
-  <a class="boton secundario" routerLink="/interno/novedades">Novedades de los beneficios</a>
 </div>
 <p class="intro">
   Cada revocatoria sigue el debido proceso: causal y evidencia, traslado de las razones a la
@@ -46,7 +46,7 @@
         @for (r of d.items; track r.id) {
           <tr>
             <th scope="row">
-              {{ r.radicado }}
+              <span class="radicado">{{ r.radicado }}</span>
               <small>{{ r.pcdNombre }}</small>
             </th>
             <td>{{ r.causal }}</td>
@@ -74,7 +74,9 @@
             </td>
             <td>
               <button type="button" class="enlace" (click)="abrir(r.id)">
-                Abrir<span class="solo-lectores"> la revocatoria de {{ r.radicado }}</span>
+                Abrir<span class="solo-lectores">
+                  la revocatoria de <span class="radicado">{{ r.radicado }}</span></span
+                >
               </button>
             </td>
           </tr>

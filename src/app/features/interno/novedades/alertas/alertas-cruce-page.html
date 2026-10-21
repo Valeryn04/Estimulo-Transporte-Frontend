@@ -1,6 +1,6 @@
+<app-pestanas seccion="novedades" />
 <div class="encabezado">
   <h1>Alertas de cruce</h1>
-  <a class="boton secundario" routerLink="/interno/novedades">Novedades de los beneficios</a>
 </div>
 <p class="intro">
   Las coincidencias de los archivos de otras entidades (defunciones, uso de tarjetas, apoyos
@@ -49,7 +49,7 @@
         @for (a of d.items; track a.id) {
           <tr>
             <th scope="row">
-              {{ a.radicado }}
+              <span class="radicado">{{ a.radicado }}</span>
               <small>{{ a.pcdNombre }}</small>
             </th>
             <td>
@@ -80,7 +80,9 @@
             <td>
               @if (a.estado === 'PENDIENTE' && puedeGestionar()) {
                 <button type="button" class="enlace" (click)="abrir(a)">
-                  Analizar<span class="solo-lectores"> la alerta de {{ a.radicado }}</span>
+                  Analizar<span class="solo-lectores">
+                    la alerta de <span class="radicado">{{ a.radicado }}</span></span
+                  >
                 </button>
               }
             </td>

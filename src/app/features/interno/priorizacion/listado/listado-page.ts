@@ -17,6 +17,7 @@ import {
   ResultadoMasivo,
 } from '../modelos-priorizacion';
 import { PriorizacionApi } from '../priorizacion-api';
+import { Pestanas } from '../../../../shared/pestanas/pestanas';
 
 type Vista = 'ninguna' | 'puntaje' | 'excepcion' | 'recalcular';
 
@@ -27,7 +28,7 @@ type Vista = 'ninguna' | 'puntaje' | 'excepcion' | 'recalcular';
  */
 @Component({
   selector: 'app-listado-priorizado-page',
-  imports: [DatePipe, DecimalPipe, ReactiveFormsModule, Campo, CampoControl, Dialogo],
+  imports: [DatePipe, DecimalPipe, ReactiveFormsModule, Campo, CampoControl, Dialogo, Pestanas],
   templateUrl: './listado-page.html',
   styleUrl: './listado-page.scss',
 })

@@ -11,6 +11,7 @@ import { CampoControl } from '../../../../shared/campo-control';
 import { aplicarErroresApi } from '../../../../shared/forms';
 import { Comunicacion, CoincidenciaExpediente, Expediente } from '../modelos-seguimiento';
 import { SeguimientoApi } from '../seguimiento-api';
+import { Pestanas } from '../../../../shared/pestanas/pestanas';
 
 /** Nombre legible de cada acción de la bitácora que aparece en la cronología. */
 const ACCIONES: Record<string, string> = {
@@ -40,7 +41,7 @@ const ACCIONES: Record<string, string> = {
  */
 @Component({
   selector: 'app-expediente-page',
-  imports: [DatePipe, DecimalPipe, ReactiveFormsModule, Campo, CampoControl, Ayuda],
+  imports: [DatePipe, DecimalPipe, ReactiveFormsModule, Campo, CampoControl, Ayuda, Pestanas],
   templateUrl: './expediente-page.html',
   styleUrl: './expediente-page.scss',
 })

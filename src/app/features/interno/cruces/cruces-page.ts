@@ -18,6 +18,7 @@ import {
   NOMBRE_ALERTA_NOVEDAD,
   NOMBRE_APLICA_CRUCE,
 } from './modelos-cruces';
+import { Pestanas } from '../../../shared/pestanas/pestanas';
 
 type Vista = 'ninguna' | 'formulario' | 'historial' | 'cargas';
 
@@ -27,7 +28,7 @@ type Vista = 'ninguna' | 'formulario' | 'historial' | 'cargas';
  */
 @Component({
   selector: 'app-cruces-page',
-  imports: [DatePipe, ReactiveFormsModule, Campo, CampoControl, Dialogo, Icono],
+  imports: [DatePipe, ReactiveFormsModule, Campo, CampoControl, Dialogo, Icono, Pestanas],
   templateUrl: './cruces-page.html',
   styleUrl: './cruces-page.scss',
 })

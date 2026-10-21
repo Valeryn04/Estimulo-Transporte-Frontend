@@ -13,6 +13,7 @@ import {
   NOMBRE_ESTADO_EXCEPCION,
 } from '../modelos-priorizacion';
 import { PriorizacionApi } from '../priorizacion-api';
+import { Pestanas } from '../../../../shared/pestanas/pestanas';
 
 /**
  * Excepciones de priorización (RF-PRI-03): los ajustes propuestos con su justificación y evidencia. El responsable del
@@ -20,7 +21,7 @@ import { PriorizacionApi } from '../priorizacion-api';
  */
 @Component({
   selector: 'app-excepciones-page',
-  imports: [DatePipe, DecimalPipe, ReactiveFormsModule, Dialogo],
+  imports: [DatePipe, DecimalPipe, ReactiveFormsModule, Dialogo, Pestanas],
   templateUrl: './excepciones-page.html',
   styleUrl: './excepciones-page.scss',
 })

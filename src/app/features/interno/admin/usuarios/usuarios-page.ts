@@ -10,6 +10,7 @@ import { Dialogo } from '../../../../shared/dialogo/dialogo';
 import { Icono } from '../../../../shared/icono/icono';
 import { AdminApi } from '../admin-api';
 import { EstadoUsuario, Pagina, Rol, Usuario } from '../modelos';
+import { Pestanas } from '../../../../shared/pestanas/pestanas';
 
 type Accion = 'ninguna' | 'bloquear' | 'baja' | 'password';
 
@@ -25,7 +26,16 @@ const ETIQUETA_ESTADO: Record<EstadoUsuario, string> = {
  */
 @Component({
   selector: 'app-usuarios-page',
-  imports: [Icono, DatePipe, ReactiveFormsModule, RouterLink, Campo, CampoControl, Dialogo],
+  imports: [
+    Icono,
+    DatePipe,
+    ReactiveFormsModule,
+    RouterLink,
+    Campo,
+    CampoControl,
+    Dialogo,
+    Pestanas,
+  ],
   templateUrl: './usuarios-page.html',
   styleUrl: './usuarios-page.scss',
 })

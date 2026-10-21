@@ -113,13 +113,7 @@ export const internoRoutes: Routes = [
         loadComponent: () =>
           import('./seguimiento/expediente/expediente-page').then((m) => m.ExpedientePage),
       },
-      {
-        path: 'tablero',
-        title: `Tablero de control · ${TITULO}`,
-        canActivate: [permisoGuard(PERMISO.tableroVer)],
-        loadComponent: () =>
-          import('./seguimiento/tablero/tablero-page').then((m) => m.TableroPage),
-      },
+      { path: 'tablero', redirectTo: '', pathMatch: 'full' },
       {
         path: 'reportes',
         title: `Reportes · ${TITULO}`,

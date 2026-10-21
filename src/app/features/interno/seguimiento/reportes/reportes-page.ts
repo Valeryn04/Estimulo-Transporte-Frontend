@@ -13,6 +13,7 @@ import {
   VistaReporte,
 } from '../modelos-seguimiento';
 import { SeguimientoApi, descargar } from '../seguimiento-api';
+import { Pestanas } from '../../../../shared/pestanas/pestanas';
 
 /**
  * Reportes del programa (RF-SEG-05 y RF-SEG-06): siete reportes con los mismos filtros, vista previa en pantalla y
@@ -21,7 +22,7 @@ import { SeguimientoApi, descargar } from '../seguimiento-api';
  */
 @Component({
   selector: 'app-reportes-page',
-  imports: [DatePipe, ReactiveFormsModule],
+  imports: [DatePipe, ReactiveFormsModule, Pestanas],
   templateUrl: './reportes-page.html',
   styleUrl: './reportes-page.scss',
 })

@@ -75,7 +75,8 @@ describe('RolesPage', () => {
     expect(filas).toHaveLength(3);
     expect(filas[0]?.textContent).toContain('Administrador');
     expect(filas[0]?.textContent).toContain('Del sistema');
-    expect(filas[0]?.textContent).toContain('Administrar los catálogos');
+    expect(filas[0]?.textContent).toContain('2 permiso(s)');
+    expect(filas[0]?.textContent).toContain('Administración');
     expect(filas[1]?.textContent).toContain('Sin permisos todavía');
     expect(filas[2]?.textContent).toContain('Propio');
     expect(filas[2]?.querySelector('td.num')?.textContent).toContain('0');
