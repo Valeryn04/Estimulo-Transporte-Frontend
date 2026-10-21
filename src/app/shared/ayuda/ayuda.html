@@ -5,7 +5,7 @@
     [attr.aria-label]="'Ayuda: ' + etiqueta()"
     [attr.aria-expanded]="abierta()"
     [attr.aria-controls]="idTooltip()"
-    (click)="abierta.set(!abierta())"
+    (click)="abierta.set(!abierta()); ajustar()"
   >
     <app-icono nombre="ayuda" />
   </button>

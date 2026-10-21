@@ -1,4 +1,16 @@
-<h1>Preinscripción al Estímulo Social de Transporte</h1>
+<ol class="proceso" aria-label="Pasos del trámite">
+  <li class="actual" aria-current="step"><span>1</span> Preinscripción</li>
+  <li><span>2</span> Verificar el correo</li>
+  <li><span>3</span> Caracterización y documentos</li>
+</ol>
+
+<h1>
+  Preinscripción al Estímulo Social de Transporte
+  <app-ayuda
+    etiqueta="Preinscripción"
+    texto="Este es el primer paso: solo le pedimos los datos básicos de la persona con discapacidad y de su cuidador. Los campos con asterisco son obligatorios. Al terminar le enviaremos un correo para verificar su dirección; después podrá completar la caracterización y cargar los documentos."
+  />
+</h1>
 
 <p class="aviso" role="note">
   <span>
@@ -24,14 +36,6 @@
       <p><a routerLink="/">Volver al inicio</a></p>
     </section>
   } @else {
-    <p class="intro">
-      Este es el primer paso. Solo le pedimos los datos básicos de la persona con discapacidad y de
-      su cuidador. Los campos con <span aria-hidden="true">*</span
-      ><span class="solo-lectores">asterisco</span> son obligatorios. Al terminar le enviaremos un
-      correo para verificar su dirección; después podrá completar la caracterización y cargar los
-      documentos.
-    </p>
-
     @if (resumen().length > 0) {
       <div #resumenEl class="aviso error resumen" role="alert" tabindex="-1">
         <div>
@@ -65,8 +69,13 @@
 
     <form [formGroup]="form" (ngSubmit)="enviar()" novalidate>
       <fieldset class="seccion">
-        <legend>Persona con discapacidad</legend>
-        <p class="por-que">Necesitamos identificar a quién se le registra la solicitud.</p>
+        <legend>
+          Persona con discapacidad
+          <app-ayuda
+            etiqueta="Persona con discapacidad"
+            texto="Necesitamos identificar a quién se le registra la solicitud."
+          />
+        </legend>
         <app-campo
           idCampo="pcd-nombre"
           etiqueta="Nombre completo"
@@ -114,11 +123,13 @@
       </fieldset>
 
       <fieldset class="seccion">
-        <legend>Cuidador o asistente personal</legend>
-        <p class="por-que">
-          El cuidador acompaña a la persona con discapacidad. Una persona solo puede tener un
-          cuidador asociado.
-        </p>
+        <legend>
+          Cuidador o asistente personal
+          <app-ayuda
+            etiqueta="Cuidador o asistente personal"
+            texto="El cuidador acompaña a la persona con discapacidad. Una persona solo puede tener un cuidador asociado."
+          />
+        </legend>
         <app-campo
           idCampo="cui-nombre"
           etiqueta="Nombre completo"
@@ -166,10 +177,13 @@
       </fieldset>
 
       <fieldset class="seccion">
-        <legend>Residencia</legend>
-        <p class="por-que">
-          Nos ayuda a conocer en qué zona de Barranquilla vive. Puede completarlo más adelante.
-        </p>
+        <legend>
+          Residencia
+          <app-ayuda
+            etiqueta="Residencia"
+            texto="Nos ayuda a conocer en qué zona de Barranquilla vive. Puede completarlo más adelante."
+          />
+        </legend>
         <app-direccion
           idCampo="direccion"
           etiqueta="Dirección de residencia"
@@ -201,11 +215,13 @@
       </fieldset>
 
       <fieldset class="seccion">
-        <legend>Correo para notificaciones</legend>
-        <p class="por-que">
-          Todas las comunicaciones del programa le llegarán a este correo. Le enviaremos un enlace
-          para verificarlo.
-        </p>
+        <legend>
+          Correo para notificaciones
+          <app-ayuda
+            etiqueta="Correo para notificaciones"
+            texto="Todas las comunicaciones del programa le llegarán a este correo. Le enviaremos un enlace para verificarlo."
+          />
+        </legend>
         <app-campo
           idCampo="correo"
           etiqueta="Correo electrónico"
@@ -245,11 +261,13 @@
       </fieldset>
 
       <section class="seccion" aria-labelledby="titulo-autorizacion">
-        <h2 id="titulo-autorizacion">Autorización de tratamiento de datos personales</h2>
-        <p class="por-que">
-          Léala completa. Incluye la autorización para tratar datos sensibles de salud y
-          discapacidad, necesarios para verificar los requisitos del programa.
-        </p>
+        <h2 id="titulo-autorizacion">
+          Autorización de tratamiento de datos personales
+          <app-ayuda
+            etiqueta="Autorización de datos"
+            texto="Léala completa. Incluye la autorización para tratar datos sensibles de salud y discapacidad, necesarios para verificar los requisitos del programa."
+          />
+        </h2>
         <div
           class="texto-autorizacion"
           tabindex="0"
@@ -291,7 +309,7 @@
           {{ enviando() ? 'Enviando…' : 'Enviar preinscripción' }}
         </button>
       </div>
-      <p class="por-que">
+      <p class="enlace-aparte">
         ¿Ya se preinscribió y no verificó su correo?
         <a routerLink="/reenviar-verificacion">Reciba el enlace de nuevo</a>.
       </p>

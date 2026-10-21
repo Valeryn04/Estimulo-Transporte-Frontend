@@ -38,6 +38,11 @@ body {
   min-height: 100%;
 }
 
+// Los tooltips ocultos no deben ampliar la página.
+body {
+  overflow-x: clip;
+}
+
 body {
   font-family: Arial, Helvetica, sans-serif;
   font-size: 1rem;
@@ -624,6 +629,24 @@ pre {
   align-items: end;
 }
 
+// Panel de contenido con título (tablero y pantallas de resumen).
+.panel-info {
+  padding: 20px 22px;
+  margin-bottom: 20px;
+  background: #fff;
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgb(20 35 52 / 6%);
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 14px;
+    font-size: 1.1rem;
+  }
+}
+
 // Los números de radicado se leen completos: no se parten en los guiones.
 .radicado {
   white-space: nowrap;
@@ -656,6 +679,110 @@ pre {
       border-bottom-color: var(--govco-azul);
     }
   }
+}
+
+// ---- Formularios del portal ciudadano: secciones como tarjetas numeradas, pasos del trámite ----
+form {
+  counter-reset: seccion;
+}
+
+.seccion {
+  min-width: 0;
+  margin: 0 0 20px;
+  padding: 20px clamp(16px, 3vw, 28px) 8px;
+  background: #fff;
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgb(20 35 52 / 6%);
+
+  > legend,
+  > h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    float: left;
+    padding: 0;
+    margin: 0 0 16px;
+    font-family: var(--fuente-titulo, inherit);
+    font-size: 1.2rem;
+    font-weight: var(--peso-titulo, bold);
+    color: var(--alc-azul, var(--govco-azul-oscuro));
+  }
+
+  > legend::before {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    font-size: 0.95rem;
+    color: #fff;
+    background: var(--alc-azul, var(--govco-azul-oscuro));
+    border-radius: 50%;
+    counter-increment: seccion;
+    content: counter(seccion);
+  }
+
+  > legend + *,
+  > h2 + * {
+    clear: both;
+  }
+}
+
+.proceso {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 0;
+  margin: 0 0 16px;
+  list-style: none;
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-muted);
+  }
+
+  li span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    font-size: 0.85rem;
+    color: var(--color-muted);
+    background: #fff;
+    border: 2px solid var(--color-line);
+    border-radius: 50%;
+  }
+
+  li.actual {
+    color: var(--alc-azul, var(--govco-azul-oscuro));
+
+    span {
+      color: #fff;
+      background: var(--alc-azul, var(--govco-azul-oscuro));
+      border-color: transparent;
+    }
+  }
+}
+
+.enlace-aparte {
+  margin: 16px 0 0;
+  font-size: 0.92rem;
+  text-align: center;
+  color: var(--color-muted);
+}
+
+// Título de página con su ayuda en línea.
+h1 app-ayuda,
+h2 app-ayuda {
+  font-size: 1rem;
 }
 
 // Al imprimir el comprobante solo se deja el contenido.

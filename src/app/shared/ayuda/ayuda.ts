@@ -13,6 +13,8 @@ let siguiente = 0;
   host: {
     '(document:click)': 'cerrarAfuera($event)',
     '(keydown.escape)': 'abierta.set(false)',
+    '(mouseenter)': 'ajustar()',
+    '(focusin)': 'ajustar()',
   },
   templateUrl: './ayuda.html',
   styleUrl: './ayuda.scss',
@@ -25,6 +27,20 @@ export class Ayuda {
 
   private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly abierta = signal(false);
+
+  /** Si el tooltip se saldría de la pantalla, se corre lo justo para que se lea completo. */
+  protected ajustar(): void {
+    const tip = this.elemento.nativeElement.querySelector<HTMLElement>('.tooltip');
+    if (!tip) return;
+    tip.style.transform = '';
+    const r = tip.getBoundingClientRect();
+    const margen = 8;
+    const ancho = document.documentElement.clientWidth;
+    let dx = 0;
+    if (r.right > ancho - margen) dx = ancho - margen - r.right;
+    if (r.left + dx < margen) dx = margen - r.left;
+    if (dx !== 0) tip.style.transform = `translateX(${dx}px)`;
+  }
 
   protected cerrarAfuera(e: Event): void {
     if (this.abierta() && !this.elemento.nativeElement.contains(e.target as Node)) {

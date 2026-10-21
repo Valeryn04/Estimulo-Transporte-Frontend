@@ -6,14 +6,20 @@
     }
     @case ('responder') {
       @if (encuesta(); as e) {
-        <h1>{{ e.titulo }}</h1>
+        <h1>
+          {{ e.titulo }}
+          <app-ayuda
+            etiqueta="Privacidad de la encuesta"
+            [texto]="
+              'Sus respuestas se analizan de forma anónima: no se asocian con su nombre ni su documento. Solo se puede responder una vez, hasta el ' +
+              e.vigenteHasta +
+              '.'
+            "
+          />
+        </h1>
         @if (e.descripcion) {
           <p>{{ e.descripcion }}</p>
         }
-        <p class="nota">
-          Sus respuestas se analizan de forma anónima: no se asocian con su nombre ni su documento.
-          Solo se puede responder una vez, hasta el {{ e.vigenteHasta }}.
-        </p>
         @if (error()) {
           <p class="aviso error" role="alert">{{ error() }}</p>
         }

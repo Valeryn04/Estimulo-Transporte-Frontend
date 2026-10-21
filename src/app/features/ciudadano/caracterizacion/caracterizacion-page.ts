@@ -60,6 +60,7 @@ import {
   textoONulo,
 } from './caracterizacion-datos';
 import { DocumentosPanel } from './documentos/documentos-panel';
+import { Ayuda } from '../../../shared/ayuda/ayuda';
 
 type Paso = 'cargando' | 'acceso' | 'formulario' | 'radicada' | 'subsanada' | 'error';
 type Guardado = 'inactivo' | 'pendiente' | 'guardando' | 'guardado' | 'error';
@@ -122,6 +123,7 @@ const textoControl = (validadores: ((c: AbstractControl) => object | null)[] = [
     Dialogo,
     DocumentosPanel,
     Icono,
+    Ayuda,
   ],
   templateUrl: './caracterizacion-page.html',
   styleUrl: './caracterizacion-page.scss',

@@ -65,7 +65,7 @@ describe('TableroPage', () => {
     expect(por('asignados')).toBe('50');
     expect(por('listaEspera')).toBe('20');
     expect(por('rechazados')).toBe('10');
-    expect(el.querySelector('h2')?.textContent).toContain('vigencia 2026');
+    expect(el.querySelector('#t-embudo')?.textContent).toContain('vigencia 2026');
   });
 
   it('muestra los casos en verificación y por subsanar', async () => {

@@ -32,10 +32,14 @@ export class AuthApi {
     return this.http.get<PerfilUsuario>(`${BASE}/me`);
   }
 
-  cambiarPassword(passwordActual: string, passwordNueva: string): Observable<RespuestaLogin> {
+  cambiarPassword(
+    passwordActual: string | null,
+    passwordNueva: string,
+  ): Observable<RespuestaLogin> {
     return this.http.post<RespuestaLogin>(
       `${BASE}/cambiar-password`,
-      { passwordActual, passwordNueva },
+      // Con la contraseña temporal no se envía la actual.
+      passwordActual === null ? { passwordNueva } : { passwordActual, passwordNueva },
       CON_COOKIE,
     );
   }

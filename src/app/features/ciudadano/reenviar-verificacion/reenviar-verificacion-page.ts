@@ -9,12 +9,14 @@ import { CampoControl } from '../../../shared/campo-control';
 import { valorDe } from '../../../shared/forms';
 import { numeroSegunTipo, soloDigitos } from '../../../shared/identificacion';
 import { TurnstileCasilla } from '../../../shared/turnstile/turnstile';
+import { Ayuda } from '../../../shared/ayuda/ayuda';
 
 /** Reenvío del enlace de verificación del correo cuando venció o no llegó (RF-PRE-04). */
 @Component({
   selector: 'app-reenviar-verificacion-page',
-  imports: [ReactiveFormsModule, RouterLink, Campo, CampoControl, TurnstileCasilla],
+  imports: [ReactiveFormsModule, RouterLink, Campo, CampoControl, TurnstileCasilla, Ayuda],
   templateUrl: './reenviar-verificacion-page.html',
+  styleUrl: './reenviar-verificacion-page.scss',
 })
 export class ReenviarVerificacionPage implements OnInit {
   private readonly api = inject(PublicoApi);

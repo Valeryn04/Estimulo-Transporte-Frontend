@@ -29,6 +29,7 @@ import { valorDe } from '../../../shared/forms';
 import { numeroSegunTipo, soloDigitos } from '../../../shared/identificacion';
 import { Descargos } from './descargos';
 import { TurnstileCasilla } from '../../../shared/turnstile/turnstile';
+import { Ayuda } from '../../../shared/ayuda/ayuda';
 
 type Paso = 'cargando' | 'identificar' | 'codigo' | 'resultado';
 type Modo = 'documento' | 'radicado';
@@ -49,6 +50,7 @@ type Modo = 'documento' | 'radicado';
     Icono,
     TurnstileCasilla,
     Descargos,
+    Ayuda,
   ],
   templateUrl: './consulta-page.html',
   styleUrl: './consulta-page.scss',

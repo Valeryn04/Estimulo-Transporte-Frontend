@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -29,7 +29,7 @@ export class CambiarPasswordPage {
   protected readonly error = signal('');
 
   protected readonly form = new FormGroup({
-    actual: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    actual: new FormControl('', { nonNullable: true }),
     nueva: new FormControl('', {
       nonNullable: true,
       validators: [
@@ -46,8 +46,15 @@ export class CambiarPasswordPage {
     }),
   });
   protected readonly passwordNueva = valorDe(this.form.controls.nueva);
+  /** Con la contraseña temporal (primer ingreso o vencida) no se pide la actual: acaba de usarla para entrar. */
+  protected readonly pideActual = computed(() => !this.sesion.perfil()?.debeCambiarPassword);
 
   constructor() {
+    effect(() => {
+      const c = this.form.controls.actual;
+      c.setValidators(this.pideActual() ? [Validators.required] : []);
+      c.updateValueAndValidity({ emitEvent: false });
+    });
     this.form.controls.nueva.valueChanges.subscribe(() =>
       this.form.controls.confirmacion.updateValueAndValidity({ emitEvent: false }),
     );
@@ -60,7 +67,9 @@ export class CambiarPasswordPage {
     this.cargando.set(true);
     try {
       const { actual, nueva } = this.form.getRawValue();
-      const r = await firstValueFrom(this.api.cambiarPassword(actual, nueva));
+      const r = await firstValueFrom(
+        this.api.cambiarPassword(this.pideActual() ? actual : null, nueva),
+      );
       // El cambio cerró todas las sesiones anteriores: la API abrió una nueva (cookie y token nuevos).
       this.sesion.iniciar(r.token, r.perfil, r.inactividadMinutos);
       await this.router.navigate(['/interno']);

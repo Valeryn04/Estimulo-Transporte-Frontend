@@ -5,12 +5,13 @@
   }
 
   @case ('identificar') {
-    <h1>Consultar el estado de mi solicitud</h1>
-    <p class="intro">
-      Para proteger sus datos, le enviaremos un <strong>código de un solo uso</strong> al correo
-      electrónico que registró en la preinscripción. Indique su solicitud con la identificación de
-      la persona con discapacidad o con su número de radicado.
-    </p>
+    <h1>
+      Consultar el estado de mi solicitud
+      <app-ayuda
+        etiqueta="Consultar el estado"
+        texto="Para proteger sus datos, le enviaremos un código de un solo uso al correo electrónico que registró en la preinscripción. Indique su solicitud con la identificación de la persona con discapacidad o con su número de radicado."
+      />
+    </h1>
 
     @if (error()) {
       <p class="aviso error" role="alert">
@@ -40,7 +41,7 @@
     </div>
 
     @if (modo() === 'documento') {
-      <form [formGroup]="identificacion" (ngSubmit)="pedirCodigo()" novalidate>
+      <form class="tarjeta" [formGroup]="identificacion" (ngSubmit)="pedirCodigo()" novalidate>
         <div class="rejilla">
           <app-campo
             idCampo="co-tipo"
@@ -79,7 +80,7 @@
         </div>
       </form>
     } @else {
-      <form [formGroup]="radicadoForm" (ngSubmit)="pedirCodigo()" novalidate>
+      <form class="tarjeta" [formGroup]="radicadoForm" (ngSubmit)="pedirCodigo()" novalidate>
         <app-campo
           idCampo="co-radicado"
           etiqueta="Número de radicado"
@@ -129,7 +130,7 @@
       </p>
     }
 
-    <form [formGroup]="codigoForm" (ngSubmit)="validarCodigo()" novalidate>
+    <form class="tarjeta" [formGroup]="codigoForm" (ngSubmit)="validarCodigo()" novalidate>
       <app-campo
         idCampo="co-codigo"
         etiqueta="Código de 6 dígitos"

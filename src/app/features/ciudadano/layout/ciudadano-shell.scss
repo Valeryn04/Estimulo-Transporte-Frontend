@@ -8,8 +8,14 @@
   margin: 0 auto;
 }
 
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f4f6f9;
+}
+
 .contenedor {
-  max-width: 60rem;
+  max-width: 58rem;
   margin: 0 auto;
   padding: 1.5rem 1rem 3rem;
 

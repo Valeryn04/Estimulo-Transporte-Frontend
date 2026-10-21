@@ -12,6 +12,7 @@ type Resultado = 'verificando' | 'verificado' | 'ya-verificado' | 'vencido' | 'i
   selector: 'app-verificar-correo-page',
   imports: [RouterLink],
   templateUrl: './verificar-correo-page.html',
+  styleUrl: './verificar-correo-page.scss',
 })
 export class VerificarCorreoPage implements OnInit {
   private readonly api = inject(PublicoApi);

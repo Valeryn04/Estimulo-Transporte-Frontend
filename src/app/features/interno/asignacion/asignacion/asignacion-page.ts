@@ -15,7 +15,6 @@ import {
   NOMBRE_ESTADO_BENEFICIO,
   Propuesta,
 } from '../modelos-asignacion';
-import { Pestanas } from '../../../../shared/pestanas/pestanas';
 
 type Pestana = 'propuesta' | 'beneficiarios';
 type Dialogos = 'ninguno' | 'omisiones' | 'espera';
@@ -27,15 +26,7 @@ type Dialogos = 'ninguno' | 'omisiones' | 'espera';
  */
 @Component({
   selector: 'app-asignacion-page',
-  imports: [
-    CurrencyPipe,
-    DatePipe,
-    DecimalPipe,
-    ReactiveFormsModule,
-    Dialogo,
-    EntregaBeneficio,
-    Pestanas,
-  ],
+  imports: [CurrencyPipe, DatePipe, DecimalPipe, ReactiveFormsModule, Dialogo, EntregaBeneficio],
   templateUrl: './asignacion-page.html',
   styleUrl: './asignacion-page.scss',
 })

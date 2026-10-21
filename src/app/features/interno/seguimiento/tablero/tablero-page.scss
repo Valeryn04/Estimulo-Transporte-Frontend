@@ -1,71 +1,317 @@
-.intro,
-.nota {
-  margin: 0 0 16px;
+:host {
+  display: block;
+}
+
+.cabecera-tablero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 24px;
+  margin-bottom: 20px;
+
+  h1 {
+    margin: 0;
+  }
+}
+
+.subtitulo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 0;
+  font-weight: 600;
   color: var(--color-muted);
 }
-
-.indicadores {
-  display: grid;
-  gap: 12px;
-  padding: 0;
-  margin: 0 0 16px;
-  list-style: none;
-  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
-}
-
-.indicador {
+.filtros-tablero {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
   margin: 0;
 
-  .valor {
-    font-size: 1.75rem;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
+  .campo-simple {
+    min-width: 11rem;
+    margin: 0;
   }
 
-  .nombre {
+  select {
+    min-height: 42px;
+    padding: 6px 10px;
+  }
+
+  .boton {
+    min-height: 42px;
+    padding: 6px 18px;
+  }
+}
+.resumen {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 20px;
+  background: #fff;
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgb(20 35 52 / 6%);
+
+  &.principal {
+    color: #fff;
+    background: var(--alc-azul, #142334);
+    border-color: transparent;
+
+    h2,
+    .pie,
+    .cifra span {
+      color: rgb(255 255 255 / 85%);
+    }
+
+    progress {
+      accent-color: var(--alc-verde, #3aa655);
+    }
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
     color: var(--color-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .cifra {
+    margin: 0;
+    font-family: var(--fuente-titulo, inherit);
+    font-size: 2.1rem;
+    font-weight: 800;
+    line-height: 1.1;
+
+    span {
+      display: block;
+      margin-top: 2px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: var(--color-muted);
+    }
+  }
+
+  .pie,
+  .vacio {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-muted);
+  }
+
+  progress {
+    width: 100%;
+    height: 12px;
+    border-radius: 999px;
+    accent-color: var(--govco-azul);
   }
 }
 
 .dos-columnas {
   display: grid;
-  gap: 16px;
-  margin-bottom: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 20px;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
 
-  .tarjeta {
-    margin: 0;
+  .panel-info {
+    margin-bottom: 0;
   }
 }
 
-.grande {
-  margin: 0 0 8px;
-  font-size: 1.125rem;
-  font-weight: 600;
-}
-
-progress {
-  width: 100%;
-  height: 1rem;
-}
-
-.datos {
+.columna {
   display: grid;
-  gap: 12px 24px;
+  gap: 20px;
+}
+.embudo {
+  display: grid;
+  gap: 10px;
+  padding: 0;
   margin: 0;
-  grid-template-columns: repeat(2, 1fr);
+  list-style: none;
 
-  dt {
-    font-size: 0.875rem;
-    color: var(--color-muted);
+  li {
+    display: grid;
+    align-items: center;
+    gap: 12px;
+    grid-template-columns: 9.5rem minmax(0, 1fr) 3.5rem;
   }
 
-  dd {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 600;
+  .barra {
+    display: block;
+    height: 14px;
+    overflow: hidden;
+    background: #e8edf3;
+    border-radius: 999px;
+
+    span {
+      display: block;
+      height: 100%;
+      background: var(--govco-azul);
+      border-radius: 999px;
+    }
+  }
+
+  .valor {
+    font-weight: 800;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+}
+.fuera {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px 0 0;
+  margin: 16px 0 0;
+  list-style: none;
+  border-top: 1px dashed var(--color-line);
+
+  li {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 6px 12px;
+    background: #f4f6f8;
+    border-radius: 999px;
+
+    &.alerta {
+      color: var(--color-error);
+      background: #fdecef;
+    }
+  }
+
+  .valor {
+    font-size: 1.1rem;
+    font-weight: 800;
+  }
+
+  .nombre {
+    font-size: 0.88rem;
+  }
+}
+
+.fichas {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px;
+    text-align: center;
+    background: #f4f6f8;
+    border-radius: 10px;
+  }
+
+  .valor {
+    font-size: 1.6rem;
+    font-weight: 800;
+  }
+
+  .nombre {
+    font-size: 0.8rem;
+  }
+}
+
+.tiempos {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  strong {
+    white-space: nowrap;
+  }
+}
+
+.localidades {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+
+  li {
+    display: grid;
+    align-items: center;
+    gap: 12px;
+    grid-template-columns: 12rem minmax(0, 1fr) 11rem;
+  }
+
+  .barra {
+    display: block;
+    height: 14px;
+    overflow: hidden;
+    background: #e8edf3;
+    border-radius: 999px;
+  }
+
+  .total {
+    display: block;
+    height: 100%;
+    background: #9db8d9;
+    border-radius: 999px;
+  }
+
+  .asignados {
+    display: block;
+    height: 100%;
+    background: var(--govco-azul);
+    border-radius: 999px;
+  }
+
+  .cantidades {
+    font-size: 0.85rem;
+    color: var(--color-muted);
+    text-align: right;
+  }
+}
+
+@media (max-width: 1100px) {
+  .dos-columnas {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .embudo li {
+    grid-template-columns: 7rem minmax(0, 1fr) 3rem;
+  }
+
+  .localidades li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .cantidades {
+    text-align: left;
   }
 }

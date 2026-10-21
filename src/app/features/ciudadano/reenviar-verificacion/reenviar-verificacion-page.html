@@ -1,8 +1,10 @@
-<h1>Recibir de nuevo el enlace de verificación</h1>
-<p>
-  Escriba la identificación de la <strong>persona con discapacidad</strong> que se preinscribió y le
-  enviaremos otra vez el enlace al correo que registró. El enlace anterior dejará de servir.
-</p>
+<h1>
+  Recibir de nuevo el enlace de verificación
+  <app-ayuda
+    etiqueta="Reenvío del enlace"
+    texto="Escriba la identificación de la persona con discapacidad que se preinscribió y le enviaremos otra vez el enlace al correo que registró. El enlace anterior dejará de servir."
+  />
+</h1>
 
 @if (respuesta()) {
   <p class="aviso exito" role="status">
@@ -20,7 +22,7 @@
       <span>{{ error() }}</span>
     </p>
   }
-  <form [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+  <form class="tarjeta" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
     <div class="rejilla">
       <app-campo
         idCampo="re-tipo"

@@ -3,6 +3,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ApiError } from '../../../../core/api/api-error';
+import { Ayuda } from '../../../../shared/ayuda/ayuda';
 import { ListasFiltro, Tablero } from '../modelos-seguimiento';
 import { SeguimientoApi } from '../seguimiento-api';
 
@@ -12,7 +13,7 @@ import { SeguimientoApi } from '../seguimiento-api';
  */
 @Component({
   selector: 'app-tablero-page',
-  imports: [CurrencyPipe, DecimalPipe, ReactiveFormsModule],
+  imports: [CurrencyPipe, DecimalPipe, ReactiveFormsModule, Ayuda],
   templateUrl: './tablero-page.html',
   styleUrl: './tablero-page.scss',
 })
@@ -30,24 +31,39 @@ export class TableroPage implements OnInit {
     poblacion: new FormControl<'' | 'CON_CUIDADOR' | 'SIN_CUIDADOR'>('', { nonNullable: true }),
   });
 
-  /** Etapas del embudo, en el orden en que avanza un caso. */
+  /** Etapas del flujo principal; la barra compara cada una con las preinscripciones. */
   protected readonly etapas = computed(() => {
     const e = this.datos()?.embudo;
     if (!e) return [];
+    const base = Math.max(e.preinscritos, 1);
     return [
       { clave: 'preinscritos', nombre: 'Preinscritos', valor: e.preinscritos },
       { clave: 'caracterizados', nombre: 'Caracterizados', valor: e.caracterizados },
       { clave: 'enVerificacion', nombre: 'En verificación', valor: e.enVerificacion },
-      { clave: 'porSubsanar', nombre: 'Por subsanar', valor: e.porSubsanar },
       { clave: 'validados', nombre: 'Validados', valor: e.validados },
       { clave: 'priorizados', nombre: 'Priorizados', valor: e.priorizados },
       { clave: 'asignados', nombre: 'Asignados', valor: e.asignados },
       { clave: 'entregas', nombre: 'Tarjetas entregadas', valor: e.entregas },
       { clave: 'activos', nombre: 'Activos', valor: e.activos },
+    ].map((x) => ({ ...x, ancho: Math.min((x.valor / base) * 100, 100) }));
+  });
+
+  /** Casos fuera del camino principal: esperan una corrección, un cupo o no cumplieron. */
+  protected readonly fuera = computed(() => {
+    const e = this.datos()?.embudo;
+    if (!e) return [];
+    return [
+      { clave: 'porSubsanar', nombre: 'Por subsanar', valor: e.porSubsanar },
       { clave: 'listaEspera', nombre: 'En lista de espera', valor: e.listaEspera },
-      { clave: 'rechazados', nombre: 'Rechazados', valor: e.rechazados },
+      { clave: 'rechazados', nombre: 'No cumplen', valor: e.rechazados },
     ];
   });
+
+  /** Ancho de una localidad frente a la que más solicitudes tiene. */
+  protected ancho(solicitudes: number): number {
+    const mayor = Math.max(...(this.datos()?.porLocalidad.map((l) => l.solicitudes) ?? [1]), 1);
+    return (solicitudes / mayor) * 100;
+  }
 
   protected readonly tiempos = computed(() => {
     const t = this.datos()?.tiemposPromedioDias;

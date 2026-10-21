@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { ApiError } from '../../../core/api/api-error';
 import { EncuestaApi, EncuestaPublica, PreguntaPublica } from '../../../core/publico/encuesta-api';
 import { ocultarTokenEnLaUrl } from '../../../shared/enlace';
+import { Ayuda } from '../../../shared/ayuda/ayuda';
 
 type Paso =
   'cargando' | 'responder' | 'gracias' | 'ya-respondida' | 'cerrada' | 'invalida' | 'error';
@@ -14,7 +15,7 @@ type Paso =
  */
 @Component({
   selector: 'app-encuesta-page',
-  imports: [RouterLink],
+  imports: [RouterLink, Ayuda],
   templateUrl: './encuesta-page.html',
   styleUrl: './encuesta-page.scss',
 })

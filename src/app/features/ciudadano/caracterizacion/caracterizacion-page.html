@@ -5,17 +5,19 @@
   }
 
   @case ('acceso') {
-    <h1>Complete su caracterización</h1>
+    <h1>
+      Complete su caracterización
+      <app-ayuda
+        etiqueta="Acceso a la caracterización"
+        texto="Para proteger sus datos, este formulario solo se abre con el enlace seguro que le enviamos al correo cuando verificó su preinscripción, o después de validar su identidad con un código de un solo uso."
+      />
+    </h1>
     @if (error()) {
       <p class="aviso error" role="alert">
         <span>{{ error() }}</span>
       </p>
     }
-    <p class="intro">
-      Para proteger sus datos, este formulario solo se abre con el
-      <strong>enlace seguro</strong> que le enviamos al correo cuando verificó su preinscripción, o
-      después de validar su identidad con un código de un solo uso.
-    </p>
+
     <div class="acciones">
       <a class="boton" routerLink="/consulta">Entrar con mi documento y un código</a>
       <a class="boton secundario" routerLink="/reenviar-verificacion"
@@ -206,8 +208,10 @@
 
         <form class="panel" [formGroup]="form" (ngSubmit)="siguiente()" novalidate>
           <fieldset class="seccion" [disabled]="!editable()">
-            <legend>{{ NOMBRE_SECCION[seccion()] }}</legend>
-            <p class="por-que">{{ POR_QUE_DE(seccion()) }}</p>
+            <legend>
+              {{ NOMBRE_SECCION[seccion()] }}
+              <app-ayuda [etiqueta]="NOMBRE_SECCION[seccion()]" [texto]="POR_QUE_DE(seccion())" />
+            </legend>
 
             @switch (seccion()) {
               @case ('datos-personales') {
@@ -240,8 +244,12 @@
                     <dd>{{ datos.pcd.correo }}</dd>
                   </div>
                 </dl>
-                <p class="nota">
-                  Estos datos vienen de su preinscripción y no se pueden cambiar aquí.
+                <p class="nota-corta">
+                  Datos de su preinscripción
+                  <app-ayuda
+                    etiqueta="Datos de la preinscripción"
+                    texto="Estos datos vienen de su preinscripción y no se pueden cambiar aquí."
+                  />
                 </p>
                 <div class="rejilla">
                   <app-campo
@@ -606,10 +614,12 @@
                     <dd>{{ datos.cuidador.numero }}</dd>
                   </div>
                 </dl>
-                <p class="nota">
-                  Estos datos vienen de su preinscripción y no se pueden cambiar aquí. Si hay un
-                  error en el documento del cuidador, comuníquese con la Gerencia de Desarrollo
-                  Social.
+                <p class="nota-corta">
+                  Datos de su preinscripción
+                  <app-ayuda
+                    etiqueta="Datos de la preinscripción"
+                    texto="Estos datos vienen de su preinscripción y no se pueden cambiar aquí. Si hay un error en el documento del cuidador, comuníquese con la Gerencia de Desarrollo Social."
+                  />
                 </p>
                 <div class="rejilla">
                   <app-campo

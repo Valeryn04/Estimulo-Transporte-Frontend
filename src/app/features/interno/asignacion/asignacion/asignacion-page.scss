@@ -17,8 +17,48 @@
 .pestanas {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 0;
+  margin: 0 0 16px;
+  border-bottom: 2px solid var(--color-line);
+}
+
+.pestanas .boton {
+  min-height: 44px;
+  padding: 10px 18px;
+  margin-bottom: -2px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+  color: var(--govco-azul-oscuro);
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom-width: 3px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.pestanas .boton:not(.secundario),
+.pestanas .boton[aria-selected='true'] {
+  color: var(--govco-azul);
+  background: var(--govco-azul-claro);
+  border-color: var(--govco-azul);
+  border-bottom-color: var(--govco-azul);
+}
+
+.pestanas .boton.secundario,
+.pestanas .boton[aria-selected='false'] {
+  color: var(--color-muted);
+  background: transparent;
+  border-color: transparent;
+}
+
+.pestanas .boton:hover:not(:disabled) {
+  background: var(--govco-azul-claro);
+  border-color: var(--color-line);
+  border-bottom-color: var(--govco-azul);
 }
 
 .barra {

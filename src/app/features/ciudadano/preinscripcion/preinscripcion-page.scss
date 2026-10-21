@@ -2,33 +2,6 @@
   margin: 0 0 20px;
 }
 
-.seccion {
-  margin: 0 0 24px;
-  padding: 16px clamp(12px, 3vw, 24px) 8px;
-  border: 1px solid var(--color-line);
-  border-radius: 12px;
-  background: #fff;
-
-  legend,
-  h2 {
-    padding: 0 6px;
-    font-family: var(--fuente-titulo);
-    font-weight: var(--peso-titulo);
-    font-size: 1.2rem;
-    color: var(--alc-azul);
-  }
-
-  h2 {
-    margin: 0 0 4px;
-    padding: 0;
-  }
-}
-
-.por-que {
-  margin: 0 0 12px;
-  color: var(--color-muted);
-}
-
 .resumen {
   margin-bottom: 20px;
 

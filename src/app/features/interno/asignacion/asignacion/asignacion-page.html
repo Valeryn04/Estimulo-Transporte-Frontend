@@ -1,4 +1,4 @@
-<app-pestanas seccion="asignacion" />
+<div class="app-pestanas-placeholder" data-seccion="asignacion" aria-label="Asignación"></div>
 <div class="encabezado">
   <h1>Asignación del beneficio</h1>
 </div>
@@ -36,21 +36,29 @@
   <p class="aviso error" role="alert">{{ error() }}</p>
 }
 
-<div class="pestanas" role="group" aria-label="Qué desea ver">
+<div class="pestanas" role="tablist" aria-label="Qué desea ver">
   <button
+    id="tab-propuesta"
     type="button"
     class="boton"
+    role="tab"
     [class.secundario]="pestana() !== 'propuesta'"
-    [attr.aria-pressed]="pestana() === 'propuesta'"
+    [attr.aria-selected]="pestana() === 'propuesta'"
+    [attr.aria-controls]="'panel-propuesta'"
+    [attr.tabindex]="pestana() === 'propuesta' ? 0 : -1"
     (click)="cambiarPestana('propuesta')"
   >
     Propuesta de asignación
   </button>
   <button
+    id="tab-beneficiarios"
     type="button"
     class="boton"
+    role="tab"
     [class.secundario]="pestana() !== 'beneficiarios'"
-    [attr.aria-pressed]="pestana() === 'beneficiarios'"
+    [attr.aria-selected]="pestana() === 'beneficiarios'"
+    [attr.aria-controls]="'panel-beneficiarios'"
+    [attr.tabindex]="pestana() === 'beneficiarios' ? 0 : -1"
     (click)="cambiarPestana('beneficiarios')"
   >
     Beneficiarios
@@ -58,278 +66,289 @@
 </div>
 
 @if (pestana() === 'propuesta') {
-  @if (cargando() && !propuesta()) {
-    <p role="status">Cargando la propuesta…</p>
-  } @else if (propuesta(); as p) {
-    <p class="total" role="status">
-      {{ p.total }} caso(s) por asignar: <strong>{{ p.alcanzan }}</strong> alcanzan,
-      <strong>{{ p.sinCupo }}</strong> sin cupo o presupuesto.
-    </p>
-    @if (puedeAsignar()) {
-      <div class="barra" role="group" aria-label="Acciones de asignación">
-        <button type="button" class="boton secundario" (click)="seleccionarLosQueAlcanzan()">
-          Marcar los que alcanzan
-        </button>
-        <button
-          type="button"
-          class="boton secundario"
-          [disabled]="seleccion().size === 0"
-          (click)="limpiarSeleccion()"
-        >
-          Quitar marcas
-        </button>
-        <button
-          type="button"
-          class="boton"
-          [disabled]="seleccion().size === 0 || asignando()"
-          (click)="asignarSeleccionados()"
-        >
-          Asignar los marcados ({{ seleccion().size }})
-        </button>
-        <button
-          type="button"
-          class="boton secundario"
-          [disabled]="asignando()"
-          (click)="pedirListaEspera()"
-        >
-          Pasar a lista de espera los que no alcanzan
-        </button>
-      </div>
-    }
-    <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Propuesta de asignación">
-      <table class="tabla">
-        <caption class="solo-lectores">
-          Casos en orden de prioridad
-        </caption>
-        <thead>
-          <tr>
-            @if (puedeAsignar()) {
-              <th scope="col" class="marca"><span class="solo-lectores">Marcar</span></th>
-            }
-            <th scope="col" class="num">Posición</th>
-            <th scope="col">Radicado</th>
-            <th scope="col">Persona con discapacidad</th>
-            <th scope="col">Localidad</th>
-            <th scope="col" class="num">Puntaje</th>
-            <th scope="col">Estado</th>
-            <th scope="col">Cupo</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (f of p.items; track f.solicitudId) {
-            <tr [class.sin-cupo]="!f.alcanza">
+  <div id="panel-propuesta" role="tabpanel" aria-labelledby="tab-propuesta">
+    @if (cargando() && !propuesta()) {
+      <p role="status">Cargando la propuesta…</p>
+    } @else if (propuesta(); as p) {
+      <p class="total" role="status">
+        {{ p.total }} caso(s) por asignar: <strong>{{ p.alcanzan }}</strong> alcanzan,
+        <strong>{{ p.sinCupo }}</strong> sin cupo o presupuesto.
+      </p>
+
+      @if (puedeAsignar()) {
+        <div class="barra" role="group" aria-label="Acciones de asignación">
+          <button type="button" class="boton secundario" (click)="seleccionarLosQueAlcanzan()">
+            Marcar los que alcanzan
+          </button>
+          <button
+            type="button"
+            class="boton secundario"
+            [disabled]="seleccion().size === 0"
+            (click)="limpiarSeleccion()"
+          >
+            Quitar marcas
+          </button>
+          <button
+            type="button"
+            class="boton"
+            [disabled]="seleccion().size === 0 || asignando()"
+            (click)="asignarSeleccionados()"
+          >
+            Asignar los marcados ({{ seleccion().size }})
+          </button>
+          <button
+            type="button"
+            class="boton secundario"
+            [disabled]="asignando()"
+            (click)="pedirListaEspera()"
+          >
+            Pasar a lista de espera los que no alcanzan
+          </button>
+        </div>
+      }
+
+      <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Propuesta de asignación">
+        <table class="tabla">
+          <caption class="solo-lectores">
+            Casos en orden de prioridad
+          </caption>
+          <thead>
+            <tr>
               @if (puedeAsignar()) {
-                <td class="marca">
-                  <input
-                    type="checkbox"
-                    [attr.aria-label]="'Marcar el caso ' + f.radicado"
-                    [checked]="marcado(f.solicitudId)"
-                    [disabled]="!f.alcanza"
-                    (change)="alternar(f.solicitudId, $any($event.target).checked)"
-                  />
-                </td>
+                <th scope="col" class="marca"><span class="solo-lectores">Marcar</span></th>
               }
-              <td class="num">{{ f.posicion }}</td>
-              <th scope="row">
-                <span class="radicado">{{ f.radicado }}</span>
-                <small>{{ f.radicadaAt | date: 'dd/MM/yyyy' }}</small>
-              </th>
-              <td>
-                {{ f.pcdNombre }}
-                <small>{{ f.conCuidador ? 'Con cuidador' : 'Sin cuidador' }}</small>
-              </td>
-              <td>
-                {{ f.localidad ?? '—' }}
-                @if (f.transporte) {
-                  <small>{{ f.transporte }}</small>
-                }
-              </td>
-              <td class="num">
-                <strong>{{ f.puntajeFinal | number: '1.0-2' }}</strong>
-                @if (f.criterioDesempate) {
-                  <small>Desempate: {{ f.criterioDesempate }}</small>
-                }
-              </td>
-              <td>
-                <span class="etiqueta" [class.ok]="f.estado === 'EN_LISTA_ESPERA'">
-                  {{ f.estado === 'EN_LISTA_ESPERA' ? 'En lista de espera' : 'Priorizada' }}
-                </span>
-              </td>
-              <td>
-                @if (f.alcanza) {
-                  <span class="etiqueta ok">Alcanza</span>
-                } @else {
-                  <span class="etiqueta mal">No alcanza</span>
-                  <small>{{ f.motivoTexto }}</small>
-                }
-              </td>
+              <th scope="col" class="num">Posición</th>
+              <th scope="col">Radicado</th>
+              <th scope="col">Persona con discapacidad</th>
+              <th scope="col">Localidad</th>
+              <th scope="col" class="num">Puntaje</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Cupo</th>
             </tr>
-          } @empty {
-            <tr>
-              <td [attr.colspan]="puedeAsignar() ? 8 : 7">
-                No hay casos por asignar. Aparecen aquí cuando se valida una solicitud y recibe su
-                puntaje.
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-    @if (totalPaginas() > 1) {
-      <nav class="paginacion" aria-label="Paginación de la propuesta">
-        <button
-          type="button"
-          class="boton secundario"
-          [disabled]="pagina() <= 1"
-          (click)="cargarPropuesta(pagina() - 1)"
-        >
-          Anterior
-        </button>
-        <span>Página {{ pagina() }} de {{ totalPaginas() }}</span>
-        <button
-          type="button"
-          class="boton secundario"
-          [disabled]="pagina() >= totalPaginas()"
-          (click)="cargarPropuesta(pagina() + 1)"
-        >
-          Siguiente
-        </button>
-      </nav>
+          </thead>
+          <tbody>
+            @for (f of p.items; track f.solicitudId) {
+              <tr [class.sin-cupo]="!f.alcanza">
+                @if (puedeAsignar()) {
+                  <td class="marca">
+                    <input
+                      type="checkbox"
+                      [attr.aria-label]="'Marcar el caso ' + f.radicado"
+                      [checked]="marcado(f.solicitudId)"
+                      [disabled]="!f.alcanza"
+                      (change)="alternar(f.solicitudId, $any($event.target).checked)"
+                    />
+                  </td>
+                }
+                <td class="num">{{ f.posicion }}</td>
+                <th scope="row">
+                  <span class="radicado">{{ f.radicado }}</span>
+                  <small>{{ f.radicadaAt | date: 'dd/MM/yyyy' }}</small>
+                </th>
+                <td>
+                  {{ f.pcdNombre }}
+                  <small>{{ f.conCuidador ? 'Con cuidador' : 'Sin cuidador' }}</small>
+                </td>
+                <td>
+                  {{ f.localidad ?? '—' }}
+                  @if (f.transporte) {
+                    <small>{{ f.transporte }}</small>
+                  }
+                </td>
+                <td class="num">
+                  <strong>{{ f.puntajeFinal | number: '1.0-2' }}</strong>
+                  @if (f.criterioDesempate) {
+                    <small>Desempate: {{ f.criterioDesempate }}</small>
+                  }
+                </td>
+                <td>
+                  <span class="etiqueta" [class.ok]="f.estado === 'EN_LISTA_ESPERA'">
+                    {{ f.estado === 'EN_LISTA_ESPERA' ? 'En lista de espera' : 'Priorizada' }}
+                  </span>
+                </td>
+                <td>
+                  @if (f.alcanza) {
+                    <span class="etiqueta ok">Alcanza</span>
+                  } @else {
+                    <span class="etiqueta mal">No alcanza</span>
+                    <small>{{ f.motivoTexto }}</small>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td [attr.colspan]="puedeAsignar() ? 8 : 7">
+                  No hay casos por asignar. Aparecen aquí cuando se valida una solicitud y recibe su
+                  puntaje.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (totalPaginas() > 1) {
+        <nav class="paginacion" aria-label="Paginación de la propuesta">
+          <button
+            type="button"
+            class="boton secundario"
+            [disabled]="pagina() <= 1"
+            (click)="cargarPropuesta(pagina() - 1)"
+          >
+            Anterior
+          </button>
+          <span>Página {{ pagina() }} de {{ totalPaginas() }}</span>
+          <button
+            type="button"
+            class="boton secundario"
+            [disabled]="pagina() >= totalPaginas()"
+            (click)="cargarPropuesta(pagina() + 1)"
+          >
+            Siguiente
+          </button>
+        </nav>
+      }
     }
-  }
+  </div>
 } @else {
-  <form
-    class="tarjeta filtros"
-    [formGroup]="filtroBen"
-    (ngSubmit)="cargarBeneficiarios()"
-    role="search"
-    aria-label="Filtrar beneficiarios"
-  >
-    <div class="rejilla">
-      <div class="campo-simple">
-        <label for="q-ben">Buscar por radicado o nombre</label>
-        <input id="q-ben" type="search" formControlName="q" />
+  <div id="panel-beneficiarios" role="tabpanel" aria-labelledby="tab-beneficiarios">
+    <form
+      class="tarjeta filtros"
+      [formGroup]="filtroBen"
+      (ngSubmit)="cargarBeneficiarios()"
+      role="search"
+      aria-label="Filtrar beneficiarios"
+    >
+      <div class="rejilla">
+        <div class="campo-simple">
+          <label for="q-ben">Buscar por radicado o nombre</label>
+          <input id="q-ben" type="search" formControlName="q" />
+        </div>
+        <div class="campo-simple">
+          <label for="estado-ben">Estado del beneficio</label>
+          <select id="estado-ben" formControlName="estado">
+            <option value="">Todos</option>
+            @for (e of opcionesEstado; track e) {
+              <option [value]="e">{{ estados[e] }}</option>
+            }
+          </select>
+        </div>
       </div>
-      <div class="campo-simple">
-        <label for="estado-ben">Estado del beneficio</label>
-        <select id="estado-ben" formControlName="estado">
-          <option value="">Todos</option>
-          @for (e of opcionesEstado; track e) {
-            <option [value]="e">{{ estados[e] }}</option>
-          }
-        </select>
+      <div class="acciones">
+        <button type="submit" class="boton">Buscar</button>
+        <button type="button" class="boton secundario" (click)="limpiarBeneficiarios()">
+          Limpiar
+        </button>
       </div>
-    </div>
-    <div class="acciones">
-      <button type="submit" class="boton">Buscar</button>
-      <button type="button" class="boton secundario" (click)="limpiarBeneficiarios()">
-        Limpiar
-      </button>
-    </div>
-  </form>
-  @if (beneficiarios(); as b) {
-    <p class="total" role="status">{{ b.total }} beneficio(s).</p>
-    <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Beneficiarios">
-      <table class="tabla">
-        <caption class="solo-lectores">
-          Beneficios asignados
-        </caption>
-        <thead>
-          <tr>
-            <th scope="col">Radicado</th>
-            <th scope="col">Persona con discapacidad</th>
-            <th scope="col">Estado</th>
-            <th scope="col" class="num">Valor comprometido</th>
-            <th scope="col">Asignado</th>
-            <th scope="col">Cupo</th>
-            <th scope="col">Entrega</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (x of b.items; track x.id) {
+    </form>
+
+    @if (beneficiarios(); as b) {
+      <p class="total" role="status">{{ b.total }} beneficio(s).</p>
+      <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Beneficiarios">
+        <table class="tabla">
+          <caption class="solo-lectores">
+            Beneficios asignados
+          </caption>
+          <thead>
             <tr>
-              <th scope="row">
-                <span class="radicado">{{ x.radicado }}</span>
-              </th>
-              <td>
-                {{ x.pcdNombre }}
-                <small>{{ x.personas === 2 ? 'Con cuidador' : 'Sin cuidador' }}</small>
-              </td>
-              <td>
-                <span
-                  class="etiqueta"
-                  [class.ok]="x.estado === 'ACTIVO'"
-                  [class.mal]="x.estado === 'FINALIZADO' || x.estado === 'BLOQUEADO'"
-                >
-                  {{ estados[x.estado] }}
-                </span>
-                @if (x.motivoFin) {
-                  <small>{{ x.motivoFin }}</small>
-                }
-              </td>
-              <td class="num">
-                {{ x.valorComprometido | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
-              </td>
-              <td>
-                {{ x.asignadoPor }}
-                <small
-                  >{{ x.asignadoAt | date: 'dd/MM/yyyy HH:mm' }} · posición {{ x.posicion }} ({{
-                    x.puntajeFinal | number: '1.0-2'
-                  }})</small
-                >
-              </td>
-              <td>
-                @if (x.reemplazaRadicado) {
-                  Reasignado del cupo de {{ x.reemplazaRadicado }}
-                } @else {
-                  —
-                }
-              </td>
-              <td>
-                <button type="button" class="enlace" (click)="entregaId.set(x.id)">
-                  {{
-                    (x.estado === 'PENDIENTE_ENTREGA' || x.entregas < x.personas) && puedeAsignar()
-                      ? 'Registrar entrega'
-                      : x.estado === 'PENDIENTE_ACTIVACION' && puedeAsignar()
-                        ? 'Activar'
-                        : 'Ver entrega'
-                  }}<span class="solo-lectores">
-                    de <span class="radicado">{{ x.radicado }}</span></span
+              <th scope="col">Radicado</th>
+              <th scope="col">Persona con discapacidad</th>
+              <th scope="col">Estado</th>
+              <th scope="col" class="num">Valor comprometido</th>
+              <th scope="col">Asignado</th>
+              <th scope="col">Cupo</th>
+              <th scope="col">Entrega</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (x of b.items; track x.id) {
+              <tr>
+                <th scope="row">
+                  <span class="radicado">{{ x.radicado }}</span>
+                </th>
+                <td>
+                  {{ x.pcdNombre }}
+                  <small>{{ x.personas === 2 ? 'Con cuidador' : 'Sin cuidador' }}</small>
+                </td>
+                <td>
+                  <span
+                    class="etiqueta"
+                    [class.ok]="x.estado === 'ACTIVO'"
+                    [class.mal]="x.estado === 'FINALIZADO' || x.estado === 'BLOQUEADO'"
                   >
-                </button>
-                <small>{{ x.entregas }} de {{ x.personas }} tarjeta(s)</small>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="7">No hay beneficios con esos filtros.</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-    @if (totalPaginasBen() > 1) {
-      <nav class="paginacion" aria-label="Paginación de beneficiarios">
-        <button
-          type="button"
-          class="boton secundario"
-          [disabled]="paginaBen() <= 1"
-          (click)="cargarBeneficiarios(paginaBen() - 1)"
-        >
-          Anterior
-        </button>
-        <span>Página {{ paginaBen() }} de {{ totalPaginasBen() }}</span>
-        <button
-          type="button"
-          class="boton secundario"
-          [disabled]="paginaBen() >= totalPaginasBen()"
-          (click)="cargarBeneficiarios(paginaBen() + 1)"
-        >
-          Siguiente
-        </button>
-      </nav>
+                    {{ estados[x.estado] }}
+                  </span>
+                  @if (x.motivoFin) {
+                    <small>{{ x.motivoFin }}</small>
+                  }
+                </td>
+                <td class="num">
+                  {{ x.valorComprometido | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+                </td>
+                <td>
+                  {{ x.asignadoPor }}
+                  <small>
+                    {{ x.asignadoAt | date: 'dd/MM/yyyy HH:mm' }} · posición {{ x.posicion }} ({{
+                      x.puntajeFinal | number: '1.0-2'
+                    }})
+                  </small>
+                </td>
+                <td>
+                  @if (x.reemplazaRadicado) {
+                    Reasignado del cupo de {{ x.reemplazaRadicado }}
+                  } @else {
+                    —
+                  }
+                </td>
+                <td>
+                  <button type="button" class="enlace" (click)="entregaId.set(x.id)">
+                    {{
+                      (x.estado === 'PENDIENTE_ENTREGA' || x.entregas < x.personas) &&
+                      puedeAsignar()
+                        ? 'Registrar entrega'
+                        : x.estado === 'PENDIENTE_ACTIVACION' && puedeAsignar()
+                          ? 'Activar'
+                          : 'Ver entrega'
+                    }}
+                    <span class="solo-lectores"
+                      >de <span class="radicado">{{ x.radicado }}</span></span
+                    >
+                  </button>
+                  <small>{{ x.entregas }} de {{ x.personas }} tarjeta(s)</small>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7">No hay beneficios con esos filtros.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (totalPaginasBen() > 1) {
+        <nav class="paginacion" aria-label="Paginación de beneficiarios">
+          <button
+            type="button"
+            class="boton secundario"
+            [disabled]="paginaBen() <= 1"
+            (click)="cargarBeneficiarios(paginaBen() - 1)"
+          >
+            Anterior
+          </button>
+          <span>Página {{ paginaBen() }} de {{ totalPaginasBen() }}</span>
+          <button
+            type="button"
+            class="boton secundario"
+            [disabled]="paginaBen() >= totalPaginasBen()"
+            (click)="cargarBeneficiarios(paginaBen() + 1)"
+          >
+            Siguiente
+          </button>
+        </nav>
+      }
     }
-  }
+  </div>
 }
 
 <app-entrega-beneficio
