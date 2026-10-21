@@ -71,6 +71,12 @@ export const routes: Routes = [
           import('./features/ciudadano/consulta/consulta-page').then((m) => m.ConsultaPage),
       },
       {
+        path: 'encuesta',
+        title: 'Encuesta de satisfacción · Estímulo Social de Transporte',
+        loadComponent: () =>
+          import('./features/ciudadano/encuesta/encuesta-page').then((m) => m.EncuestaPage),
+      },
+      {
         path: 'caracterizacion',
         title: 'Caracterización · Estímulo Social de Transporte',
         loadComponent: () =>

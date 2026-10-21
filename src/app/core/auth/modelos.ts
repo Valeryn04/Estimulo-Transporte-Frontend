@@ -32,6 +32,8 @@ export const PERMISO = {
   asignacionAsignar: 'asignacion.asignar',
   novedadesGestionar: 'novedades.gestionar',
   novedadesVer: 'novedades.ver',
+  encuestasAdministrar: 'encuestas.administrar',
+  encuestasResultados: 'encuestas.resultados',
   validacionVer: 'validacion.ver',
   validar: 'validacion.validar',
   asignarCasos: 'validacion.asignar',

@@ -87,6 +87,12 @@ export const internoRoutes: Routes = [
           import('./novedades/alertas/alertas-cruce-page').then((m) => m.AlertasCrucePage),
       },
       {
+        path: 'encuestas',
+        title: `Encuestas de satisfacción · ${TITULO}`,
+        canActivate: [permisoGuard(PERMISO.encuestasAdministrar, PERMISO.encuestasResultados)],
+        loadComponent: () => import('./encuestas/encuestas-page').then((m) => m.EncuestasPage),
+      },
+      {
         path: 'admin/cupos',
         title: `Cupos y presupuesto · ${TITULO}`,
         canActivate: [permisoGuard(PERMISO.cupos, PERMISO.asignacionVer)],

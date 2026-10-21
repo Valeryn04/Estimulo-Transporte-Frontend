@@ -1,0 +1,56 @@
+.intro {
+  margin: 0 0 16px;
+  color: var(--color-muted);
+}
+
+.pregunta {
+  padding: 8px 16px 12px;
+  margin: 0 0 16px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+
+  legend {
+    padding: 0 6px;
+    font-weight: 700;
+  }
+}
+
+.indicadores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  padding: 0;
+  list-style: none;
+}
+
+.nota {
+  color: var(--color-muted);
+}
+
+.resultado {
+  margin-bottom: 16px;
+
+  h3 {
+    margin: 0;
+  }
+}
+
+.barras {
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: grid;
+    gap: 8px;
+    align-items: center;
+    grid-template-columns: 10rem 1fr 7rem;
+  }
+
+  progress {
+    width: 100%;
+  }
+}
+
+.textos {
+  padding-left: 20px;
+}

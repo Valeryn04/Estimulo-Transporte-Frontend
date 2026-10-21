@@ -1,0 +1,40 @@
+.nota {
+  color: var(--color-muted);
+}
+
+.pregunta {
+  padding: 12px 16px;
+  margin: 0 0 16px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+
+  legend {
+    padding: 0 6px;
+    font-weight: 700;
+  }
+
+  &.falta {
+    border-color: var(--color-error);
+  }
+
+  textarea {
+    width: 100%;
+  }
+}
+
+.obligatoria {
+  font-weight: 400;
+  color: var(--color-muted);
+}
+
+.escala {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.extremos {
+  display: block;
+  margin-top: 4px;
+  color: var(--color-muted);
+}

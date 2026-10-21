@@ -56,6 +56,16 @@
     </div>
   }
 
+  @if (sesion.tieneAlguno(PERMISO.encuestasAdministrar, PERMISO.encuestasResultados)) {
+    <h2>Encuestas</h2>
+    <div class="atajos">
+      <a class="tarjeta" routerLink="/interno/encuestas">
+        <strong>Encuestas de satisfacción</strong>
+        <span>Crear, publicar y ver los resultados anonimizados.</span>
+      </a>
+    </div>
+  }
+
   @if (sesion.tieneAlguno(PERMISO.asignacionVer, PERMISO.cupos)) {
     <h2>Asignación</h2>
     <div class="atajos">

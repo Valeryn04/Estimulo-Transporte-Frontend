@@ -1,0 +1,107 @@
+<section class="tarjeta" aria-live="polite">
+  @switch (paso()) {
+    @case ('cargando') {
+      <h1>Abriendo la encuesta…</h1>
+      <p role="status">Un momento, por favor.</p>
+    }
+    @case ('responder') {
+      @if (encuesta(); as e) {
+        <h1>{{ e.titulo }}</h1>
+        @if (e.descripcion) {
+          <p>{{ e.descripcion }}</p>
+        }
+        <p class="nota">
+          Sus respuestas se analizan de forma anónima: no se asocian con su nombre ni su documento.
+          Solo se puede responder una vez, hasta el {{ e.vigenteHasta }}.
+        </p>
+        @if (error()) {
+          <p class="aviso error" role="alert">{{ error() }}</p>
+        }
+        <form (submit)="$event.preventDefault(); enviar()" novalidate>
+          @for (p of e.preguntas; track p.id) {
+            <fieldset class="pregunta" [class.falta]="faltan().has(p.id)">
+              <legend>
+                {{ p.texto }}
+                @if (p.obligatoria) {
+                  <span class="obligatoria">(obligatoria)</span>
+                }
+              </legend>
+              @switch (p.tipo) {
+                @case ('ESCALA') {
+                  <div class="escala" role="radiogroup" [attr.aria-label]="p.texto">
+                    @for (n of escala(p); track n) {
+                      <label class="opcion">
+                        <input
+                          type="radio"
+                          [name]="'p-' + p.id"
+                          [value]="n"
+                          [checked]="valor(p) === n"
+                          (change)="elegir(p, n)"
+                        />
+                        <span>{{ n }}</span>
+                      </label>
+                    }
+                  </div>
+                  <small class="extremos"
+                    >1 = muy insatisfecho · {{ p.escalaMax }} = muy satisfecho</small
+                  >
+                }
+                @case ('SELECCION') {
+                  @for (o of p.opciones; track o) {
+                    <label class="opcion">
+                      <input
+                        type="radio"
+                        [name]="'p-' + p.id"
+                        [value]="o"
+                        [checked]="valor(p) === o"
+                        (change)="elegir(p, o)"
+                      />
+                      <span>{{ o }}</span>
+                    </label>
+                  }
+                }
+                @default {
+                  <label class="solo-lectores" [for]="'t-' + p.id">{{ p.texto }}</label>
+                  <textarea
+                    [id]="'t-' + p.id"
+                    rows="3"
+                    maxlength="1000"
+                    (input)="elegir(p, $any($event.target).value)"
+                  ></textarea>
+                }
+              }
+            </fieldset>
+          }
+          <div class="acciones">
+            <button type="submit" class="boton" [disabled]="enviando()">
+              {{ enviando() ? 'Enviando…' : 'Enviar mis respuestas' }}
+            </button>
+          </div>
+        </form>
+      }
+    }
+    @case ('gracias') {
+      <h1>¡Gracias por su opinión!</h1>
+      <p class="aviso exito" role="status">
+        <span>Recibimos sus respuestas. Nos ayudan a mejorar el servicio.</span>
+      </p>
+    }
+    @case ('ya-respondida') {
+      <h1>Ya respondió esta encuesta</h1>
+      <p>Solo se puede responder una vez. ¡Gracias por su opinión!</p>
+    }
+    @case ('cerrada') {
+      <h1>La encuesta ya no está disponible</h1>
+      <p>Esta encuesta se cerró o terminó su periodo para responder.</p>
+    }
+    @case ('invalida') {
+      <h1>El enlace no es válido</h1>
+      <p>Revise que abrió el enlace completo del correo que le enviamos.</p>
+    }
+    @default {
+      <h1>No pudimos abrir la encuesta</h1>
+      <p class="aviso error" role="alert">{{ error() }}</p>
+    }
+  }
+  <p><a routerLink="/">Ir al inicio</a></p>
+</section>

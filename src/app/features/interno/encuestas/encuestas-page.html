@@ -1,0 +1,267 @@
+<div class="encabezado">
+  <h1>Encuestas de satisfacción</h1>
+  @if (puedeAdministrar()) {
+    <button type="button" class="boton" (click)="abrirNueva()">Nueva encuesta</button>
+  }
+</div>
+<p class="intro">
+  Al publicar una encuesta se invita por correo a los beneficiarios activos con un enlace personal.
+  Cada persona responde una sola vez y los resultados se analizan sin identificar a quien respondió.
+</p>
+
+@if (mensaje()) {
+  <p class="aviso exito" role="status">{{ mensaje() }}</p>
+}
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+
+@if (cargando()) {
+  <p role="status">Cargando encuestas…</p>
+} @else {
+  <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Encuestas">
+    <table class="tabla">
+      <caption class="solo-lectores">
+        Encuestas de satisfacción
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Encuesta</th>
+          <th scope="col">Vigencia</th>
+          <th scope="col">Estado</th>
+          <th scope="col" class="num">Respondidas</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (e of encuestas(); track e.id) {
+          <tr>
+            <th scope="row">
+              {{ e.titulo }}
+              <small>Creada por {{ e.creadaPor }} el {{ e.creadaAt | date: 'dd/MM/yyyy' }}</small>
+            </th>
+            <td>{{ e.vigenteDesde }} a {{ e.vigenteHasta }}</td>
+            <td>
+              <span class="etiqueta" [class.ok]="e.estado === 'PUBLICADA'">{{
+                estados[e.estado]
+              }}</span>
+            </td>
+            <td class="num">{{ e.respondidas }} de {{ e.invitadas }}</td>
+            <td>
+              <span class="grupo-acciones">
+                @if (puedeAdministrar() && e.estado === 'BORRADOR') {
+                  <button type="button" class="enlace" (click)="abrirEditar(e)">
+                    Editar<span class="solo-lectores"> {{ e.titulo }}</span>
+                  </button>
+                  <button type="button" class="enlace" (click)="pedirPublicar(e)">
+                    Publicar<span class="solo-lectores"> {{ e.titulo }}</span>
+                  </button>
+                }
+                @if (puedeAdministrar() && e.estado === 'PUBLICADA') {
+                  <button type="button" class="enlace" (click)="cerrarEncuesta(e)">
+                    Cerrar<span class="solo-lectores"> {{ e.titulo }}</span>
+                  </button>
+                }
+                @if (e.estado !== 'BORRADOR') {
+                  <button type="button" class="enlace" (click)="verResultados(e)">
+                    Resultados<span class="solo-lectores"> de {{ e.titulo }}</span>
+                  </button>
+                }
+              </span>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5">Todavía no hay encuestas.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+<!-- Crear / editar -->
+<app-dialogo
+  [titulo]="editando() ? 'Editar encuesta' : 'Nueva encuesta'"
+  [abierto]="vista() === 'formulario'"
+  (cierra)="cerrar()"
+>
+  <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+    <app-campo idCampo="enc-titulo" etiqueta="Título" [control]="form.controls.titulo">
+      <input appCampoControl type="text" formControlName="titulo" maxlength="150" />
+    </app-campo>
+    <app-campo
+      idCampo="enc-descripcion"
+      etiqueta="Descripción (opcional)"
+      [control]="form.controls.descripcion"
+    >
+      <textarea appCampoControl formControlName="descripcion" rows="2" maxlength="1000"></textarea>
+    </app-campo>
+    <div class="rejilla">
+      <app-campo idCampo="enc-desde" etiqueta="Vigente desde" [control]="form.controls.desde">
+        <input appCampoControl type="date" formControlName="desde" />
+      </app-campo>
+      <app-campo idCampo="enc-hasta" etiqueta="Vigente hasta" [control]="form.controls.hasta">
+        <input appCampoControl type="date" formControlName="hasta" />
+      </app-campo>
+    </div>
+
+    <div formArrayName="preguntas">
+      @for (p of preguntas.controls; track p; let i = $index) {
+        <fieldset class="pregunta" [formGroupName]="i">
+          <legend>Pregunta {{ i + 1 }}</legend>
+          <div class="rejilla">
+            <div class="campo-simple">
+              <label [for]="'p-tipo-' + i">Tipo</label>
+              <select [id]="'p-tipo-' + i" formControlName="tipo">
+                @for (t of listaTipos; track t) {
+                  <option [value]="t">{{ tipos[t] }}</option>
+                }
+              </select>
+            </div>
+            @if (tipoDe(i) === 'ESCALA') {
+              <div class="campo-simple">
+                <label [for]="'p-escala-' + i">Valor máximo de la escala (3 a 10)</label>
+                <input
+                  [id]="'p-escala-' + i"
+                  type="number"
+                  min="3"
+                  max="10"
+                  formControlName="escalaMax"
+                />
+              </div>
+            }
+          </div>
+          <div class="campo-simple">
+            <label [for]="'p-texto-' + i">Texto de la pregunta</label>
+            <input [id]="'p-texto-' + i" type="text" formControlName="texto" maxlength="300" />
+          </div>
+          @if (tipoDe(i) === 'SELECCION') {
+            <div class="campo-simple">
+              <label [for]="'p-opciones-' + i">Opciones (una por línea)</label>
+              <textarea [id]="'p-opciones-' + i" rows="3" formControlName="opciones"></textarea>
+            </div>
+          }
+          <label class="opcion">
+            <input type="checkbox" formControlName="obligatoria" />
+            <span>Obligatoria</span>
+          </label>
+          <button type="button" class="enlace" (click)="quitarPregunta(i)">
+            Quitar<span class="solo-lectores"> la pregunta {{ i + 1 }}</span>
+          </button>
+        </fieldset>
+      }
+    </div>
+    <button type="button" class="boton secundario" (click)="agregarPregunta()">
+      Agregar pregunta
+    </button>
+
+    @if (erroresDialogo().length > 0) {
+      <div class="aviso error" role="alert">
+        <ul>
+          @for (m of erroresDialogo(); track $index) {
+            <li>{{ m }}</li>
+          }
+        </ul>
+      </div>
+    }
+    <div class="acciones">
+      <button type="submit" class="boton" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando…' : 'Guardar borrador' }}
+      </button>
+      <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>
+    </div>
+  </form>
+</app-dialogo>
+
+<!-- Publicar -->
+<app-dialogo titulo="Publicar la encuesta" [abierto]="vista() === 'publicar'" (cierra)="cerrar()">
+  <p>
+    «{{ editando()?.titulo }}» pasará a publicada: ya no se podrán cambiar sus preguntas y se
+    enviará por correo la invitación, con su enlace personal, a cada beneficiario con el beneficio
+    activo.
+  </p>
+  @if (erroresDialogo().length > 0) {
+    <div class="aviso error" role="alert">
+      @for (m of erroresDialogo(); track $index) {
+        <p>{{ m }}</p>
+      }
+    </div>
+  }
+  <div class="acciones">
+    <button type="button" class="boton" [disabled]="guardando()" (click)="publicar()">
+      {{ guardando() ? 'Publicando…' : 'Publicar e invitar' }}
+    </button>
+    <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>
+  </div>
+</app-dialogo>
+
+<!-- Resultados -->
+<app-dialogo
+  [titulo]="'Resultados · ' + (resultados()?.encuesta?.titulo ?? '')"
+  [abierto]="vista() === 'resultados'"
+  (cierra)="cerrar()"
+>
+  @if (resultados(); as r) {
+    <ul class="indicadores">
+      <li>
+        Invitadas: <strong>{{ r.invitadas }}</strong>
+      </li>
+      <li>
+        Respondidas: <strong>{{ r.respondidas }}</strong>
+      </li>
+      <li>
+        Tasa de respuesta:
+        <strong>{{
+          r.tasaRespuesta === null ? '—' : (r.tasaRespuesta | number: '1.0-1') + ' %'
+        }}</strong>
+      </li>
+      <li>
+        Satisfacción (0 a 100):
+        <strong>{{ r.satisfaccion === null ? '—' : (r.satisfaccion | number: '1.0-1') }}</strong>
+      </li>
+    </ul>
+    <p class="nota">Los resultados no identifican a quien respondió.</p>
+    @for (p of r.preguntas; track p.id) {
+      <section class="resultado">
+        <h3>{{ p.texto }}</h3>
+        <small>{{ p.respondidas }} respuesta(s)</small>
+        @if (p.conteo) {
+          @if (p.promedio !== undefined) {
+            <p>
+              Promedio:
+              <strong>{{ p.promedio === null ? '—' : (p.promedio | number: '1.0-2') }}</strong>
+            </p>
+          }
+          <ul class="barras">
+            @for (c of p.conteo; track c.valor) {
+              <li>
+                <span class="etiqueta-barra">{{ c.valor }}</span>
+                <progress
+                  max="100"
+                  [value]="porcentaje(c.cantidad, p.respondidas)"
+                  [attr.aria-label]="c.valor"
+                >
+                  {{ porcentaje(c.cantidad, p.respondidas) }}%
+                </progress>
+                <span>{{ c.cantidad }} ({{ porcentaje(c.cantidad, p.respondidas) }} %)</span>
+              </li>
+            }
+          </ul>
+        }
+        @if (p.textos) {
+          <ul class="textos">
+            @for (t of p.textos; track $index) {
+              <li>{{ t }}</li>
+            } @empty {
+              <li>Sin comentarios.</li>
+            }
+          </ul>
+        }
+      </section>
+    }
+  }
+  <div class="acciones">
+    <button type="button" class="boton secundario" (click)="cerrar()">Cerrar</button>
+  </div>
+</app-dialogo>

@@ -61,6 +61,9 @@
       <a routerLink="/interno/novedades/revocatorias" routerLinkActive="activo">Revocatorias</a>
       <a routerLink="/interno/novedades/alertas" routerLinkActive="activo">Alertas de cruce</a>
     }
+    @if (sesion.tieneAlguno(PERMISO.encuestasAdministrar, PERMISO.encuestasResultados)) {
+      <a routerLink="/interno/encuestas" routerLinkActive="activo">Encuestas de satisfacción</a>
+    }
 
     @if (sesion.tieneAlguno(PERMISO.asignacionVer, PERMISO.cupos)) {
       <p class="grupo">Asignación</p>
