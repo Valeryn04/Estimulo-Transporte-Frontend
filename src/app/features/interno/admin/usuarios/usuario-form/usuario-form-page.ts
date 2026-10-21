@@ -79,9 +79,9 @@ export class UsuarioFormPage implements OnInit {
       const r = await firstValueFrom(this.api.disponibilidad({ [campo]: valor, excluirId }));
       const dato = r[campo];
       if (dato && !dato.disponible) {
-        const quien = dato.usadoPor ? ` la cuenta «${dato.usadoPor}»` : ' otra cuenta';
+        // Se dice que ya está registrado, sin revelar a quién pertenece.
         control.setErrors({
-          ocupado: `${campo === 'correo' ? 'este correo' : 'este usuario'} ya lo usa${quien}`,
+          ocupado: `${campo === 'correo' ? 'este correo' : 'este usuario'} ya está registrado`,
         });
         control.markAsTouched();
       }

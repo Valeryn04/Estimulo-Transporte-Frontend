@@ -68,6 +68,14 @@ describe('AsignacionPage', () => {
       b.textContent?.includes(texto),
     )!;
 
+  it('ofrece la pestaña de cupos y presupuesto a quien los administra, sin salir del menú de Asignación', async () => {
+    const { el } = await montar(TRES, ['asignacion.ver', 'cupos.administrar']);
+    expect([...el.querySelectorAll('.pestanas a')].map((a) => a.textContent?.trim())).toEqual([
+      'Asignación del beneficio',
+      'Cupos y presupuesto',
+    ]);
+  });
+
   it('muestra los cupos y el presupuesto y la propuesta en orden con lo que alcanza y lo que no', async () => {
     const { el } = await montar();
     expect(el.querySelector('.resumen')?.textContent).toContain('3 de 3');

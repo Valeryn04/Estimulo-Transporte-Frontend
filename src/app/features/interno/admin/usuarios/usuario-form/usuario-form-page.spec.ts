@@ -68,8 +68,8 @@ describe('UsuarioFormPage', () => {
     const libres = async () => {
       for (const r of ctrl.match((x) => x.url.endsWith('/admin/usuarios/disponibilidad'))) {
         r.flush({
-          usuario: { disponible: true, usadoPor: null },
-          correo: { disponible: true, usadoPor: null, estado: null },
+          usuario: { disponible: true },
+          correo: { disponible: true },
         });
       }
       await asentar(fixture);
@@ -150,11 +150,11 @@ describe('UsuarioFormPage', () => {
     expect(correo.request.params.get('correo')).toBe('ana@barranquilla.gov.co');
     correo.flush({
       usuario: null,
-      correo: { disponible: false, usadoPor: 'ana.gomez', estado: 'ACTIVO' },
+      correo: { disponible: false },
     });
     await asentar(fixture);
     expect(el.querySelector('#correo-error')?.textContent).toContain(
-      'este correo ya lo usa la cuenta «ana.gomez»',
+      'este correo ya está registrado',
     );
     expect(el.querySelector('#correo')?.getAttribute('aria-invalid')).toBe('true');
 
@@ -162,10 +162,10 @@ describe('UsuarioFormPage', () => {
     el.querySelector<HTMLInputElement>('#usuario')!.dispatchEvent(new Event('blur'));
     ctrl
       .expectOne((r) => r.url.endsWith('/admin/usuarios/disponibilidad') && r.params.has('usuario'))
-      .flush({ usuario: { disponible: false, usadoPor: 'ana.perez' }, correo: null });
+      .flush({ usuario: { disponible: false }, correo: null });
     await asentar(fixture);
     expect(el.querySelector('#usuario-error')?.textContent).toContain(
-      'este usuario ya lo usa la cuenta «ana.perez»',
+      'este usuario ya está registrado',
     );
 
     // Al cambiar el correo, el aviso se quita solo.

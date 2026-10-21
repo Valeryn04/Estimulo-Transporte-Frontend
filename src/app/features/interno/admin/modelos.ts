@@ -69,6 +69,6 @@ export interface DatosUsuarioEdicion {
 }
 
 export interface DisponibilidadUsuario {
-  usuario: { disponible: boolean; usadoPor: string | null } | null;
-  correo: { disponible: boolean; usadoPor: string | null; estado: string | null } | null;
+  usuario: { disponible: boolean } | null;
+  correo: { disponible: boolean } | null;
 }
