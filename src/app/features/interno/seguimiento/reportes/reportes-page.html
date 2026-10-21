@@ -1,0 +1,219 @@
+<div class="encabezado">
+  <h1>Reportes</h1>
+</div>
+<p class="intro">
+  Elija un reporte y los filtros. La vista previa muestra las primeras filas; el archivo exportado
+  lleva todas, con los filtros en el encabezado.
+</p>
+
+@if (mensaje()) {
+  <p class="aviso exito" role="status">{{ mensaje() }}</p>
+}
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+
+<form
+  class="tarjeta filtros"
+  [formGroup]="filtros"
+  (ngSubmit)="consultar()"
+  aria-label="Filtros del reporte"
+>
+  <div class="rejilla">
+    <div class="campo-simple">
+      <label for="reporte">Reporte</label>
+      <select id="reporte" formControlName="reporte">
+        @for (r of reportes(); track r.codigo) {
+          <option [value]="r.codigo">{{ r.nombre }}</option>
+        }
+      </select>
+    </div>
+    <div class="campo-simple">
+      <label for="vigencia">Vigencia</label>
+      <select id="vigencia" formControlName="vigenciaId">
+        <option value="">La activa</option>
+        @for (v of listas()?.vigencias ?? []; track v.id) {
+          <option [value]="v.id">{{ v.anio }}</option>
+        }
+      </select>
+    </div>
+    <div class="campo-simple">
+      <label for="desde">Desde</label>
+      <input id="desde" type="date" formControlName="desde" />
+    </div>
+    <div class="campo-simple">
+      <label for="hasta">Hasta</label>
+      <input id="hasta" type="date" formControlName="hasta" />
+    </div>
+    <div class="campo-simple">
+      <label for="localidad">Localidad</label>
+      <select id="localidad" formControlName="localidadId">
+        <option value="">Todas</option>
+        @for (l of listas()?.localidades ?? []; track l.id) {
+          <option [value]="l.id">{{ l.nombre }}</option>
+        }
+      </select>
+    </div>
+    <div class="campo-simple">
+      <label for="estado">Etapa o estado</label>
+      <select id="estado" formControlName="estado">
+        <option value="">Todos</option>
+        @for (s of listas()?.estados ?? []; track s.codigo) {
+          <option [value]="s.codigo">{{ s.nombre }}</option>
+        }
+      </select>
+    </div>
+    <div class="campo-simple">
+      <label for="poblacion">Tipo de persona</label>
+      <select id="poblacion" formControlName="poblacion">
+        <option value="">Todas</option>
+        <option value="CON_CUIDADOR">Con cuidador</option>
+        <option value="SIN_CUIDADOR">Sin cuidador</option>
+      </select>
+    </div>
+  </div>
+  <div class="acciones">
+    <button type="submit" class="boton" [disabled]="cargando() || !filtros.value.reporte">
+      Ver reporte
+    </button>
+    @if (puedeExportar()) {
+      <button
+        type="button"
+        class="boton secundario"
+        [disabled]="exportando() || !filtros.value.reporte"
+        (click)="exportar('XLSX')"
+      >
+        Exportar a Excel
+      </button>
+      <button
+        type="button"
+        class="boton secundario"
+        [disabled]="exportando() || !filtros.value.reporte"
+        (click)="exportar('PDF')"
+      >
+        Exportar a PDF
+      </button>
+    }
+  </div>
+</form>
+
+@if (cargando()) {
+  <p role="status">Generando el reporte…</p>
+} @else if (vista(); as v) {
+  <section class="tarjeta" aria-labelledby="t-vista">
+    <h2 id="t-vista">{{ v.nombre }}</h2>
+    <ul class="filtros-aplicados">
+      @for (f of v.filtros; track f) {
+        <li>{{ f }}</li>
+      }
+    </ul>
+    <p role="status">
+      {{ v.total }} fila(s)
+      @if (v.total > v.filas.length) {
+        · se muestran las primeras {{ v.filas.length }}; el archivo exportado las incluye todas
+      }
+    </p>
+    <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Vista previa del reporte">
+      <table class="tabla">
+        <caption class="solo-lectores">
+          {{
+            v.nombre
+          }}
+        </caption>
+        <thead>
+          <tr>
+            @for (c of v.columnas; track c.clave) {
+              <th scope="col">{{ c.titulo }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (fila of v.filas; track $index) {
+            <tr>
+              @for (c of v.columnas; track c.clave) {
+                <td>{{ celda(fila[c.clave] ?? null) }}</td>
+              }
+            </tr>
+          } @empty {
+            <tr>
+              <td [attr.colspan]="v.columnas.length">No hay registros con esos filtros.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+
+@if (puedeBi()) {
+  <section class="tarjeta" aria-labelledby="t-bi">
+    <h2 id="t-bi">Eventos para Business Intelligence</h2>
+    <p class="intro">
+      Descargue en CSV los eventos del proceso, sin datos personales, para analizarlos en una
+      herramienta de BI. Cada caso se identifica con una referencia que no permite saber quién es.
+    </p>
+    <form class="filtros" [formGroup]="bi" (ngSubmit)="descargarBi()" aria-label="Eventos para BI">
+      <div class="rejilla">
+        <div class="campo-simple">
+          <label for="bi-desde">Desde</label>
+          <input id="bi-desde" type="date" formControlName="desde" />
+        </div>
+        <div class="campo-simple">
+          <label for="bi-hasta">Hasta</label>
+          <input id="bi-hasta" type="date" formControlName="hasta" />
+        </div>
+      </div>
+      <div class="acciones">
+        <button type="submit" class="boton secundario" [disabled]="exportando()">
+          Descargar eventos (CSV)
+        </button>
+      </div>
+    </form>
+  </section>
+}
+
+@if (puedeExportar()) {
+  <section class="tarjeta" aria-labelledby="t-hist">
+    <h2 id="t-hist">Historial de exportaciones</h2>
+    <div
+      class="tabla-contenedor"
+      tabindex="0"
+      role="region"
+      aria-label="Historial de exportaciones"
+    >
+      <table class="tabla">
+        <caption class="solo-lectores">
+          Exportaciones realizadas
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Fecha</th>
+            <th scope="col">Quién</th>
+            <th scope="col">Reporte</th>
+            <th scope="col">Formato</th>
+            <th scope="col" class="num">Filas</th>
+            <th scope="col">Huella SHA-256</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (x of historial(); track x.id) {
+            <tr>
+              <td>{{ x.fecha | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ x.usuario }}</td>
+              <td>{{ x.nombre }}</td>
+              <td>{{ x.formato }}</td>
+              <td class="num">{{ x.filas }}</td>
+              <td>
+                <code>{{ x.sha256.slice(0, 16) }}…</code>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6">Todavía no se ha exportado ningún reporte.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}

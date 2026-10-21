@@ -1,0 +1,35 @@
+.intro,
+.total {
+  margin: 0 0 16px;
+  color: var(--color-muted);
+}
+
+small {
+  display: block;
+  color: var(--color-muted);
+}
+
+.justificacion {
+  margin: 0 0 4px;
+}
+
+pre {
+  margin: 4px 0 8px;
+  padding: 8px;
+  overflow-x: auto;
+  font-size: 0.8125rem;
+  background: var(--color-surface-alt, rgb(0 0 0 / 4%));
+  border-radius: var(--radius);
+}
+
+.ip {
+  font-size: 0.75rem;
+}
+
+.paginas {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 16px;
+}

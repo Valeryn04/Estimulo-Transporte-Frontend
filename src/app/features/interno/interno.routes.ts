@@ -93,6 +93,41 @@ export const internoRoutes: Routes = [
         loadComponent: () => import('./encuestas/encuestas-page').then((m) => m.EncuestasPage),
       },
       {
+        path: 'bitacora',
+        title: `Bitácora de auditoría · ${TITULO}`,
+        canActivate: [permisoGuard(PERMISO.bitacoraVer)],
+        loadComponent: () =>
+          import('./seguimiento/bitacora/bitacora-page').then((m) => m.BitacoraPage),
+      },
+      {
+        path: 'expedientes',
+        title: `Expediente integral · ${TITULO}`,
+        canActivate: [permisoGuard(PERMISO.expedienteVer)],
+        loadComponent: () =>
+          import('./seguimiento/expediente/expediente-page').then((m) => m.ExpedientePage),
+      },
+      {
+        path: 'expedientes/:solicitudId',
+        title: `Expediente integral · ${TITULO}`,
+        canActivate: [permisoGuard(PERMISO.expedienteVer)],
+        loadComponent: () =>
+          import('./seguimiento/expediente/expediente-page').then((m) => m.ExpedientePage),
+      },
+      {
+        path: 'tablero',
+        title: `Tablero de control · ${TITULO}`,
+        canActivate: [permisoGuard(PERMISO.tableroVer)],
+        loadComponent: () =>
+          import('./seguimiento/tablero/tablero-page').then((m) => m.TableroPage),
+      },
+      {
+        path: 'reportes',
+        title: `Reportes · ${TITULO}`,
+        canActivate: [permisoGuard(PERMISO.reportesVer, PERMISO.biConsultar)],
+        loadComponent: () =>
+          import('./seguimiento/reportes/reportes-page').then((m) => m.ReportesPage),
+      },
+      {
         path: 'admin/cupos',
         title: `Cupos y presupuesto · ${TITULO}`,
         canActivate: [permisoGuard(PERMISO.cupos, PERMISO.asignacionVer)],

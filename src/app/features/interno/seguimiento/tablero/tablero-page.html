@@ -1,0 +1,182 @@
+<div class="encabezado">
+  <h1>Tablero de control</h1>
+</div>
+<p class="intro">
+  Seguimiento del programa en tiempo real. Los filtros de localidad y población aplican a las etapas
+  y a los tiempos; el presupuesto y la distribución por localidad son de toda la vigencia.
+</p>
+
+<form
+  class="tarjeta filtros"
+  [formGroup]="filtros"
+  (ngSubmit)="consultar()"
+  role="search"
+  aria-label="Filtrar el tablero"
+>
+  <div class="rejilla">
+    <div class="campo-simple">
+      <label for="vigencia">Vigencia</label>
+      <select id="vigencia" formControlName="vigenciaId">
+        <option value="">La activa</option>
+        @for (v of listas()?.vigencias ?? []; track v.id) {
+          <option [value]="v.id">{{ v.anio }}</option>
+        }
+      </select>
+    </div>
+    <div class="campo-simple">
+      <label for="localidad">Localidad</label>
+      <select id="localidad" formControlName="localidadId">
+        <option value="">Todas</option>
+        @for (l of listas()?.localidades ?? []; track l.id) {
+          <option [value]="l.id">{{ l.nombre }}</option>
+        }
+      </select>
+    </div>
+    <div class="campo-simple">
+      <label for="poblacion">Población</label>
+      <select id="poblacion" formControlName="poblacion">
+        <option value="">Toda</option>
+        <option value="CON_CUIDADOR">Con cuidador</option>
+        <option value="SIN_CUIDADOR">Sin cuidador</option>
+      </select>
+    </div>
+  </div>
+  <div class="acciones">
+    <button type="submit" class="boton" [disabled]="cargando()">Actualizar</button>
+  </div>
+</form>
+
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+
+@if (datos(); as d) {
+  <h2>Etapas del proceso · vigencia {{ d.vigencia }}</h2>
+  <ul class="indicadores">
+    @for (e of etapas(); track e.clave) {
+      <li class="tarjeta indicador" [attr.data-etapa]="e.clave">
+        <span class="valor">{{ e.valor | number }}</span>
+        <span class="nombre">{{ e.nombre }}</span>
+      </li>
+    }
+  </ul>
+
+  <div class="dos-columnas">
+    <section class="tarjeta" aria-labelledby="t-avance">
+      <h2 id="t-avance">Avance contra la meta</h2>
+      <p class="grande">
+        {{ d.avance.asignadosVigentes | number }} de {{ d.avance.meta | number }} beneficiarios ({{
+          d.avance.porcentaje | number: '1.0-1'
+        }}
+        %)
+      </p>
+      <progress
+        [value]="d.avance.asignadosVigentes"
+        [max]="d.avance.meta"
+        aria-label="Avance contra la meta de beneficiarios"
+      ></progress>
+    </section>
+
+    <section class="tarjeta" aria-labelledby="t-pres">
+      <h2 id="t-pres">Ejecución presupuestal</h2>
+      @if (d.presupuesto; as p) {
+        <p class="grande">
+          {{ p.comprometido | currency: 'COP' : 'symbol-narrow' : '1.0-0' }} de
+          {{ p.total | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+          ({{ p.porcentaje | number: '1.0-1' }} %)
+        </p>
+        <progress
+          [value]="p.comprometido"
+          [max]="p.total || 1"
+          aria-label="Presupuesto comprometido"
+        ></progress>
+        <p class="nota">
+          Disponible: {{ p.disponible | currency: 'COP' : 'symbol-narrow' : '1.0-0' }} · Cupos de la
+          vigencia: {{ p.cupos | number }}
+        </p>
+      } @else {
+        <p>La vigencia no tiene presupuesto configurado.</p>
+      }
+    </section>
+  </div>
+
+  <div class="dos-columnas">
+    <section class="tarjeta" aria-labelledby="t-nov">
+      <h2 id="t-nov">Novedades y satisfacción</h2>
+      <dl class="datos">
+        <div>
+          <dt>Bloqueos y suspensiones</dt>
+          <dd>{{ d.novedades.bloqueos }}</dd>
+        </div>
+        <div>
+          <dt>Levantamientos</dt>
+          <dd>{{ d.novedades.levantamientos }}</dd>
+        </div>
+        <div>
+          <dt>Revocatorias</dt>
+          <dd>{{ d.novedades.revocatorias }}</dd>
+        </div>
+        <div>
+          <dt>Satisfacción</dt>
+          <dd>
+            @if (d.satisfaccion !== null) {
+              {{ d.satisfaccion | number: '1.0-1' }} de 100
+            } @else {
+              Sin respuestas
+            }
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="tarjeta" aria-labelledby="t-tiempos">
+      <h2 id="t-tiempos">Tiempo promedio entre etapas</h2>
+      <table class="tabla">
+        <caption class="solo-lectores">
+          Tiempo promedio en días
+        </caption>
+        <tbody>
+          @for (t of tiempos(); track t.nombre) {
+            <tr>
+              <th scope="row">{{ t.nombre }}</th>
+              <td class="num">
+                {{ t.dias !== null ? (t.dias | number: '1.0-1') + ' días' : 'Sin datos' }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <section class="tarjeta" aria-labelledby="t-loc">
+    <h2 id="t-loc">Por localidad</h2>
+    <table class="tabla">
+      <caption class="solo-lectores">
+        Solicitudes y beneficios asignados por localidad
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Localidad</th>
+          <th scope="col" class="num">Solicitudes</th>
+          <th scope="col" class="num">Asignados</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (l of d.porLocalidad; track l.localidad) {
+          <tr>
+            <th scope="row">{{ l.localidad }}</th>
+            <td class="num">{{ l.solicitudes }}</td>
+            <td class="num">{{ l.asignados }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="3">Sin solicitudes.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+} @else if (cargando()) {
+  <p role="status">Cargando el tablero…</p>
+}

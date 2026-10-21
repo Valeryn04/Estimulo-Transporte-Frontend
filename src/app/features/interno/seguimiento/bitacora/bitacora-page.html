@@ -1,0 +1,149 @@
+<div class="encabezado">
+  <h1>Bitácora de auditoría</h1>
+</div>
+<p class="intro">
+  Registro de todo lo que ocurre en el sistema: quién lo hizo, cuándo y sobre qué expediente. No se
+  puede modificar ni borrar. Consultarla también queda registrado.
+</p>
+
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+
+<form
+  class="tarjeta filtros"
+  [formGroup]="filtros"
+  (ngSubmit)="buscar()"
+  role="search"
+  aria-label="Filtrar la bitácora"
+>
+  <div class="rejilla">
+    <div class="campo-simple">
+      <label for="radicado">Radicado</label>
+      <input id="radicado" type="search" formControlName="radicado" placeholder="EST-2026-000001" />
+    </div>
+    <div class="campo-simple">
+      <label for="usuario">Usuario</label>
+      <input id="usuario" type="search" formControlName="usuario" />
+    </div>
+    <div class="campo-simple">
+      <label for="modulo">Módulo</label>
+      <select id="modulo" formControlName="modulo">
+        <option value="">Todos</option>
+        @for (m of modulos(); track m) {
+          <option [value]="m">{{ m }}</option>
+        }
+      </select>
+    </div>
+    <div class="campo-simple">
+      <label for="accion">Acción (empieza por)</label>
+      <input id="accion" type="search" formControlName="accion" placeholder="BENEFICIO_" />
+    </div>
+    <div class="campo-simple">
+      <label for="desde">Desde</label>
+      <input id="desde" type="date" formControlName="desde" />
+    </div>
+    <div class="campo-simple">
+      <label for="hasta">Hasta</label>
+      <input id="hasta" type="date" formControlName="hasta" />
+    </div>
+  </div>
+  <div class="acciones">
+    <button type="submit" class="boton">Buscar</button>
+    <button type="button" class="boton secundario" (click)="limpiar()">Limpiar</button>
+  </div>
+</form>
+
+@if (cargando() && !datos()) {
+  <p role="status">Cargando la bitácora…</p>
+} @else if (datos(); as d) {
+  <p role="status" class="total">
+    {{ d.total }} evento(s)
+    @if (d.sensiblesOcultos) {
+      · Los valores anteriores y nuevos no se muestran: requieren permiso sobre datos sensibles.
+    }
+  </p>
+  <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Eventos de la bitácora">
+    <table class="tabla">
+      <caption class="solo-lectores">
+        Eventos de la bitácora
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Fecha</th>
+          <th scope="col">Usuario</th>
+          <th scope="col">Módulo y acción</th>
+          <th scope="col">Expediente</th>
+          <th scope="col">Detalle</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (e of d.items; track e.id) {
+          <tr>
+            <td>{{ e.fecha | date: 'dd/MM/yyyy HH:mm:ss' }}</td>
+            <td>{{ e.usuario ?? 'Sistema o ciudadano' }}</td>
+            <td>
+              <strong>{{ e.accion }}</strong>
+              <small>{{ e.modulo }}</small>
+            </td>
+            <td>
+              @if (e.radicado) {
+                <a [routerLink]="['/interno/expedientes']" [queryParams]="{ q: e.radicado }">{{
+                  e.radicado
+                }}</a>
+              } @else {
+                —
+              }
+            </td>
+            <td>
+              @if (e.justificacion) {
+                <p class="justificacion">{{ e.justificacion }}</p>
+              }
+              @if (tieneValores(e)) {
+                <details>
+                  <summary>Ver valores</summary>
+                  @if (e.anterior !== null) {
+                    <p><strong>Antes</strong></p>
+                    <pre>{{ e.anterior | json }}</pre>
+                  }
+                  @if (e.nuevo !== null) {
+                    <p><strong>Después</strong></p>
+                    <pre>{{ e.nuevo | json }}</pre>
+                  }
+                  @if (detalleUtil(e.detalle)) {
+                    <p><strong>Detalle</strong></p>
+                    <pre>{{ e.detalle | json }}</pre>
+                  }
+                </details>
+              }
+              <small class="ip">{{ e.ip }}</small>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5">No hay eventos con esos filtros.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <nav class="paginas" aria-label="Páginas de la bitácora">
+    <button
+      type="button"
+      class="boton secundario"
+      [disabled]="pagina() <= 1 || cargando()"
+      (click)="buscar(pagina() - 1)"
+    >
+      Anterior
+    </button>
+    <span>Página {{ pagina() }} de {{ totalPaginas() }}</span>
+    <button
+      type="button"
+      class="boton secundario"
+      [disabled]="pagina() >= totalPaginas() || cargando()"
+      (click)="buscar(pagina() + 1)"
+    >
+      Siguiente
+    </button>
+  </nav>
+}

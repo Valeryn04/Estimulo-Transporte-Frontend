@@ -65,6 +65,30 @@
       <a routerLink="/interno/encuestas" routerLinkActive="activo">Encuestas de satisfacción</a>
     }
 
+    @if (
+      sesion.tieneAlguno(
+        PERMISO.tableroVer,
+        PERMISO.expedienteVer,
+        PERMISO.reportesVer,
+        PERMISO.biConsultar,
+        PERMISO.bitacoraVer
+      )
+    ) {
+      <p class="grupo">Seguimiento y control</p>
+      @if (sesion.tiene(PERMISO.tableroVer)) {
+        <a routerLink="/interno/tablero" routerLinkActive="activo">Tablero de control</a>
+      }
+      @if (sesion.tiene(PERMISO.expedienteVer)) {
+        <a routerLink="/interno/expedientes" routerLinkActive="activo">Expediente integral</a>
+      }
+      @if (sesion.tieneAlguno(PERMISO.reportesVer, PERMISO.biConsultar)) {
+        <a routerLink="/interno/reportes" routerLinkActive="activo">Reportes</a>
+      }
+      @if (sesion.tiene(PERMISO.bitacoraVer)) {
+        <a routerLink="/interno/bitacora" routerLinkActive="activo">Bitácora de auditoría</a>
+      }
+    }
+
     @if (sesion.tieneAlguno(PERMISO.asignacionVer, PERMISO.cupos)) {
       <p class="grupo">Asignación</p>
       <a routerLink="/interno/asignacion" routerLinkActive="activo">Asignación del beneficio</a>

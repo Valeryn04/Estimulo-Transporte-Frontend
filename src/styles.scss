@@ -475,8 +475,17 @@ main :is(p, li, dd, dt, small, label, h1, h2, h3, .aviso) {
 // Al imprimir el comprobante solo se deja el contenido.
 @media print {
   .cabecera,
-  .saltar {
+  .saltar,
+  .barra,
+  .menu,
+  .velo {
     display: none !important;
+  }
+
+  .cuerpo,
+  .contenido {
+    display: block;
+    padding: 0;
   }
 }
 

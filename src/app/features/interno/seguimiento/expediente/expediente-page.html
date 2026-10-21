@@ -1,0 +1,225 @@
+@if (!hayExpediente()) {
+  <div class="encabezado">
+    <h1>Expediente integral</h1>
+  </div>
+  <p class="intro">
+    Busque una persona por número de radicado, número de documento o nombre para ver todo su
+    recorrido en el programa.
+  </p>
+
+  <form
+    class="tarjeta filtros"
+    (submit)="$event.preventDefault(); buscar()"
+    role="search"
+    aria-label="Buscar un expediente"
+  >
+    <div class="campo-simple">
+      <label for="busqueda">Radicado, documento o nombre</label>
+      <input id="busqueda" type="search" [formControl]="busqueda" />
+      @if (busqueda.touched && busqueda.invalid) {
+        <span class="error-campo" role="alert">Escriba al menos 3 caracteres.</span>
+      }
+    </div>
+    <div class="acciones">
+      <button type="submit" class="boton" [disabled]="cargando()">Buscar</button>
+    </div>
+  </form>
+
+  @if (error()) {
+    <p class="aviso error" role="alert">{{ error() }}</p>
+  }
+  @if (cargando()) {
+    <p role="status">Buscando…</p>
+  } @else if (coincidencias(); as lista) {
+    <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Resultados de la búsqueda">
+      <table class="tabla">
+        <caption class="solo-lectores">
+          Resultados de la búsqueda
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Radicado</th>
+            <th scope="col">Persona con discapacidad</th>
+            <th scope="col">Vigencia</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of lista; track c.solicitudId) {
+            <tr>
+              <th scope="row">{{ c.radicado ?? 'Sin radicar' }}</th>
+              <td>{{ c.pcdNombre }}</td>
+              <td>{{ c.anio }}</td>
+              <td>
+                <span class="etiqueta">{{ c.estado }}</span>
+              </td>
+              <td>
+                <button type="button" class="enlace" (click)="abrir(c.solicitudId)">
+                  Abrir expediente
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5">No encontramos expedientes con esa búsqueda.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+} @else if (expediente(); as x) {
+  <div class="encabezado no-imprimir">
+    <h1>Expediente {{ x.radicado ?? 'sin radicar' }}</h1>
+    <span class="grupo-botones">
+      <button type="button" class="boton secundario" (click)="volver()">Nueva búsqueda</button>
+      <button type="button" class="boton" (click)="imprimir()">Imprimir</button>
+    </span>
+  </div>
+  <h1 class="solo-impresion">Expediente {{ x.radicado ?? 'sin radicar' }}</h1>
+  <p class="intro solo-impresion">
+    Estímulo Social de Transporte · Alcaldía de Barranquilla · Vigencia {{ x.vigencia }}
+  </p>
+  @if (x.sensiblesOcultos) {
+    <p class="aviso" role="status">
+      Los números de documento aparecen parcialmente y no se muestra el correo: su rol no tiene
+      permiso sobre datos sensibles.
+    </p>
+  }
+
+  <section class="tarjeta" aria-labelledby="t-resumen">
+    <h2 id="t-resumen">Resumen</h2>
+    <dl class="datos">
+      <div>
+        <dt>Estado</dt>
+        <dd>
+          <span class="etiqueta">{{ x.estado }}</span>
+        </dd>
+      </div>
+      <div>
+        <dt>Persona con discapacidad</dt>
+        <dd>
+          {{ x.pcd.nombre }}
+          <small>{{ x.pcd.tipoIdentificacion }} {{ x.pcd.numeroIdentificacion }}</small>
+        </dd>
+      </div>
+      @if (x.cuidador) {
+        <div>
+          <dt>Cuidador</dt>
+          <dd>
+            {{ x.cuidador.nombre }}
+            <small>{{ x.cuidador.tipoIdentificacion }} {{ x.cuidador.numeroIdentificacion }}</small>
+          </dd>
+        </div>
+      }
+      <div>
+        <dt>Localidad y barrio</dt>
+        <dd>{{ x.localidad ?? '—' }} · {{ x.barrio ?? '—' }}</dd>
+      </div>
+      @if (x.correo) {
+        <div>
+          <dt>Correo</dt>
+          <dd>{{ x.correo }}</dd>
+        </div>
+      }
+      <div>
+        <dt>Preinscrita</dt>
+        <dd>{{ x.creadaAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+      </div>
+      <div>
+        <dt>Radicada</dt>
+        <dd>{{ x.radicadaAt ? (x.radicadaAt | date: 'dd/MM/yyyy HH:mm') : '—' }}</dd>
+      </div>
+      <div>
+        <dt>Puntaje</dt>
+        <dd>
+          @if (x.puntaje; as p) {
+            {{ p.total | number: '1.0-2' }} (matriz versión {{ p.matrizVersion }})
+          } @else {
+            Sin calcular
+          }
+        </dd>
+      </div>
+      <div>
+        <dt>Beneficio</dt>
+        <dd>
+          @if (x.beneficio; as b) {
+            {{ b.estado }} · asignado el {{ b.asignadoAt | date: 'dd/MM/yyyy' }}
+          } @else {
+            Sin asignar
+          }
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  @if (x.otrasVigencias.length > 0) {
+    <section class="tarjeta" aria-labelledby="t-otras">
+      <h2 id="t-otras">Otras vigencias</h2>
+      <ul>
+        @for (o of x.otrasVigencias; track o.solicitudId) {
+          <li>
+            Vigencia {{ o.anio }}: {{ o.radicado ?? 'sin radicar' }} ({{ o.estado }})
+            <button type="button" class="enlace no-imprimir" (click)="abrir(o.solicitudId)">
+              Abrir
+            </button>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  <section class="tarjeta" aria-labelledby="t-docs">
+    <h2 id="t-docs">Documentos y versiones</h2>
+    <table class="tabla">
+      <caption class="solo-lectores">
+        Documentos del expediente
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Documento</th>
+          <th scope="col">Versión</th>
+          <th scope="col">Archivo</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Cargado</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (d of x.documentos; track $index) {
+          <tr>
+            <th scope="row">{{ d.documento }}</th>
+            <td>{{ d.version }}</td>
+            <td>{{ d.archivo }}</td>
+            <td>{{ d.estado }}</td>
+            <td>{{ d.cargadoAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5">Sin documentos.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+
+  <section class="tarjeta" aria-labelledby="t-cron">
+    <h2 id="t-cron">Cronología</h2>
+    <ol class="cronologia">
+      @for (c of x.cronologia; track $index) {
+        <li [class.correo]="c.origen === 'correo'">
+          <time [attr.datetime]="c.fecha">{{ c.fecha | date: 'dd/MM/yyyy HH:mm' }}</time>
+          <div>
+            <strong>{{ c.origen === 'correo' ? 'Correo: ' : '' }}{{ accion(c.accion) }}</strong>
+            <small> {{ c.modulo }} · {{ c.usuario ?? 'Sistema o ciudadano' }} </small>
+            @if (c.justificacion) {
+              <p>{{ c.justificacion }}</p>
+            }
+          </div>
+        </li>
+      } @empty {
+        <li>Sin eventos.</li>
+      }
+    </ol>
+  </section>
+}

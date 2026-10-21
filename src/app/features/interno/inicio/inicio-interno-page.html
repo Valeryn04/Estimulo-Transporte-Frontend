@@ -66,6 +66,44 @@
     </div>
   }
 
+  @if (
+    sesion.tieneAlguno(
+      PERMISO.tableroVer,
+      PERMISO.expedienteVer,
+      PERMISO.reportesVer,
+      PERMISO.biConsultar,
+      PERMISO.bitacoraVer
+    )
+  ) {
+    <h2>Seguimiento y control</h2>
+    <div class="atajos">
+      @if (sesion.tiene(PERMISO.tableroVer)) {
+        <a class="tarjeta" routerLink="/interno/tablero">
+          <strong>Tablero de control</strong>
+          <span>Etapas, avance contra la meta, presupuesto y tiempos.</span>
+        </a>
+      }
+      @if (sesion.tiene(PERMISO.expedienteVer)) {
+        <a class="tarjeta" routerLink="/interno/expedientes">
+          <strong>Expediente integral</strong>
+          <span>Todo el recorrido de una persona en un solo lugar.</span>
+        </a>
+      }
+      @if (sesion.tieneAlguno(PERMISO.reportesVer, PERMISO.biConsultar)) {
+        <a class="tarjeta" routerLink="/interno/reportes">
+          <strong>Reportes</strong>
+          <span>Consultar y exportar a Excel o PDF.</span>
+        </a>
+      }
+      @if (sesion.tiene(PERMISO.bitacoraVer)) {
+        <a class="tarjeta" routerLink="/interno/bitacora">
+          <strong>Bitácora de auditoría</strong>
+          <span>Quién hizo qué y cuándo.</span>
+        </a>
+      }
+    </div>
+  }
+
   @if (sesion.tieneAlguno(PERMISO.asignacionVer, PERMISO.cupos)) {
     <h2>Asignación</h2>
     <div class="atajos">
