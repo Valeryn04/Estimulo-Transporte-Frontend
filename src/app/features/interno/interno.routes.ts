@@ -52,6 +52,19 @@ export const internoRoutes: Routes = [
           import('./priorizacion/excepciones/excepciones-page').then((m) => m.ExcepcionesPage),
       },
       {
+        path: 'asignacion',
+        title: `Asignación · ${TITULO}`,
+        canActivate: [permisoGuard(PERMISO.asignacionVer)],
+        loadComponent: () =>
+          import('./asignacion/asignacion/asignacion-page').then((m) => m.AsignacionPage),
+      },
+      {
+        path: 'admin/cupos',
+        title: `Cupos y presupuesto · ${TITULO}`,
+        canActivate: [permisoGuard(PERMISO.cupos, PERMISO.asignacionVer)],
+        loadComponent: () => import('./asignacion/cupos/cupos-page').then((m) => m.CuposPage),
+      },
+      {
         path: 'admin/matriz',
         title: `Matriz de ponderación · ${TITULO}`,
         canActivate: [permisoGuard(PERMISO.matriz, PERMISO.priorizacionAprobar)],

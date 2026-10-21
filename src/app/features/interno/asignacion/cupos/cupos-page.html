@@ -1,0 +1,297 @@
+<div class="encabezado">
+  <h1>Cupos y presupuesto</h1>
+</div>
+<p class="intro">
+  Control en línea de los cupos y del presupuesto de la vigencia. No se puede asignar un beneficio
+  sin cupo o sin saldo. Cada cambio queda registrado con su motivo y, para cupos y presupuesto, con
+  su soporte.
+</p>
+
+@if (mensaje()) {
+  <p class="aviso exito" role="status">{{ mensaje() }}</p>
+}
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+
+@if (cargando()) {
+  <p role="status">Cargando…</p>
+} @else if (datos(); as d) {
+  <h2>Vigencia {{ d.vigencia.anio }}</h2>
+  <div class="resumen">
+    <section class="tarjeta indicador" aria-labelledby="t-cupos">
+      <h3 id="t-cupos">Cupos</h3>
+      <p class="cifra">
+        {{ d.cupos.disponibles | number }}
+        <small>disponibles de {{ d.cupos.totales | number }}</small>
+      </p>
+      <progress max="100" [value]="pctCupos()" aria-label="Cupos ocupados">
+        {{ pctCupos() }}%
+      </progress>
+      <ul>
+        <li>
+          Ocupados: <strong>{{ d.cupos.ocupados | number }}</strong>
+        </li>
+        <li>
+          Liberados: <strong>{{ d.cupos.liberados | number }}</strong>
+        </li>
+      </ul>
+    </section>
+    <section class="tarjeta indicador" aria-labelledby="t-presupuesto">
+      <h3 id="t-presupuesto">Presupuesto</h3>
+      <p class="cifra">
+        {{ d.presupuesto.disponible | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+        <small
+          >disponibles de
+          {{ d.presupuesto.total | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</small
+        >
+      </p>
+      <progress max="100" [value]="pctPresupuesto()" aria-label="Presupuesto comprometido">
+        {{ pctPresupuesto() }}%
+      </progress>
+      <ul>
+        <li>
+          Comprometido:
+          <strong>{{
+            d.presupuesto.comprometido | currency: 'COP' : 'symbol-narrow' : '1.0-0'
+          }}</strong>
+        </li>
+        <li>
+          Valor del estímulo por persona:
+          <strong>{{ d.valorEstimulo | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+        </li>
+      </ul>
+    </section>
+  </div>
+
+  @if (d.distribucion.localidades.length > 0 || d.distribucion.transportes.length > 0) {
+    <section class="tarjeta" aria-labelledby="t-dist">
+      <h2 id="t-dist">Distribución vigente</h2>
+      <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Distribución de cupos">
+        <table class="tabla">
+          <caption class="solo-lectores">
+            Cupos por localidad y por tipo de transporte
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Tipo</th>
+              <th scope="col">Elemento</th>
+              <th scope="col" class="num">Cupos</th>
+              <th scope="col" class="num">Ocupados</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (i of d.distribucion.localidades; track i.itemId) {
+              <tr>
+                <td>Localidad</td>
+                <th scope="row">{{ i.nombre }}</th>
+                <td class="num">{{ i.cupos }}</td>
+                <td class="num">{{ i.ocupados }}</td>
+              </tr>
+            }
+            @for (i of d.distribucion.transportes; track i.itemId) {
+              <tr>
+                <td>Transporte</td>
+                <th scope="row">{{ i.nombre }}</th>
+                <td class="num">{{ i.cupos }}</td>
+                <td class="num">{{ i.ocupados }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+
+  @if (puedeAdministrar()) {
+    <section class="tarjeta" aria-labelledby="t-mod">
+      <h2 id="t-mod">Modificar cupos, valor, presupuesto o distribución</h2>
+      @if (erroresForm().length > 0) {
+        <div class="aviso error" role="alert">
+          <ul>
+            @for (m of erroresForm(); track $index) {
+              <li>{{ m }}</li>
+            }
+          </ul>
+        </div>
+      }
+      <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+        <div class="rejilla">
+          <app-campo
+            idCampo="cupos-totales"
+            etiqueta="Cupos totales"
+            [control]="form.controls.cuposTotales"
+          >
+            <input appCampoControl type="number" min="0" step="1" formControlName="cuposTotales" />
+          </app-campo>
+          <app-campo
+            idCampo="cupos-valor"
+            etiqueta="Valor del estímulo por persona (COP)"
+            [control]="form.controls.valorEstimulo"
+          >
+            <input
+              appCampoControl
+              type="number"
+              min="0"
+              step="1000"
+              formControlName="valorEstimulo"
+            />
+          </app-campo>
+          <app-campo
+            idCampo="cupos-presupuesto"
+            etiqueta="Presupuesto total (COP)"
+            [control]="form.controls.presupuestoTotal"
+          >
+            <input
+              appCampoControl
+              type="number"
+              min="0"
+              step="1000"
+              formControlName="presupuestoTotal"
+            />
+          </app-campo>
+        </div>
+
+        <fieldset class="distribucion" formArrayName="localidades">
+          <legend>Cupos por localidad (opcional)</legend>
+          @for (f of form.controls.localidades.controls; track f; let i = $index) {
+            <div class="fila-dist" [formGroupName]="i">
+              <div class="campo-simple">
+                <label [for]="'loc-' + i">Localidad</label>
+                <select [id]="'loc-' + i" formControlName="itemId">
+                  <option [ngValue]="null">Elija una localidad</option>
+                  @for (l of d.catalogos.localidades; track l.id) {
+                    <option [ngValue]="l.id">{{ l.nombre }}</option>
+                  }
+                </select>
+              </div>
+              <div class="campo-simple">
+                <label [for]="'loc-cupos-' + i">Cupos</label>
+                <input [id]="'loc-cupos-' + i" type="number" min="0" formControlName="cupos" />
+              </div>
+              <button type="button" class="enlace" (click)="quitar(form.controls.localidades, i)">
+                Quitar<span class="solo-lectores"> la localidad {{ i + 1 }}</span>
+              </button>
+            </div>
+          }
+          <button
+            type="button"
+            class="boton secundario"
+            (click)="agregar(form.controls.localidades)"
+          >
+            Agregar localidad
+          </button>
+        </fieldset>
+
+        <fieldset class="distribucion" formArrayName="transportes">
+          <legend>Cupos por tipo de transporte (opcional)</legend>
+          @for (f of form.controls.transportes.controls; track f; let i = $index) {
+            <div class="fila-dist" [formGroupName]="i">
+              <div class="campo-simple">
+                <label [for]="'tra-' + i">Tipo de transporte</label>
+                <select [id]="'tra-' + i" formControlName="itemId">
+                  <option [ngValue]="null">Elija un tipo</option>
+                  @for (t of d.catalogos.tiposTransporte; track t.id) {
+                    <option [ngValue]="t.id">{{ t.nombre }}</option>
+                  }
+                </select>
+              </div>
+              <div class="campo-simple">
+                <label [for]="'tra-cupos-' + i">Cupos</label>
+                <input [id]="'tra-cupos-' + i" type="number" min="0" formControlName="cupos" />
+              </div>
+              <button type="button" class="enlace" (click)="quitar(form.controls.transportes, i)">
+                Quitar<span class="solo-lectores"> el tipo de transporte {{ i + 1 }}</span>
+              </button>
+            </div>
+          }
+          <button
+            type="button"
+            class="boton secundario"
+            (click)="agregar(form.controls.transportes)"
+          >
+            Agregar tipo de transporte
+          </button>
+        </fieldset>
+
+        <app-campo
+          idCampo="cupos-motivo"
+          etiqueta="Motivo del cambio"
+          ayuda="Obligatorio, mínimo 10 caracteres. Queda en el historial."
+          [control]="form.controls.motivo"
+        >
+          <textarea appCampoControl formControlName="motivo" rows="3" maxlength="1000"></textarea>
+        </app-campo>
+        <div class="campo-simple">
+          <label for="cupos-soporte">Soporte (PDF, JPG o PNG)</label>
+          <input
+            id="cupos-soporte"
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            (change)="elegirSoporte($event)"
+          />
+          <small class="ayuda"
+            >Obligatorio al cambiar los cupos o el presupuesto: por ejemplo, el acto de adición
+            presupuestal.</small
+          >
+        </div>
+        <div class="acciones">
+          <button type="submit" class="boton" [disabled]="guardando()">
+            {{ guardando() ? 'Guardando…' : 'Registrar el cambio' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  }
+
+  <section class="tarjeta" aria-labelledby="t-hist">
+    <h2 id="t-hist">Historial de modificaciones</h2>
+    <div
+      class="tabla-contenedor"
+      tabindex="0"
+      role="region"
+      aria-label="Historial de modificaciones"
+    >
+      <table class="tabla">
+        <caption class="solo-lectores">
+          Modificaciones de cupos, valor, presupuesto y distribución
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Qué cambió</th>
+            <th scope="col">Antes → después</th>
+            <th scope="col">Motivo</th>
+            <th scope="col">Quién y cuándo</th>
+            <th scope="col">Soporte</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (a of ajustes(); track a.id) {
+            <tr>
+              <th scope="row">{{ nombreAjuste[a.tipo] }}</th>
+              <td>{{ resumenAjuste(a) }}</td>
+              <td class="motivo">{{ a.motivo }}</td>
+              <td>
+                {{ a.creadoPor }}
+                <small>{{ a.creadoAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+              </td>
+              <td>
+                @if (a.soporte) {
+                  <button type="button" class="enlace" (click)="verSoporte(a)">
+                    {{ a.soporte.nombre }}
+                  </button>
+                } @else {
+                  —
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5">Todavía no se ha modificado nada.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}

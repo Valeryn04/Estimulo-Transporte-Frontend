@@ -50,6 +50,12 @@
       <a routerLink="/interno/validacion" routerLinkActive="activo">Bandeja de validación</a>
     }
 
+    @if (sesion.tieneAlguno(PERMISO.asignacionVer, PERMISO.cupos)) {
+      <p class="grupo">Asignación</p>
+      <a routerLink="/interno/asignacion" routerLinkActive="activo">Asignación del beneficio</a>
+      <a routerLink="/interno/admin/cupos" routerLinkActive="activo">Cupos y presupuesto</a>
+    }
+
     @if (sesion.tieneAlguno(PERMISO.priorizacionVer, PERMISO.matriz, PERMISO.priorizacionAprobar)) {
       <p class="grupo">Priorización</p>
     }

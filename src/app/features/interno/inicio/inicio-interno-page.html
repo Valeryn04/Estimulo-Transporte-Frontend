@@ -5,12 +5,49 @@
     incluye.
   </p>
 
+  @if (alertas().length > 0) {
+    <section class="avisos" aria-labelledby="t-avisos">
+      <h2 id="t-avisos">Avisos pendientes</h2>
+      <ul>
+        @for (a of alertas(); track a.id) {
+          <li class="aviso">
+            <strong>{{ a.titulo }}</strong>
+            <span>{{ a.mensaje }}</span>
+            <small>{{ a.creadaAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+            <span class="acciones-aviso">
+              @if (a.enlace) {
+                <a [routerLink]="a.enlace">Ir a atenderlo</a>
+              }
+              <button type="button" class="enlace" (click)="atender(a)">
+                Marcar como atendido<span class="solo-lectores">: {{ a.titulo }}</span>
+              </button>
+            </span>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
   @if (sesion.tiene(PERMISO.validacionVer)) {
     <h2>Validación de solicitudes</h2>
     <div class="atajos">
       <a class="tarjeta" routerLink="/interno/validacion">
         <strong>Bandeja de validación</strong>
         <span>Casos pendientes: abra uno, revise la lista de chequeo y emita su decisión.</span>
+      </a>
+    </div>
+  }
+
+  @if (sesion.tieneAlguno(PERMISO.asignacionVer, PERMISO.cupos)) {
+    <h2>Asignación</h2>
+    <div class="atajos">
+      <a class="tarjeta" routerLink="/interno/asignacion">
+        <strong>Asignación del beneficio</strong>
+        <span>Propuesta en orden de prioridad, lista de espera y beneficiarios.</span>
+      </a>
+      <a class="tarjeta" routerLink="/interno/admin/cupos">
+        <strong>Cupos y presupuesto</strong>
+        <span>Cupos, valor del estímulo y presupuesto de la vigencia, con su soporte.</span>
       </a>
     </div>
   }

@@ -4,9 +4,8 @@
 </div>
 
 <p class="intro">
-  La vigencia activa es la que recibe las preinscripciones. Los cupos totales limitan las
-  asignaciones del año; el descuento de cupos por cada asignación se habilita con la etapa de
-  asignación.
+  La vigencia activa es la que recibe las preinscripciones. Los cupos y el presupuesto de cada
+  vigencia se controlan y se modifican, con su soporte, en «Cupos y presupuesto».
 </p>
 
 @if (mensaje()) {
@@ -106,7 +105,11 @@
     <app-campo
       idCampo="vig-cupos"
       etiqueta="Cupos totales"
-      ayuda="Número de beneficiarios que se pueden asignar en esta vigencia."
+      [ayuda]="
+        editando()
+          ? 'Para modificarlos use «Cupos y presupuesto»: allí queda el motivo y el soporte.'
+          : 'Número de beneficiarios que se pueden asignar en esta vigencia.'
+      "
       [control]="form.controls.cuposTotales"
     >
       <input appCampoControl type="number" formControlName="cuposTotales" min="0" />

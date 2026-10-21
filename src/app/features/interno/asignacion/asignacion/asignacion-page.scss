@@ -1,0 +1,38 @@
+.intro {
+  margin: 0 0 12px;
+  color: var(--color-muted);
+}
+
+.resumen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  background: var(--govco-azul-claro);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+}
+
+.pestanas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.marca {
+  width: 44px;
+}
+
+tr.sin-cupo td,
+tr.sin-cupo th {
+  background: color-mix(in srgb, var(--color-error) 5%, transparent);
+}

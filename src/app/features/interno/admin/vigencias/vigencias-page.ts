@@ -68,6 +68,7 @@ export class VigenciasPage implements OnInit {
     this.errorDialogo.set('');
     const anio = (this.vigencias()[0]?.anio ?? new Date().getFullYear()) + 1;
     this.form.controls.anio.enable();
+    this.form.controls.cuposTotales.enable();
     this.form.reset({
       anio,
       fechaInicio: `${anio}-01-01`,
@@ -87,6 +88,8 @@ export class VigenciasPage implements OnInit {
       cuposTotales: v.cuposTotales,
     });
     this.form.controls.anio.disable();
+    // Los cupos de una vigencia existente se modifican con su soporte en «Cupos y presupuesto».
+    this.form.controls.cuposTotales.disable();
     this.abierto.set(true);
   }
 

@@ -1,0 +1,220 @@
+<app-dialogo
+  [titulo]="
+    'Entrega del medio de transporte' + (detalle() ? ' · ' + detalle()!.beneficio.radicado : '')
+  "
+  [abierto]="beneficioId() !== null"
+  (cierra)="cierra.emit()"
+>
+  @if (error()) {
+    <p class="aviso error" role="alert">{{ error() }}</p>
+  }
+  @if (mensaje()) {
+    <p class="aviso exito" role="status">{{ mensaje() }}</p>
+  }
+  @if (detalle(); as d) {
+    <p>
+      {{ d.beneficio.pcdNombre }} ·
+      <span
+        class="etiqueta"
+        [class.ok]="d.beneficio.estado === 'ACTIVO'"
+        [class.mal]="d.beneficio.estado === 'FINALIZADO'"
+      >
+        {{ estados[d.beneficio.estado] }}
+      </span>
+      @if (d.beneficio.activadoAt) {
+        <small>Activo desde {{ d.beneficio.activadoAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+      }
+    </p>
+
+    <h3>Entregas registradas</h3>
+    @if (d.entregas.length > 0) {
+      <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Entregas registradas">
+        <table class="tabla">
+          <caption class="solo-lectores">
+            Tarjetas entregadas
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Persona</th>
+              <th scope="col">Tarjeta</th>
+              <th scope="col">Entrega</th>
+              <th scope="col">Recibió</th>
+              <th scope="col">Acta</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (e of d.entregas; track e.id) {
+              <tr [class.inactivo]="!e.vigente">
+                <th scope="row">{{ nombreRol[e.rol] }}</th>
+                <td>
+                  {{ e.tarjeta }}
+                  <small>{{ e.tipoTransporte }}</small>
+                  @if (!e.vigente) {
+                    <small>Liberada</small>
+                  }
+                </td>
+                <td>
+                  {{ e.fechaEntrega }}
+                  <small>{{ e.funcionarioEntrega }}</small>
+                </td>
+                <td>
+                  {{ e.receptorNombre }}
+                  <small>
+                    {{ nombreReceptor[e.receptorTipo] }}
+                    @if (e.receptorNumero) {
+                      · {{ e.receptorTipoIdentificacion }} {{ e.receptorNumero }}
+                    }
+                  </small>
+                </td>
+                <td>
+                  <button type="button" class="enlace" (click)="verActa(e)">
+                    {{ e.soporte.nombre }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <p>Todavía no se ha entregado ninguna tarjeta.</p>
+    }
+
+    @if (puedeRegistrar()) {
+      <h3>Registrar una entrega</h3>
+      <p class="ayuda">Falta entregar: {{ d.pendientes.map(nombreRolDe).join(' y ') }}.</p>
+      <form [formGroup]="form" (ngSubmit)="registrar()" novalidate>
+        <div class="rejilla">
+          <div class="campo-simple">
+            <label for="ent-rol">A quién se le entrega la tarjeta</label>
+            <select id="ent-rol" formControlName="rol" (change)="cambiarRol()">
+              @for (r of d.pendientes; track r) {
+                <option [value]="r">{{ nombreRol[r] }}</option>
+              }
+            </select>
+          </div>
+          <app-campo
+            idCampo="ent-tarjeta"
+            etiqueta="Identificador de la tarjeta"
+            ayuda="No puede estar asignado a otro beneficiario activo."
+            [control]="form.controls.tarjetaId"
+          >
+            <input
+              appCampoControl
+              type="text"
+              formControlName="tarjetaId"
+              maxlength="30"
+              autocomplete="off"
+            />
+          </app-campo>
+          <app-campo
+            idCampo="ent-transporte"
+            etiqueta="Tipo de transporte"
+            [control]="form.controls.tipoTransporteId"
+          >
+            <select appCampoControl formControlName="tipoTransporteId">
+              <option [ngValue]="null">Elija un tipo</option>
+              @for (t of d.opciones.tiposTransporte; track t.id) {
+                <option [ngValue]="t.id">{{ t.nombre }}</option>
+              }
+            </select>
+          </app-campo>
+          <app-campo
+            idCampo="ent-fecha"
+            etiqueta="Fecha de entrega"
+            [control]="form.controls.fechaEntrega"
+          >
+            <input
+              appCampoControl
+              type="date"
+              formControlName="fechaEntrega"
+              [min]="d.beneficio.asignadoDia"
+              [max]="d.beneficio.hoy"
+            />
+          </app-campo>
+        </div>
+        <div class="campo-simple">
+          <label for="ent-receptor">Quién recibe</label>
+          <select id="ent-receptor" formControlName="receptorTipo" (change)="cambiarReceptor()">
+            @for (r of receptores(); track r) {
+              <option [value]="r">{{ nombreReceptor[r] }}</option>
+            }
+          </select>
+        </div>
+        @if (receptorTipo() === 'TERCERO') {
+          <div class="rejilla">
+            <app-campo
+              idCampo="ent-tercero"
+              etiqueta="Nombre de quien recibe"
+              [control]="form.controls.receptorNombre"
+            >
+              <input appCampoControl type="text" formControlName="receptorNombre" maxlength="150" />
+            </app-campo>
+            <app-campo
+              idCampo="ent-tercero-tipo"
+              etiqueta="Tipo de documento"
+              [control]="form.controls.receptorTipoIdentificacionId"
+            >
+              <select appCampoControl formControlName="receptorTipoIdentificacionId">
+                <option [ngValue]="null">Elija un tipo</option>
+                @for (t of d.opciones.tiposIdentificacion; track t.id) {
+                  <option [ngValue]="t.id">{{ t.nombre }}</option>
+                }
+              </select>
+            </app-campo>
+            <app-campo
+              idCampo="ent-tercero-numero"
+              etiqueta="Número de documento"
+              [control]="form.controls.receptorNumero"
+            >
+              <input appCampoControl type="text" formControlName="receptorNumero" maxlength="30" />
+            </app-campo>
+          </div>
+        }
+        <app-campo
+          idCampo="ent-funcionario"
+          etiqueta="Funcionario que realiza la entrega"
+          [control]="form.controls.funcionarioEntrega"
+        >
+          <input appCampoControl type="text" formControlName="funcionarioEntrega" maxlength="150" />
+        </app-campo>
+        <div class="campo-simple">
+          <label for="ent-acta">Acta de entrega firmada (PDF, JPG o PNG)</label>
+          <input
+            id="ent-acta"
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            (change)="elegirActa($event)"
+          />
+        </div>
+        <div class="acciones">
+          <button type="submit" class="boton" [disabled]="guardando()">
+            {{ guardando() ? 'Guardando…' : 'Registrar la entrega' }}
+          </button>
+        </div>
+      </form>
+    }
+
+    @if (puedeActivar()) {
+      <h3>Activación</h3>
+      <p>
+        Ya se entregaron las tarjetas. Cuando el operador de transporte confirme la activación,
+        regístrela aquí.
+      </p>
+      <div class="campo-simple">
+        <label for="ent-obs">Observación (opcional)</label>
+        <input id="ent-obs" type="text" [formControl]="observacion" maxlength="500" />
+      </div>
+      <div class="acciones">
+        <button type="button" class="boton" [disabled]="guardando()" (click)="activar()">
+          Confirmar la activación
+        </button>
+      </div>
+    }
+  } @else if (!error()) {
+    <p role="status">Cargando…</p>
+  }
+  <div class="acciones">
+    <button type="button" class="boton secundario" (click)="cierra.emit()">Cerrar</button>
+  </div>
+</app-dialogo>

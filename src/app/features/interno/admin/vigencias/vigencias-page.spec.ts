@@ -68,18 +68,20 @@ describe('VigenciasPage', () => {
     expect(el.querySelector('#vig-fin-error')?.textContent).toContain('anterior a la inicial');
   });
 
-  it('edita los cupos y muestra el error de cruce de fechas que devuelve la API', async () => {
+  it('edita las fechas, deja los cupos de solo lectura y muestra el error de cruce de fechas que devuelve la API', async () => {
     const { el, ctrl, asentar, escribir, enviar } = await montar();
     el.querySelector<HTMLButtonElement>('button[title="Editar la vigencia 2026"]')!.click();
     await asentar();
     expect(el.querySelector<HTMLInputElement>('#vig-anio')!.disabled).toBe(true);
-    escribir('#vig-cupos', '3500');
+    // Los cupos de una vigencia existente no se cambian aquí: se modifican con su soporte en «Cupos y presupuesto».
+    expect(el.querySelector<HTMLInputElement>('#vig-cupos')!.disabled).toBe(true);
+    escribir('#vig-fin', '2026-11-30');
     enviar();
     const req = ctrl.expectOne(`${API_BASE}/admin/vigencias/1`);
     expect(req.request.body).toEqual({
       fechaInicio: '2026-01-01',
-      fechaFin: '2026-12-31',
-      cuposTotales: 3500,
+      fechaFin: '2026-11-30',
+      cuposTotales: 3000,
     });
     req.flush(
       errorApi('VALIDACION', 'Revise', [
