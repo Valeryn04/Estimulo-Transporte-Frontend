@@ -168,6 +168,32 @@
         }
       </select>
     </app-campo>
+    <app-campo
+      idCampo="cruce-alerta"
+      etiqueta="Alertas de novedades"
+      ayuda="Qué pasa cuando se carga un archivo: las alertas las analiza el gestor de novedades y nunca cambian un beneficio."
+      [control]="form.controls.alertaNovedad"
+    >
+      <select appCampoControl formControlName="alertaNovedad">
+        @for (o of opcionesAlerta; track o) {
+          <option [value]="o">{{ alertas[o] }}</option>
+        }
+      </select>
+    </app-campo>
+    @if (form.controls.alertaNovedad.value !== 'NINGUNA') {
+      <app-campo
+        idCampo="cruce-causal"
+        etiqueta="Causal de revocatoria que sugiere"
+        [control]="form.controls.causalCodigo"
+      >
+        <select appCampoControl formControlName="causalCodigo">
+          <option [ngValue]="null">Elija una causal</option>
+          @for (c of causales(); track c.codigo) {
+            <option [value]="c.codigo">{{ c.nombre }}</option>
+          }
+        </select>
+      </app-campo>
+    }
     @if (errorDialogo()) {
       <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
     }

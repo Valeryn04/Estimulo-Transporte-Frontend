@@ -1,0 +1,29 @@
+.intro {
+  margin: 0 0 16px;
+  color: var(--color-muted);
+}
+
+h3 {
+  margin: 16px 0 8px;
+}
+
+.ayuda {
+  color: var(--color-muted);
+}
+
+.linea {
+  padding-left: 20px;
+
+  li {
+    margin-bottom: 10px;
+  }
+
+  small {
+    display: block;
+    color: var(--color-muted);
+  }
+
+  .texto {
+    white-space: pre-wrap;
+  }
+}

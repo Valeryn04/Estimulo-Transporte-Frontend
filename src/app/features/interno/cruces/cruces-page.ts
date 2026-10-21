@@ -10,7 +10,14 @@ import { Icono } from '../../../shared/icono/icono';
 import { aplicarErroresApi } from '../../../shared/forms';
 import { VersionRegistro } from '../admin/config/modelos-config';
 import { CrucesApi } from './cruces-api';
-import { AplicaACruce, CargaCruce, EstructuraCruce, NOMBRE_APLICA_CRUCE } from './modelos-cruces';
+import {
+  AlertaNovedad,
+  AplicaACruce,
+  CargaCruce,
+  EstructuraCruce,
+  NOMBRE_ALERTA_NOVEDAD,
+  NOMBRE_APLICA_CRUCE,
+} from './modelos-cruces';
 
 type Vista = 'ninguna' | 'formulario' | 'historial' | 'cargas';
 
@@ -33,6 +40,10 @@ export class CrucesPage implements OnInit {
   protected readonly mensaje = signal('');
   protected readonly aplicaA = NOMBRE_APLICA_CRUCE;
   protected readonly opciones = Object.keys(NOMBRE_APLICA_CRUCE) as AplicaACruce[];
+
+  protected readonly alertas = NOMBRE_ALERTA_NOVEDAD;
+  protected readonly opcionesAlerta = Object.keys(NOMBRE_ALERTA_NOVEDAD) as AlertaNovedad[];
+  protected readonly causales = signal<{ codigo: string; nombre: string }[]>([]);
 
   protected readonly vista = signal<Vista>('ninguna');
   protected readonly actual = signal<EstructuraCruce | null>(null);
@@ -62,10 +73,21 @@ export class CrucesPage implements OnInit {
       validators: [Validators.maxLength(60)],
     }),
     aplicaA: new FormControl<AplicaACruce>('AMBOS', { nonNullable: true }),
+    alertaNovedad: new FormControl<AlertaNovedad>('NINGUNA', { nonNullable: true }),
+    causalCodigo: new FormControl<string | null>(null),
   });
 
   ngOnInit(): void {
     void this.cargar();
+    void this.cargarCausales();
+  }
+
+  private async cargarCausales(): Promise<void> {
+    try {
+      this.causales.set(await firstValueFrom(this.api.causales()));
+    } catch {
+      this.causales.set([]);
+    }
   }
 
   private async cargar(): Promise<void> {
@@ -89,6 +111,8 @@ export class CrucesPage implements OnInit {
       columnaIdentificacion: 'IDENTIFICACION',
       columnaDetalle: '',
       aplicaA: 'AMBOS',
+      alertaNovedad: 'NINGUNA',
+      causalCodigo: null,
     });
     this.vista.set('formulario');
   }
@@ -103,6 +127,8 @@ export class CrucesPage implements OnInit {
       columnaIdentificacion: e.columnaIdentificacion,
       columnaDetalle: e.columnaDetalle ?? '',
       aplicaA: e.aplicaA,
+      alertaNovedad: e.alertaNovedad,
+      causalCodigo: e.causalCodigo,
     });
     this.vista.set('formulario');
   }
@@ -124,6 +150,8 @@ export class CrucesPage implements OnInit {
       columnaIdentificacion: v.columnaIdentificacion.trim(),
       columnaDetalle: v.columnaDetalle.trim() || null,
       aplicaA: v.aplicaA,
+      alertaNovedad: v.alertaNovedad,
+      causalCodigo: v.alertaNovedad === 'NINGUNA' ? null : v.causalCodigo,
     };
     const edicion = this.actual();
     try {

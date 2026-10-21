@@ -1,0 +1,291 @@
+<div class="encabezado">
+  <h1>Revocatorias</h1>
+  <a class="boton secundario" routerLink="/interno/novedades">Novedades de los beneficios</a>
+</div>
+<p class="intro">
+  Cada revocatoria sigue el debido proceso: causal y evidencia, traslado de las razones a la
+  persona, plazo y recepción de descargos, y acto administrativo motivado. Solo con el acto
+  registrado el beneficio se finaliza y el cupo se libera.
+</p>
+
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+
+<form class="tarjeta filtros" (submit)="$event.preventDefault(); buscar()" role="search">
+  <div class="campo-simple">
+    <label for="estado-rev">Estado</label>
+    <select id="estado-rev" [formControl]="estado" (change)="buscar()">
+      <option value="">Todas</option>
+      @for (o of opciones; track o) {
+        <option [value]="o">{{ estados[o] }}</option>
+      }
+    </select>
+  </div>
+</form>
+
+@if (cargando() && !datos()) {
+  <p role="status">Cargando…</p>
+} @else if (datos(); as d) {
+  <p class="total" role="status">{{ d.total }} revocatoria(s).</p>
+  <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Revocatorias">
+    <table class="tabla">
+      <caption class="solo-lectores">
+        Revocatorias de beneficios
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Beneficio</th>
+          <th scope="col">Causal</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Plazo de descargos</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of d.items; track r.id) {
+          <tr>
+            <th scope="row">
+              {{ r.radicado }}
+              <small>{{ r.pcdNombre }}</small>
+            </th>
+            <td>{{ r.causal }}</td>
+            <td>
+              <span
+                class="etiqueta"
+                [class.ok]="r.resultado === 'ARCHIVADA'"
+                [class.mal]="r.resultado === 'REVOCADA'"
+              >
+                {{ estados[r.estado] }}
+              </span>
+              @if (r.resultado) {
+                <small>{{ r.resultado === 'REVOCADA' ? 'Beneficio revocado' : 'Archivada' }}</small>
+              }
+            </td>
+            <td>
+              @if (r.venceDescargosAt) {
+                {{ r.venceDescargosAt | date: 'dd/MM/yyyy' }}
+                @if (r.sinDescargos) {
+                  <small>Sin descargos</small>
+                }
+              } @else {
+                —
+              }
+            </td>
+            <td>
+              <button type="button" class="enlace" (click)="abrir(r.id)">
+                Abrir<span class="solo-lectores"> la revocatoria de {{ r.radicado }}</span>
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5">No hay revocatorias con ese estado.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (totalPaginas() > 1) {
+    <nav class="paginacion" aria-label="Paginación">
+      <button
+        type="button"
+        class="boton secundario"
+        [disabled]="pagina() <= 1"
+        (click)="buscar(pagina() - 1)"
+      >
+        Anterior
+      </button>
+      <span>Página {{ pagina() }} de {{ totalPaginas() }}</span>
+      <button
+        type="button"
+        class="boton secundario"
+        [disabled]="pagina() >= totalPaginas()"
+        (click)="buscar(pagina() + 1)"
+      >
+        Siguiente
+      </button>
+    </nav>
+  }
+}
+
+<app-dialogo
+  [titulo]="'Revocatoria · ' + (detalle()?.radicado ?? '')"
+  [abierto]="detalle() !== null"
+  (cierra)="cerrar()"
+>
+  @if (errorDialogo()) {
+    <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
+  }
+  @if (mensaje()) {
+    <p class="aviso exito" role="status">{{ mensaje() }}</p>
+  }
+  @if (detalle(); as r) {
+    <p>
+      {{ r.pcdNombre }} · <strong>{{ r.causal }}</strong> ·
+      <span class="etiqueta">{{ estados[r.estado] }}</span>
+    </p>
+    <p>{{ r.descripcion }}</p>
+    @if (r.venceDescargosAt && r.estado === 'EN_TRASLADO') {
+      <p>
+        Plazo para presentar descargos hasta el
+        <strong>{{ r.venceDescargosAt | date: 'dd/MM/yyyy HH:mm' }}</strong
+        >.
+      </p>
+    }
+
+    <h3>Línea de tiempo</h3>
+    <ol class="linea">
+      @for (e of r.eventos; track e.id) {
+        <li>
+          <strong>{{ etapas[e.etapa] }}</strong> · {{ e.fecha }} · {{ e.usuario }}
+          @if (e.referencia) {
+            <small>Acto: {{ e.referencia }}</small>
+          }
+          <small class="texto">{{ e.texto }}</small>
+          @if (e.evidencia) {
+            <button type="button" class="enlace" (click)="verArchivo(e)">
+              {{ e.evidencia.nombre }}
+            </button>
+          }
+        </li>
+      }
+    </ol>
+
+    @if (puedeGestionar() && r.estado !== 'DECIDIDA') {
+      @if (r.estado === 'INICIADA') {
+        <h3>Traslado de las razones a la persona</h3>
+        <p class="ayuda">Se le envía por correo y se abre el plazo para presentar descargos.</p>
+        <div class="campo-simple">
+          <label for="rev-traslado">Razones que se comunican</label>
+          <textarea
+            id="rev-traslado"
+            rows="3"
+            [formControl]="formTraslado.controls.texto"
+            maxlength="4000"
+          ></textarea>
+        </div>
+        <div class="campo-simple">
+          <label for="rev-traslado-archivo">Soporte del traslado (opcional)</label>
+          <input
+            id="rev-traslado-archivo"
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            (change)="elegirArchivo($event)"
+          />
+        </div>
+        <div class="acciones">
+          <button
+            type="button"
+            class="boton"
+            [disabled]="guardando()"
+            (click)="registrarTraslado()"
+          >
+            Registrar el traslado
+          </button>
+        </div>
+      }
+
+      @if (r.estado === 'EN_TRASLADO' && !r.sinDescargos) {
+        <h3>Descargos</h3>
+        @if (r.puedeSinDescargos) {
+          <p>
+            El plazo venció. Si la persona no presentó descargos, regístrelo para poder decidir.
+          </p>
+          <div class="acciones">
+            <button
+              type="button"
+              class="boton secundario"
+              [disabled]="guardando()"
+              (click)="registrarSinDescargos()"
+            >
+              Registrar que no hubo descargos
+            </button>
+          </div>
+        } @else {
+          <p class="ayuda">Registre los descargos que presente la persona dentro del plazo.</p>
+          <div class="campo-simple">
+            <label for="rev-descargos">Descargos recibidos</label>
+            <textarea
+              id="rev-descargos"
+              rows="3"
+              [formControl]="formDescargos.controls.texto"
+              maxlength="4000"
+            ></textarea>
+          </div>
+          <div class="campo-simple">
+            <label for="rev-descargos-archivo">Soporte de los descargos (opcional)</label>
+            <input
+              id="rev-descargos-archivo"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              (change)="elegirArchivo($event)"
+            />
+          </div>
+          <div class="acciones">
+            <button
+              type="button"
+              class="boton"
+              [disabled]="guardando()"
+              (click)="registrarDescargos()"
+            >
+              Registrar los descargos
+            </button>
+          </div>
+        }
+      }
+
+      @if (r.puedeDecidir) {
+        <h3>Acto administrativo que decide</h3>
+        <p class="ayuda">
+          Se debe decidir dentro de {{ r.plazoDecisionDias }} días. Al revocar, el beneficio se
+          finaliza y el cupo queda libre para reasignar.
+        </p>
+        <div class="rejilla">
+          <div class="campo-simple">
+            <label for="rev-resultado">Decisión</label>
+            <select id="rev-resultado" [formControl]="formDecision.controls.resultado">
+              <option value="REVOCAR">Revocar el beneficio</option>
+              <option value="ARCHIVAR">Archivar el trámite (el beneficio continúa)</option>
+            </select>
+          </div>
+          <div class="campo-simple">
+            <label for="rev-acto">Número del acto administrativo</label>
+            <input
+              id="rev-acto"
+              type="text"
+              [formControl]="formDecision.controls.numeroActo"
+              maxlength="100"
+            />
+          </div>
+        </div>
+        <div class="campo-simple">
+          <label for="rev-motivacion">Motivación</label>
+          <textarea
+            id="rev-motivacion"
+            rows="3"
+            [formControl]="formDecision.controls.motivacion"
+            maxlength="4000"
+          ></textarea>
+        </div>
+        <div class="campo-simple">
+          <label for="rev-acto-archivo">Acto administrativo firmado (PDF, JPG o PNG)</label>
+          <input
+            id="rev-acto-archivo"
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            (change)="elegirArchivo($event)"
+          />
+        </div>
+        <div class="acciones">
+          <button type="button" class="boton" [disabled]="guardando()" (click)="decidir()">
+            Registrar el acto y decidir
+          </button>
+        </div>
+      }
+    }
+  }
+  <div class="acciones">
+    <button type="button" class="boton secundario" (click)="cerrar()">Cerrar</button>
+  </div>
+</app-dialogo>

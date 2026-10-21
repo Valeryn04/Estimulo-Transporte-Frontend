@@ -38,6 +38,24 @@
     </div>
   }
 
+  @if (sesion.tiene(PERMISO.novedadesVer)) {
+    <h2>Novedades y revocatoria</h2>
+    <div class="atajos">
+      <a class="tarjeta" routerLink="/interno/novedades">
+        <strong>Novedades de los beneficios</strong>
+        <span>Bloqueos, suspensiones y reactivaciones, con su historial.</span>
+      </a>
+      <a class="tarjeta" routerLink="/interno/novedades/revocatorias">
+        <strong>Revocatorias</strong>
+        <span>Traslado, descargos y acto administrativo.</span>
+      </a>
+      <a class="tarjeta" routerLink="/interno/novedades/alertas">
+        <strong>Alertas de cruce</strong>
+        <span>Coincidencias de defunciones, uso de tarjetas y apoyos incompatibles.</span>
+      </a>
+    </div>
+  }
+
   @if (sesion.tieneAlguno(PERMISO.asignacionVer, PERMISO.cupos)) {
     <h2>Asignación</h2>
     <div class="atajos">

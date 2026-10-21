@@ -6,6 +6,14 @@ export const NOMBRE_APLICA_CRUCE: Record<AplicaACruce, string> = {
   AMBOS: 'Ambos',
 };
 
+export type AlertaNovedad = 'NINGUNA' | 'PRESENCIA' | 'AUSENCIA';
+
+export const NOMBRE_ALERTA_NOVEDAD: Record<AlertaNovedad, string> = {
+  NINGUNA: 'No genera alertas de novedades',
+  PRESENCIA: 'Alerta a los beneficiarios que aparecen en el archivo',
+  AUSENCIA: 'Alerta a los beneficiarios activos que no aparecen en el archivo',
+};
+
 export interface CargaCruce {
   id: number;
   archivoNombre: string;
@@ -26,6 +34,8 @@ export interface EstructuraCruce {
   columnaIdentificacion: string;
   columnaDetalle: string | null;
   aplicaA: AplicaACruce;
+  alertaNovedad: AlertaNovedad;
+  causalCodigo: string | null;
   activo: boolean;
   version: number;
   vigente: CargaCruce | null;
@@ -38,4 +48,6 @@ export interface DatosEstructuraCruce {
   columnaIdentificacion: string;
   columnaDetalle: string | null;
   aplicaA: AplicaACruce;
+  alertaNovedad: AlertaNovedad;
+  causalCodigo: string | null;
 }

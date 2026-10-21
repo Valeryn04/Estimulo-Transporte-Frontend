@@ -26,6 +26,8 @@ const estructura = (c: Partial<EstructuraCruce> = {}): EstructuraCruce => ({
   columnaIdentificacion: 'IDENTIFICACION',
   columnaDetalle: 'ESTADO',
   aplicaA: 'PCD',
+  alertaNovedad: 'NINGUNA',
+  causalCodigo: null,
   activo: true,
   version: 1,
   vigente: null,
@@ -40,6 +42,9 @@ describe('CrucesPage', () => {
     ],
   ) {
     const p = montarPantalla(CrucesPage, {}, ['cruces.administrar']);
+    p.ctrl.expectOne(`${URL}/causales`).flush({
+      items: [{ codigo: 'FALLECIMIENTO', nombre: 'Fallecimiento' }],
+    });
     p.ctrl.expectOne(URL).flush({ items: lista });
     await p.asentar();
     return p;
@@ -87,6 +92,8 @@ describe('CrucesPage', () => {
       columnaIdentificacion: 'IDENTIFICACION',
       columnaDetalle: null,
       aplicaA: 'AMBOS',
+      alertaNovedad: 'NINGUNA',
+      causalCodigo: null,
     });
     r.flush(estructura({ id: 3 }), { status: 201, statusText: 'Creado' });
     await asentar();

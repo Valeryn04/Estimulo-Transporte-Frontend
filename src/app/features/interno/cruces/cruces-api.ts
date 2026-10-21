@@ -16,6 +16,13 @@ export class CrucesApi {
     return this.http.get<{ items: EstructuraCruce[] }>(CRUCES).pipe(map((r) => r.items));
   }
 
+  /** Causales de revocatoria que una estructura puede sugerir. */
+  causales(): Observable<{ codigo: string; nombre: string }[]> {
+    return this.http
+      .get<{ items: { codigo: string; nombre: string }[] }>(`${CRUCES}/causales`)
+      .pipe(map((r) => r.items));
+  }
+
   crear(d: DatosEstructuraCruce): Observable<EstructuraCruce> {
     return this.http.post<EstructuraCruce>(CRUCES, d);
   }

@@ -1,0 +1,160 @@
+<div class="encabezado">
+  <h1>Alertas de cruce</h1>
+  <a class="boton secundario" routerLink="/interno/novedades">Novedades de los beneficios</a>
+</div>
+<p class="intro">
+  Las coincidencias de los archivos de otras entidades (defunciones, uso de tarjetas, apoyos
+  incompatibles) con los beneficios vigentes. Analícelas antes de actuar: una alerta nunca finaliza
+  ni cambia un beneficio.
+</p>
+
+@if (mensaje()) {
+  <p class="aviso exito" role="status">{{ mensaje() }}</p>
+}
+@if (error()) {
+  <p class="aviso error" role="alert">{{ error() }}</p>
+}
+
+<form class="tarjeta filtros" (submit)="$event.preventDefault(); buscar()" role="search">
+  <div class="campo-simple">
+    <label for="estado-alerta">Estado</label>
+    <select id="estado-alerta" [formControl]="estado" (change)="buscar()">
+      <option value="">Todas</option>
+      @for (o of opciones; track o) {
+        <option [value]="o">{{ nombres[o] }}</option>
+      }
+    </select>
+  </div>
+</form>
+
+@if (cargando() && !datos()) {
+  <p role="status">Cargando…</p>
+} @else if (datos(); as d) {
+  <p class="total" role="status">{{ d.total }} alerta(s).</p>
+  <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Alertas de cruce">
+    <table class="tabla">
+      <caption class="solo-lectores">
+        Alertas generadas por los cruces
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Beneficio</th>
+          <th scope="col">Cruce</th>
+          <th scope="col">Qué se encontró</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (a of d.items; track a.id) {
+          <tr>
+            <th scope="row">
+              {{ a.radicado }}
+              <small>{{ a.pcdNombre }}</small>
+            </th>
+            <td>
+              {{ a.estructura }}
+              <small>{{ a.creadaAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+            </td>
+            <td class="detalle">{{ a.detalle }}</td>
+            <td>
+              <span
+                class="etiqueta"
+                [class.mal]="a.estado === 'PENDIENTE'"
+                [class.ok]="a.estado === 'DESCARTADA'"
+              >
+                {{ nombres[a.estado] }}
+              </span>
+              @if (a.analizadaPor) {
+                <small>{{ a.analizadaPor }} · {{ a.analizadaAt | date: 'dd/MM/yyyy' }}</small>
+              }
+              @if (a.observacion) {
+                <small>{{ a.observacion }}</small>
+              }
+              @if (a.revocatoriaId) {
+                <a [routerLink]="['/interno/novedades/revocatorias', a.revocatoriaId]"
+                  >Ver la revocatoria</a
+                >
+              }
+            </td>
+            <td>
+              @if (a.estado === 'PENDIENTE' && puedeGestionar()) {
+                <button type="button" class="enlace" (click)="abrir(a)">
+                  Analizar<span class="solo-lectores"> la alerta de {{ a.radicado }}</span>
+                </button>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5">No hay alertas con ese estado.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (totalPaginas() > 1) {
+    <nav class="paginacion" aria-label="Paginación">
+      <button
+        type="button"
+        class="boton secundario"
+        [disabled]="pagina() <= 1"
+        (click)="buscar(pagina() - 1)"
+      >
+        Anterior
+      </button>
+      <span>Página {{ pagina() }} de {{ totalPaginas() }}</span>
+      <button
+        type="button"
+        class="boton secundario"
+        [disabled]="pagina() >= totalPaginas()"
+        (click)="buscar(pagina() + 1)"
+      >
+        Siguiente
+      </button>
+    </nav>
+  }
+}
+
+<app-dialogo
+  [titulo]="'Analizar la alerta de ' + (analizando()?.radicado ?? '')"
+  [abierto]="analizando() !== null"
+  (cierra)="cerrar()"
+>
+  @if (analizando(); as a) {
+    <p>{{ a.detalle }}</p>
+  }
+  <form [formGroup]="form" (ngSubmit)="analizar()" novalidate>
+    <div class="campo-simple">
+      <label for="alerta-accion">Qué se hace con esta alerta</label>
+      <select id="alerta-accion" formControlName="accion">
+        <option value="DESCARTAR">Descartarla: no hay nada que actuar</option>
+        <option value="INICIAR_REVOCATORIA">Iniciar la revocatoria (con debido proceso)</option>
+      </select>
+    </div>
+    <div class="campo-simple">
+      <label for="alerta-obs">Análisis realizado</label>
+      <textarea id="alerta-obs" rows="3" formControlName="observacion" maxlength="1000"></textarea>
+    </div>
+    @if (form.controls.accion.value === 'INICIAR_REVOCATORIA') {
+      <div class="campo-simple">
+        <label for="alerta-archivo">Evidencia (PDF, JPG o PNG)</label>
+        <input
+          id="alerta-archivo"
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png"
+          (change)="elegirArchivo($event)"
+        />
+      </div>
+    }
+    @if (errorDialogo()) {
+      <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
+    }
+    <div class="acciones">
+      <button type="submit" class="boton" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando…' : 'Registrar el análisis' }}
+      </button>
+      <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>
+    </div>
+  </form>
+</app-dialogo>

@@ -59,6 +59,34 @@ export const internoRoutes: Routes = [
           import('./asignacion/asignacion/asignacion-page').then((m) => m.AsignacionPage),
       },
       {
+        path: 'novedades',
+        title: `Novedades · ${TITULO}`,
+        canActivate: [permisoGuard(PERMISO.novedadesVer)],
+        loadComponent: () =>
+          import('./novedades/resumen/novedades-page').then((m) => m.NovedadesPage),
+      },
+      {
+        path: 'novedades/revocatorias',
+        title: `Revocatorias · ${TITULO}`,
+        canActivate: [permisoGuard(PERMISO.novedadesVer)],
+        loadComponent: () =>
+          import('./novedades/revocatorias/revocatorias-page').then((m) => m.RevocatoriasPage),
+      },
+      {
+        path: 'novedades/revocatorias/:id',
+        title: `Revocatoria · ${TITULO}`,
+        canActivate: [permisoGuard(PERMISO.novedadesVer)],
+        loadComponent: () =>
+          import('./novedades/revocatorias/revocatorias-page').then((m) => m.RevocatoriasPage),
+      },
+      {
+        path: 'novedades/alertas',
+        title: `Alertas de cruce · ${TITULO}`,
+        canActivate: [permisoGuard(PERMISO.novedadesVer)],
+        loadComponent: () =>
+          import('./novedades/alertas/alertas-cruce-page').then((m) => m.AlertasCrucePage),
+      },
+      {
         path: 'admin/cupos',
         title: `Cupos y presupuesto · ${TITULO}`,
         canActivate: [permisoGuard(PERMISO.cupos, PERMISO.asignacionVer)],

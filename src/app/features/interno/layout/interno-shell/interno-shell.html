@@ -50,6 +50,18 @@
       <a routerLink="/interno/validacion" routerLinkActive="activo">Bandeja de validación</a>
     }
 
+    @if (sesion.tiene(PERMISO.novedadesVer)) {
+      <p class="grupo">Novedades y revocatoria</p>
+      <a
+        routerLink="/interno/novedades"
+        routerLinkActive="activo"
+        [routerLinkActiveOptions]="{ exact: true }"
+        >Novedades de los beneficios</a
+      >
+      <a routerLink="/interno/novedades/revocatorias" routerLinkActive="activo">Revocatorias</a>
+      <a routerLink="/interno/novedades/alertas" routerLinkActive="activo">Alertas de cruce</a>
+    }
+
     @if (sesion.tieneAlguno(PERMISO.asignacionVer, PERMISO.cupos)) {
       <p class="grupo">Asignación</p>
       <a routerLink="/interno/asignacion" routerLinkActive="activo">Asignación del beneficio</a>

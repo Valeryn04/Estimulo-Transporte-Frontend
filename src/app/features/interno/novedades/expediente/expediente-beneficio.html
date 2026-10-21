@@ -1,0 +1,221 @@
+<app-dialogo
+  [titulo]="'Novedades del beneficio' + (datos() ? ' · ' + datos()!.beneficio.radicado : '')"
+  [abierto]="beneficioId() !== null"
+  (cierra)="cierra.emit()"
+>
+  @if (error()) {
+    <p class="aviso error" role="alert">{{ error() }}</p>
+  }
+  @if (mensaje()) {
+    <p class="aviso exito" role="status">{{ mensaje() }}</p>
+  }
+  @if (datos(); as d) {
+    <p>
+      {{ d.beneficio.pcdNombre }} ·
+      <span
+        class="etiqueta"
+        [class.ok]="d.beneficio.estado === 'ACTIVO'"
+        [class.mal]="d.beneficio.estado !== 'ACTIVO'"
+      >
+        {{ estados[d.beneficio.estado] }}
+      </span>
+    </p>
+
+    <h3>Historial de novedades</h3>
+    <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Historial de novedades">
+      <table class="tabla">
+        <caption class="solo-lectores">
+          Bloqueos, suspensiones y reactivaciones
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Novedad</th>
+            <th scope="col">Fecha efectiva</th>
+            <th scope="col">Responsable</th>
+            <th scope="col">Evidencia</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (n of d.novedades; track n.id) {
+            <tr>
+              <th scope="row">
+                {{ n.tipoNombre }}
+                @if (n.causal) {
+                  <small>{{ n.causal }}</small>
+                }
+                @if (n.observacion) {
+                  <small>{{ n.observacion }}</small>
+                }
+                @if (n.abierta) {
+                  <small class="abierta">Sin levantar</small>
+                }
+              </th>
+              <td>
+                {{ n.fechaEfectiva }}
+                @if (n.levantamientoProgramado) {
+                  <small>Levantamiento programado: {{ n.levantamientoProgramado }}</small>
+                }
+              </td>
+              <td>
+                {{ n.responsable }}
+                <small>{{ n.creadaAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+              </td>
+              <td>
+                <button type="button" class="enlace" (click)="verEvidencia(n)">
+                  {{ n.evidencia.nombre }}
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="4">Este beneficio no tiene novedades.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (d.revocatorias.length > 0) {
+      <h3>Revocatorias</h3>
+      <ul class="revocatorias">
+        @for (r of d.revocatorias; track r.id) {
+          <li>
+            <a [routerLink]="['/interno/novedades/revocatorias', r.id]">{{ r.causal }}</a>
+            · {{ estadoRev[r.estado] }}
+            @if (r.resultado) {
+              ({{ r.resultado === 'REVOCADA' ? 'beneficio revocado' : 'archivada' }})
+            }
+          </li>
+        }
+      </ul>
+    }
+
+    @if (puedeGestionar() && tiposPosibles().length > 0) {
+      <h3>Registrar una novedad</h3>
+      <form [formGroup]="form" (ngSubmit)="registrar()" novalidate>
+        <div class="rejilla">
+          <div class="campo-simple">
+            <label for="nov-tipo">Novedad</label>
+            <select id="nov-tipo" formControlName="tipo" (change)="cambiarTipo()">
+              @for (t of tiposPosibles(); track t.valor) {
+                <option [value]="t.valor">{{ t.nombre }}</option>
+              }
+            </select>
+          </div>
+          @if (tipo() !== 'LEVANTAMIENTO') {
+            <div class="campo-simple">
+              <label for="nov-causal">Causal</label>
+              <select id="nov-causal" formControlName="causalId">
+                <option [ngValue]="null">Elija una causal</option>
+                @for (c of d.causales.bloqueo; track c.id) {
+                  <option [ngValue]="c.id">{{ c.nombre }}</option>
+                }
+              </select>
+            </div>
+          }
+          <app-campo
+            idCampo="nov-fecha"
+            etiqueta="Fecha efectiva"
+            [control]="form.controls.fechaEfectiva"
+          >
+            <input
+              appCampoControl
+              type="date"
+              formControlName="fechaEfectiva"
+              [min]="d.beneficio.asignadoDia"
+            />
+          </app-campo>
+          @if (tipo() !== 'LEVANTAMIENTO') {
+            <app-campo
+              idCampo="nov-programada"
+              etiqueta="Levantamiento programado (opcional)"
+              ayuda="Al llegar esa fecha se le avisa al gestor para que confirme la reactivación."
+              [control]="form.controls.levantamientoProgramado"
+            >
+              <input appCampoControl type="date" formControlName="levantamientoProgramado" />
+            </app-campo>
+          }
+        </div>
+        <app-campo
+          idCampo="nov-obs"
+          [etiqueta]="tipo() === 'LEVANTAMIENTO' ? 'Observación (obligatoria)' : 'Observación'"
+          [control]="form.controls.observacion"
+        >
+          <textarea
+            appCampoControl
+            formControlName="observacion"
+            rows="2"
+            maxlength="1000"
+          ></textarea>
+        </app-campo>
+        <div class="campo-simple">
+          <label for="nov-evidencia">Evidencia de soporte (PDF, JPG o PNG)</label>
+          <input
+            id="nov-evidencia"
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            (change)="elegirEvidencia($event)"
+          />
+        </div>
+        <p class="ayuda">
+          Se envía un correo a la persona con la novedad, la causal y la fecha efectiva.
+        </p>
+        <div class="acciones">
+          <button type="submit" class="boton" [disabled]="guardando()">
+            {{ guardando() ? 'Guardando…' : 'Registrar la novedad' }}
+          </button>
+        </div>
+      </form>
+    }
+
+    @if (puedeRevocar()) {
+      <h3>Iniciar una revocatoria</h3>
+      <p class="ayuda">
+        La revocatoria sigue el debido proceso: traslado de las razones, descargos y acto
+        administrativo motivado. Solo con el acto el beneficio se finaliza.
+      </p>
+      <form [formGroup]="formRev" (ngSubmit)="iniciarRevocatoria()" novalidate>
+        <div class="campo-simple">
+          <label for="rev-causal">Causal</label>
+          <select id="rev-causal" formControlName="causalId">
+            <option [ngValue]="null">Elija una causal</option>
+            @for (c of d.causales.revocatoria; track c.id) {
+              <option [ngValue]="c.id">{{ c.nombre }}</option>
+            }
+          </select>
+        </div>
+        <app-campo
+          idCampo="rev-desc"
+          etiqueta="Hechos que la sustentan"
+          [control]="formRev.controls.descripcion"
+        >
+          <textarea
+            appCampoControl
+            formControlName="descripcion"
+            rows="3"
+            maxlength="2000"
+          ></textarea>
+        </app-campo>
+        <div class="campo-simple">
+          <label for="rev-evidencia">Evidencia (PDF, JPG o PNG)</label>
+          <input
+            id="rev-evidencia"
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            (change)="elegirEvidenciaRev($event)"
+          />
+        </div>
+        <div class="acciones">
+          <button type="submit" class="boton secundario" [disabled]="guardando()">
+            Iniciar la revocatoria
+          </button>
+        </div>
+      </form>
+    }
+  } @else if (!error()) {
+    <p role="status">Cargando…</p>
+  }
+  <div class="acciones">
+    <button type="button" class="boton secundario" (click)="cierra.emit()">Cerrar</button>
+  </div>
+</app-dialogo>
