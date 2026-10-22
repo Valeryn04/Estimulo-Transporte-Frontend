@@ -39,7 +39,7 @@ const archivo = (el: HTMLElement, id: string) => {
 };
 
 describe('finalización y actualización de datos del beneficio (RF-BEN-05)', () => {
-  async function montar(d = expediente(), puede = true) {
+  async function montar(d = expediente(), puede = true, accion = '') {
     const p = montarPantalla(
       ExpedienteBeneficio,
       { beneficioId: 5, puedeGestionar: puede },
@@ -48,12 +48,19 @@ describe('finalización y actualización de datos del beneficio (RF-BEN-05)', ()
     await p.asentar();
     p.ctrl.expectOne(`${URL}/beneficios/5`).flush(d);
     await p.asentar();
+    // Se muestra un solo formulario a la vez: primero se elige qué hacer.
+    if (accion) {
+      [...p.el.querySelectorAll<HTMLButtonElement>('.elegir button')]
+        .find((b) => b.textContent?.includes(accion))!
+        .click();
+      await p.asentar();
+    }
     return p;
   }
 
   describe('finalizar', () => {
     it('exige causal, justificación, soporte y la confirmación antes de enviar', async () => {
-      const p = await montar();
+      const p = await montar(undefined, true, 'Finalizar el beneficio');
       p.enviar('app-finalizar-beneficio form');
       await p.asentar();
       p.ctrl.expectNone((r) => r.method === 'POST');
@@ -70,7 +77,7 @@ describe('finalización y actualización de datos del beneficio (RF-BEN-05)', ()
     });
 
     it('finaliza el beneficio con soporte y vuelve a cargar el expediente', async () => {
-      const p = await montar();
+      const p = await montar(undefined, true, 'Finalizar el beneficio');
       const causal = p.el.querySelector<HTMLSelectElement>('#fin-causal')!;
       causal.selectedIndex = 2;
       causal.dispatchEvent(new Event('change'));
@@ -101,7 +108,7 @@ describe('finalización y actualización de datos del beneficio (RF-BEN-05)', ()
     });
 
     it('muestra el error de la API', async () => {
-      const p = await montar();
+      const p = await montar(undefined, true, 'Finalizar el beneficio');
       const causal = p.el.querySelector<HTMLSelectElement>('#fin-causal')!;
       causal.selectedIndex = 1;
       causal.dispatchEvent(new Event('change'));
@@ -127,7 +134,7 @@ describe('finalización y actualización de datos del beneficio (RF-BEN-05)', ()
 
   describe('actualizar datos', () => {
     it('cambia el correo con justificación y soporte', async () => {
-      const p = await montar();
+      const p = await montar(undefined, true, 'Actualizar datos de la persona');
       p.escribir('#dat-dato', 'CORREO');
       await p.asentar();
       p.escribir('#dat-correo', 'nuevo@correo.com');
@@ -149,7 +156,7 @@ describe('finalización y actualización de datos del beneficio (RF-BEN-05)', ()
     });
 
     it('para el cuidador pide su identificación y avisa que falta su tarjeta', async () => {
-      const p = await montar();
+      const p = await montar(undefined, true, 'Actualizar datos de la persona');
       p.escribir('#dat-dato', 'CUIDADOR');
       await p.asentar();
       expect(p.el.querySelector('#dat-numero')).not.toBeNull();
@@ -157,7 +164,7 @@ describe('finalización y actualización de datos del beneficio (RF-BEN-05)', ()
     });
 
     it('sin soporte no envía', async () => {
-      const p = await montar();
+      const p = await montar(undefined, true, 'Actualizar datos de la persona');
       p.escribir('#dat-dato', 'CORREO');
       await p.asentar();
       p.escribir('#dat-correo', 'nuevo@correo.com');

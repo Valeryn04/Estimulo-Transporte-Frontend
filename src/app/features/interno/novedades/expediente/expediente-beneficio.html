@@ -107,7 +107,38 @@
       </ul>
     }
 
-    @if (puedeGestionar() && tiposPosibles().length > 0) {
+    @if (puedeGestionar() && !accion()) {
+      <h3>¿Qué desea hacer?</h3>
+      <div class="elegir" role="group" aria-label="Acciones sobre el beneficio">
+        @if (tiposPosibles().length > 0) {
+          <button type="button" class="boton secundario" (click)="accion.set('NOVEDAD')">
+            {{ textoNovedad() }}
+          </button>
+        }
+        @if (puedeFinalizar()) {
+          <button type="button" class="boton secundario" (click)="accion.set('DATOS')">
+            Actualizar datos de la persona
+          </button>
+        }
+        @if (puedeRevocar()) {
+          <button type="button" class="boton secundario" (click)="accion.set('REVOCATORIA')">
+            Iniciar una revocatoria
+          </button>
+        }
+        @if (puedeFinalizar()) {
+          <button type="button" class="boton secundario" (click)="accion.set('FINALIZAR')">
+            Finalizar el beneficio
+          </button>
+        }
+      </div>
+    }
+    @if (accion()) {
+      <button type="button" class="enlace volver" (click)="accion.set(null)">
+        ← Volver a las opciones
+      </button>
+    }
+
+    @if (accion() === 'NOVEDAD' && tiposPosibles().length > 0) {
       <h3>
         Registrar una novedad
         <app-ayuda
@@ -196,7 +227,7 @@
       </form>
     }
 
-    @if (puedeRevocar()) {
+    @if (accion() === 'REVOCATORIA' && puedeRevocar()) {
       <h3>
         Iniciar una revocatoria
         <app-ayuda
@@ -204,6 +235,10 @@
           texto="La revocatoria sigue el debido proceso: traslado de las razones, descargos y acto administrativo motivado. Solo con el acto el beneficio se finaliza."
         />
       </h3>
+      <p class="aviso advertencia" role="note">
+        Esto abre un trámite con debido proceso: la persona será notificada y podrá presentar
+        descargos. El beneficio solo se finaliza si se emite un acto administrativo que lo revoque.
+      </p>
       <form [formGroup]="formRev" (ngSubmit)="iniciarRevocatoria()" novalidate>
         <div class="campo-simple">
           <label for="rev-causal">Causal</label>
@@ -251,8 +286,10 @@
       </form>
     }
 
-    @if (puedeFinalizar()) {
+    @if (accion() === 'DATOS' && puedeFinalizar()) {
       <app-actualizar-datos [beneficioId]="d.beneficio.id" (hecho)="alHacer($event)" />
+    }
+    @if (accion() === 'FINALIZAR' && puedeFinalizar()) {
       <app-finalizar-beneficio
         [beneficioId]="d.beneficio.id"
         [causales]="d.causales.finalizacion"

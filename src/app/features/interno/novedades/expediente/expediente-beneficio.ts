@@ -61,6 +61,10 @@ export class ExpedienteBeneficio {
   protected readonly estados = NOMBRE_ESTADO_BENEFICIO;
   protected readonly estadoRev = NOMBRE_ESTADO_REVOCATORIA;
   protected readonly tipo = signal<TipoNovedad>('BLOQUEO');
+  /** Qué se está haciendo: se muestra un solo formulario a la vez. */
+  protected readonly accion = signal<'NOVEDAD' | 'DATOS' | 'REVOCATORIA' | 'FINALIZAR' | null>(
+    null,
+  );
   protected readonly nombreDato = NOMBRE_DATO;
   protected readonly puedeFinalizar = computed(
     () => this.puedeGestionar() && this.datos()?.beneficio.estado !== 'FINALIZADO',
@@ -80,6 +84,12 @@ export class ExpedienteBeneficio {
     }
     return [];
   });
+  /** Nombre del botón de la novedad según el estado: reactivar un beneficio detenido o bloquear/suspender uno activo. */
+  protected readonly textoNovedad = computed(() =>
+    this.tiposPosibles().some((t) => t.valor === 'LEVANTAMIENTO')
+      ? 'Reactivar el beneficio'
+      : 'Bloquear o suspender',
+  );
   protected readonly hayRevocatoriaAbierta = computed(() =>
     (this.datos()?.revocatorias ?? []).some((r) => r.estado !== 'DECIDIDA'),
   );
@@ -124,6 +134,7 @@ export class ExpedienteBeneficio {
     this.mensaje.set('');
     this.evidencia.set(null);
     this.evidenciaRev.set(null);
+    this.accion.set(null);
     try {
       const d = await firstValueFrom(this.api.expediente(id));
       this.datos.set(d);

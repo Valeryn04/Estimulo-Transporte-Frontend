@@ -112,7 +112,7 @@ describe('NovedadesPage', () => {
 });
 
 describe('ExpedienteBeneficio', () => {
-  async function montar(d: ExpedienteNovedades = expediente(), puede = true) {
+  async function montar(d: ExpedienteNovedades = expediente(), puede = true, accion = '') {
     const p = montarPantalla(
       ExpedienteBeneficio,
       { beneficioId: 5, puedeGestionar: puede },
@@ -121,18 +121,48 @@ describe('ExpedienteBeneficio', () => {
     await p.asentar();
     p.ctrl.expectOne(`${URL}/beneficios/5`).flush(d);
     await p.asentar();
+    // Se muestra un solo formulario a la vez: primero se elige qué hacer.
+    if (accion) {
+      [...p.el.querySelectorAll<HTMLButtonElement>('.elegir button')]
+        .find((b) => b.textContent?.includes(accion))!
+        .click();
+      await p.asentar();
+    }
     return p;
   }
 
+  it('primero se elige qué hacer y solo se muestra el formulario de esa acción', async () => {
+    const p = await montar();
+    const botones = [...p.el.querySelectorAll<HTMLButtonElement>('.elegir button')].map((b) =>
+      b.textContent!.trim(),
+    );
+    expect(botones).toEqual([
+      'Bloquear o suspender',
+      'Actualizar datos de la persona',
+      'Iniciar una revocatoria',
+      'Finalizar el beneficio',
+    ]);
+    expect(p.el.querySelector('form')).toBeNull();
+    [...p.el.querySelectorAll<HTMLButtonElement>('.elegir button')][2]!.click();
+    await p.asentar();
+    expect(p.el.querySelector('#rev-causal')).not.toBeNull();
+    expect(p.el.querySelector('#nov-tipo')).toBeNull();
+    expect(p.el.textContent).toContain('debido proceso');
+    p.el.querySelector<HTMLButtonElement>('.volver')!.click();
+    await p.asentar();
+    expect(p.el.querySelector('form')).toBeNull();
+    expect(p.el.querySelector('.elegir')).not.toBeNull();
+  });
+
   it('un beneficio activo se puede bloquear o suspender, y un bloqueado solo reactivar', async () => {
-    const a = await montar();
+    const a = await montar(undefined, true, 'Bloquear o suspender');
     expect(
       [...a.el.querySelectorAll<HTMLOptionElement>('#nov-tipo option')].map((o) => o.value),
     ).toEqual(['BLOQUEO', 'SUSPENSION']);
   });
 
   it('exige causal y evidencia, y registra la novedad con la fecha efectiva', async () => {
-    const p = await montar();
+    const p = await montar(undefined, true, 'Bloquear o suspender');
     p.enviar('dialog form');
     await p.asentar();
     p.ctrl.expectNone((r) => r.method === 'POST');
@@ -178,13 +208,16 @@ describe('ExpedienteBeneficio', () => {
     await p.asentar();
     expect(p.el.querySelector('.aviso.exito')?.textContent).toContain('comunicada');
     expect(p.el.querySelector('tbody')?.textContent).toContain('Sin levantar');
-    expect(
-      [...p.el.querySelectorAll<HTMLOptionElement>('#nov-tipo option')].map((o) => o.value),
-    ).toEqual(['LEVANTAMIENTO']);
+    // Un beneficio bloqueado solo se puede reactivar.
+    const opciones = [...p.el.querySelectorAll<HTMLButtonElement>('.elegir button')].map((b) =>
+      b.textContent!.trim(),
+    );
+    expect(opciones).toContain('Reactivar el beneficio');
+    expect(opciones).not.toContain('Bloquear o suspender');
   });
 
   it('muestra el error de la API al registrar', async () => {
-    const p = await montar();
+    const p = await montar(undefined, true, 'Bloquear o suspender');
     const causal = p.el.querySelector<HTMLSelectElement>('#nov-causal')!;
     causal.selectedIndex = 1;
     causal.dispatchEvent(new Event('change'));
@@ -201,14 +234,14 @@ describe('ExpedienteBeneficio', () => {
   });
 
   it('inicia una revocatoria con causal, hechos y evidencia', async () => {
-    const p = await montar();
+    const p = await montar(undefined, true, 'Iniciar una revocatoria');
     const causal = p.el.querySelector<HTMLSelectElement>('#rev-causal')!;
     causal.selectedIndex = 1;
     causal.dispatchEvent(new Event('change'));
     p.escribir('#rev-desc', 'La tarjeta fue usada por una persona distinta');
     archivo(p.el, '#rev-evidencia');
     const botones = [...p.el.querySelectorAll<HTMLFormElement>('dialog form')];
-    botones[1]!.dispatchEvent(new Event('submit'));
+    botones[0]!.dispatchEvent(new Event('submit'));
     const r = p.ctrl.expectOne(`${URL}/beneficios/5/revocatorias`);
     expect(JSON.parse((r.request.body as FormData).get('datos') as string)).toEqual({
       causalId: 21,
