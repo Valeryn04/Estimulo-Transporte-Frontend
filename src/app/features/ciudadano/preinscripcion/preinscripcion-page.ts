@@ -28,6 +28,8 @@ import { Confirmar } from '../../../shared/alertas/confirmar';
 
 /** Campos que se muestran en el resumen de errores, en el orden del formulario. */
 const CAMPOS = [
+  ['diligencia', 'diligencia', '¿Quién diligencia este formulario?'],
+  ['agregaCuidador', 'agrega-cuidador', '¿Va a agregar un cuidador?'],
   ['pcdNombre', 'pcd-nombre', 'Nombre completo de la persona con discapacidad'],
   ['pcdTipoIdentificacionId', 'pcd-tipo', 'Tipo de identificación de la persona con discapacidad'],
   ['pcdNumero', 'pcd-numero', 'Número de identificación de la persona con discapacidad'],
@@ -102,8 +104,12 @@ export class PreinscripcionPage implements OnInit {
       nonNullable: true,
       validators: [Validators.required, numeroSegunTipo(() => this.codigoPcd())],
     }),
-    // Marcado cuando la persona no tiene cuidador: entonces no se piden los datos del cuidador.
-    sinCuidador: new FormControl(false, { nonNullable: true }),
+    // Primera pregunta: quién llena el formulario. De eso depende si el cuidador es obligatorio.
+    diligencia: new FormControl<'PCD' | 'CUIDADOR' | null>(null, [Validators.required]),
+    // Solo la pregunta la persona con discapacidad: ¿agregará un cuidador? Si responde que sí, sus datos son obligatorios.
+    agregaCuidador: new FormControl<boolean | null>({ value: null, disabled: true }, [
+      Validators.required,
+    ]),
     cuidadorNombre: new FormControl('', {
       nonNullable: true,
       validators: [
@@ -149,6 +155,14 @@ export class PreinscripcionPage implements OnInit {
     this.form.controls.cuidadorTipoIdentificacionId,
   );
   private readonly localidad: Signal<number | null> = valorDe(this.form.controls.localidadId);
+  protected readonly diligencia = valorDe(this.form.controls.diligencia);
+  protected readonly agregaCuidador = valorDe(this.form.controls.agregaCuidador);
+  /** El cuidador es obligatorio si quien llena es el cuidador, o si la persona con discapacidad dijo que lo agregará. */
+  protected readonly tieneCuidador = computed(
+    () =>
+      this.diligencia() === 'CUIDADOR' ||
+      (this.diligencia() === 'PCD' && this.agregaCuidador() === true),
+  );
 
   protected readonly codigoPcd: Signal<string | undefined> = computed(() =>
     this.codigo(this.tipoPcd()),
@@ -177,22 +191,35 @@ export class PreinscripcionPage implements OnInit {
     this.form.controls.cuidadorTipoIdentificacionId.valueChanges.subscribe(() =>
       this.form.controls.cuidadorNumero.updateValueAndValidity(),
     );
-    this.form.controls.sinCuidador.valueChanges.subscribe((sin) => {
-      for (const c of [
-        this.form.controls.cuidadorNombre,
-        this.form.controls.cuidadorTipoIdentificacionId,
-        this.form.controls.cuidadorNumero,
-      ]) {
-        if (sin) c.disable();
-        else c.enable();
+    // Las preguntas del cuidador se piden (y se validan) solo cuando corresponde.
+    this.form.controls.diligencia.valueChanges.subscribe((quien) => {
+      const agrega = this.form.controls.agregaCuidador;
+      if (quien === 'PCD') agrega.enable();
+      else {
+        agrega.reset(null);
+        agrega.disable();
       }
+      this.alternarCuidador();
     });
+    this.form.controls.agregaCuidador.valueChanges.subscribe(() => this.alternarCuidador());
+    this.alternarCuidador();
     this.form.controls.barrioId.disable(); // se habilita al elegir la localidad
     this.form.controls.localidadId.valueChanges.subscribe((localidad) => {
       this.form.controls.barrioId.reset(null);
       if (localidad) this.form.controls.barrioId.enable();
       else this.form.controls.barrioId.disable();
     });
+  }
+
+  private alternarCuidador(): void {
+    const f = this.form.controls;
+    const pide =
+      f.diligencia.value === 'CUIDADOR' ||
+      (f.diligencia.value === 'PCD' && f.agregaCuidador.value === true);
+    for (const c of [f.cuidadorNombre, f.cuidadorTipoIdentificacionId, f.cuidadorNumero]) {
+      if (pide) c.enable({ emitEvent: false });
+      else c.disable({ emitEvent: false });
+    }
   }
 
   private codigo(id: number | null): string | undefined {
@@ -276,8 +303,9 @@ export class PreinscripcionPage implements OnInit {
           pcdNombre: v.pcdNombre.trim(),
           pcdTipoIdentificacionId: v.pcdTipoIdentificacionId as number,
           pcdNumero: v.pcdNumero.trim(),
-          tieneCuidador: !v.sinCuidador,
-          ...(v.sinCuidador
+          diligenciadaPor: v.diligencia as 'PCD' | 'CUIDADOR',
+          tieneCuidador: this.tieneCuidador(),
+          ...(!this.tieneCuidador()
             ? {}
             : {
                 cuidadorNombre: v.cuidadorNombre.trim(),

@@ -35,7 +35,15 @@ describe('PreinscripcionPage', () => {
       s.value = o.value;
       s.dispatchEvent(new Event('change'));
     };
+    const elegirRadio = async (control: string, indice: number) => {
+      const radios = p.el.querySelectorAll<HTMLInputElement>(`input[formcontrolname="${control}"]`);
+      radios[indice]!.click();
+      await p.asentar();
+    };
+    /** Por defecto: quien llena es la persona con discapacidad y sí agregará un cuidador. */
     const llenar = async () => {
+      await elegirRadio('diligencia', 0);
+      await elegirRadio('agregaCuidador', 0);
       p.escribir('#pcd-nombre', 'María Fernanda Pérez');
       elegir('#pcd-tipo', 'CC');
       p.escribir('#pcd-numero', '1.234.567');
@@ -48,7 +56,7 @@ describe('PreinscripcionPage', () => {
       await p.asentar();
     };
     const enviar = () => p.enviar('form');
-    return { ...p, elegir, llenar, enviar };
+    return { ...p, elegir, elegirRadio, llenar, enviar };
   }
 
   it('muestra la aclaración de que la preinscripción no equivale a la aprobación', async () => {
@@ -100,7 +108,7 @@ describe('PreinscripcionPage', () => {
     expect(items).toContain(
       'Autorización de tratamiento de datos: debe aceptarla para poder enviar la preinscripción',
     );
-    expect(resumen.querySelector('a')!.getAttribute('href')).toBe('#pcd-nombre');
+    expect(resumen.querySelector('a')!.getAttribute('href')).toBe('#diligencia');
     expect(el.querySelector('#pcd-nombre')?.getAttribute('aria-invalid')).toBe('true');
   });
 
@@ -172,22 +180,29 @@ describe('PreinscripcionPage', () => {
     });
   });
 
-  it('una persona sin cuidador no tiene que llenar sus datos y se envía sin ellos', async () => {
-    const { el, ctrl, llenar, enviar, asentar } = await montar();
+  it('la primera pregunta es quién diligencia; hasta responderla no se piden los datos del cuidador', async () => {
+    const { el } = await montar();
+    expect(el.querySelector('#diligencia')).not.toBeNull();
+    expect(el.querySelector('#cui-nombre')).toBeNull();
+    expect(el.querySelector('#agrega-cuidador')).toBeNull();
+  });
+
+  it('la persona con discapacidad responde si agregará cuidador; con «no» se envía sin sus datos', async () => {
+    const { el, ctrl, elegirRadio, llenar, enviar, asentar } = await montar();
     vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     await llenar();
-    const casilla = el.querySelector<HTMLInputElement>('#sin-cuidador')!;
-    casilla.click();
-    await asentar();
+    expect(el.querySelector('#cui-nombre')).not.toBeNull();
+    await elegirRadio('agregaCuidador', 1);
     expect(el.querySelector('#cui-nombre')).toBeNull();
     enviar();
+    await asentar();
     const req = ctrl.expectOne(`${API_BASE}/publico/preinscripciones`);
-    expect(req.request.body.tieneCuidador).toBe(false);
+    expect(req.request.body).toMatchObject({ diligenciadaPor: 'PCD', tieneCuidador: false });
     expect(req.request.body.cuidadorNumero).toBeUndefined();
     expect(req.request.body.cuidadorNombre).toBeUndefined();
   });
 
-  it('sin marcar «no tiene cuidador», los datos del cuidador siguen siendo obligatorios', async () => {
+  it('si la persona dice que agregará un cuidador, sus datos son obligatorios', async () => {
     const { el, ctrl, escribir, llenar, enviar, asentar } = await montar();
     await llenar();
     escribir('#cui-nombre', '');
@@ -195,6 +210,28 @@ describe('PreinscripcionPage', () => {
     await asentar();
     ctrl.expectNone((r) => r.method === 'POST');
     expect(el.querySelector('#cui-nombre-error')).not.toBeNull();
+  });
+
+  it('si quien llena es el cuidador, no se le pregunta si agregará uno: sus datos son obligatorios', async () => {
+    const { el, ctrl, elegirRadio, llenar, enviar, asentar } = await montar();
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    await llenar();
+    await elegirRadio('diligencia', 1);
+    expect(el.querySelector('#agrega-cuidador')).toBeNull();
+    expect(el.querySelector('#cui-nombre')).not.toBeNull();
+    enviar();
+    await asentar();
+    const req = ctrl.expectOne(`${API_BASE}/publico/preinscripciones`);
+    expect(req.request.body).toMatchObject({ diligenciadaPor: 'CUIDADOR', tieneCuidador: true });
+    expect(req.request.body.cuidadorNumero).toBe('98765432');
+  });
+
+  it('sin responder quién diligencia o si agregará cuidador no se puede enviar', async () => {
+    const { el, ctrl, enviar, asentar } = await montar();
+    enviar();
+    await asentar();
+    ctrl.expectNone((r) => r.method === 'POST');
+    expect(el.querySelector('#diligencia-error')?.textContent).toContain('elija una opción');
   });
 
   it('el correo se escribe dos veces: si son diferentes lo dice en el campo y no se envía', async () => {

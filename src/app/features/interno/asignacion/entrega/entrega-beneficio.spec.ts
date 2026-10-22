@@ -34,6 +34,7 @@ const detalle = (c: Partial<DetalleBeneficio> = {}): DetalleBeneficio => ({
     tiposTransporte: [{ id: 8, nombre: 'Transmetro' }],
     tiposIdentificacion: [{ id: 1, nombre: 'Cédula' }],
   },
+  sugerencias: { tipoTransporteId: 8, prefijoTarjeta: 'TM' },
   ...c,
 });
 
@@ -73,6 +74,7 @@ describe('EntregaBeneficio', () => {
             receptorTipoIdentificacion: 'Cédula',
             receptorNumero: '123456',
             funcionarioEntrega: 'Funcionaria',
+            terceroConAutorizacion: true,
             soporte: { nombre: 'acta.pdf', tamanoBytes: 100 },
             vigente: true,
             registradoPor: 'asignador',
@@ -86,6 +88,7 @@ describe('EntregaBeneficio', () => {
     expect(fila.textContent).toContain('******1234');
     expect(fila.textContent).toContain('Ana Gómez');
     expect(fila.textContent).toContain('Un tercero autorizado');
+    expect(fila.textContent).toContain('con autorización');
     expect(fila.textContent).toContain('acta.pdf');
     // Solo se puede elegir a quien falta.
     const roles = [...el.querySelectorAll<HTMLOptionElement>('#ent-rol option')].map(
@@ -104,14 +107,18 @@ describe('EntregaBeneficio', () => {
 
   it('registra la entrega a la persona con quien la recibe y envía los datos con el acta', async () => {
     const { el, ctrl, escribir, enviar, asentar } = await montar();
+    // El formulario trae listo el prefijo de la tarjeta y el transporte que la persona dijo usar.
+    expect(el.querySelector<HTMLInputElement>('#ent-tarjeta')!.value).toBe('TM');
+    expect(
+      el.querySelector<HTMLSelectElement>('#ent-transporte')!.selectedOptions[0]!.textContent,
+    ).toContain('Transmetro');
     escribir('#ent-tarjeta', 'TM00001234');
-    const t = el.querySelector<HTMLSelectElement>('#ent-transporte')!;
-    t.selectedIndex = 1;
-    t.dispatchEvent(new Event('change'));
     await asentar();
     expect(el.querySelector<HTMLInputElement>('#ent-fecha')!.value).toBe('2026-10-19');
     expect(el.querySelector<HTMLInputElement>('#ent-fecha')!.min).toBe('2026-10-05');
-    escribir('#ent-funcionario', 'Funcionaria de entrega');
+    // Quien entrega es quien tiene la sesión: no hay campo para escribirlo.
+    expect(el.querySelector('#ent-funcionario')).toBeNull();
+    expect(el.textContent).toContain('Persona de Prueba');
     enviar('dialog form');
     await asentar();
     // Falta el acta.
@@ -127,7 +134,6 @@ describe('EntregaBeneficio', () => {
       tipoTransporteId: 8,
       fechaEntrega: '2026-10-19',
       receptorTipo: 'PCD',
-      funcionarioEntrega: 'Funcionaria de entrega',
     });
     expect(form.get('archivo')).toBeInstanceOf(File);
     r.flush(detalle());
@@ -140,10 +146,6 @@ describe('EntregaBeneficio', () => {
   it('si recibe un tercero pide su nombre y su documento', async () => {
     const { el, ctrl, escribir, enviar, asentar } = await montar();
     escribir('#ent-tarjeta', 'TM00005678');
-    const t = el.querySelector<HTMLSelectElement>('#ent-transporte')!;
-    t.selectedIndex = 1;
-    t.dispatchEvent(new Event('change'));
-    escribir('#ent-funcionario', 'Funcionaria de entrega');
     const rec = el.querySelector<HTMLSelectElement>('#ent-receptor')!;
     rec.value = 'TERCERO';
     rec.dispatchEvent(new Event('change'));
@@ -155,6 +157,24 @@ describe('EntregaBeneficio', () => {
     tipo.dispatchEvent(new Event('change'));
     escribir('#ent-tercero-numero', '1234567');
     acta(el);
+    // Hay que decir si el tercero presentó la autorización; sin ella no se entrega.
+    enviar('dialog form');
+    await asentar();
+    ctrl.expectNone((r) => r.method === 'POST');
+    expect(el.querySelector('.aviso.error')?.textContent).toContain('autorización');
+    const aut = el.querySelectorAll<HTMLInputElement>(
+      'input[formcontrolname="terceroConAutorizacion"]',
+    );
+    aut[1]!.click();
+    await asentar();
+    expect(el.querySelector('fieldset.autorizacion')?.textContent).toContain(
+      'Sin la autorización firmada',
+    );
+    enviar('dialog form');
+    await asentar();
+    ctrl.expectNone((r) => r.method === 'POST');
+    aut[0]!.click();
+    await asentar();
     enviar('dialog form');
     const r = ctrl.expectOne(`${URL}/entregas`);
     expect(JSON.parse((r.request.body as FormData).get('datos') as string)).toMatchObject({
@@ -162,6 +182,7 @@ describe('EntregaBeneficio', () => {
       receptorNombre: 'Ana Gómez Vargas',
       receptorTipoIdentificacionId: 1,
       receptorNumero: '1234567',
+      terceroConAutorizacion: true,
     });
     r.flush(
       errorApi(

@@ -32,6 +32,8 @@ export interface DatosPreinscripcion {
   pcdNumero: string;
   /** Falso cuando la persona no tiene cuidador: entonces no se envían sus datos. */
   tieneCuidador: boolean;
+  /** Quién llenó el formulario. */
+  diligenciadaPor: 'PCD' | 'CUIDADOR';
   cuidadorNombre?: string;
   cuidadorTipoIdentificacionId?: number;
   cuidadorNumero?: string;

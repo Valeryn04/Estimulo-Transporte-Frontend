@@ -161,6 +161,8 @@ export interface EntregaRegistrada {
   receptorTipoIdentificacion: string | null;
   receptorNumero: string | null;
   funcionarioEntrega: string;
+  /** Solo si recibió un tercero: si presentó la autorización firmada. */
+  terceroConAutorizacion: boolean | null;
   soporte: { nombre: string; tamanoBytes: number };
   vigente: boolean;
   registradoPor: string;
@@ -187,6 +189,8 @@ export interface DetalleBeneficio {
     tiposTransporte: { id: number; nombre: string }[];
     tiposIdentificacion: { id: number; nombre: string }[];
   };
+  /** Lo que el formulario trae listo. */
+  sugerencias: { tipoTransporteId: number | null; prefijoTarjeta: string };
 }
 
 export interface DatosEntrega {
@@ -198,5 +202,5 @@ export interface DatosEntrega {
   receptorNombre?: string;
   receptorTipoIdentificacionId?: number;
   receptorNumero?: string;
-  funcionarioEntrega: string;
+  terceroConAutorizacion?: boolean;
 }

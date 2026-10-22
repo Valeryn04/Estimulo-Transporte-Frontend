@@ -54,6 +54,60 @@
     <form [formGroup]="form" (ngSubmit)="enviar()" novalidate>
       <fieldset class="seccion">
         <legend>
+          ¿Quién diligencia este formulario?
+          <app-ayuda
+            etiqueta="Quién diligencia el formulario"
+            texto="Si es la persona con discapacidad quien lo llena, le preguntaremos si agregará un cuidador. Si lo llena el cuidador, sus datos son obligatorios."
+          />
+        </legend>
+        <app-campo
+          tipo="grupo"
+          idCampo="diligencia"
+          etiqueta="Quién llena el formulario"
+          [control]="form.controls.diligencia"
+          [mensajes]="{ required: 'elija una opción' }"
+        >
+          <div class="opciones">
+            <label class="opcion">
+              <input id="diligencia" type="radio" formControlName="diligencia" value="PCD" />
+              <span>Soy la persona con discapacidad</span>
+            </label>
+            <label class="opcion">
+              <input type="radio" formControlName="diligencia" value="CUIDADOR" />
+              <span>Soy el cuidador de la persona con discapacidad</span>
+            </label>
+          </div>
+        </app-campo>
+        @if (diligencia() === 'PCD') {
+          <app-campo
+            tipo="grupo"
+            idCampo="agrega-cuidador"
+            etiqueta="¿Va a agregar un cuidador o asistente personal?"
+            ayuda="Si responde que sí, le pediremos sus datos. Si no, siga con la solicitud solo con los suyos."
+            [control]="form.controls.agregaCuidador"
+            [mensajes]="{ required: 'responda sí o no' }"
+          >
+            <div class="opciones">
+              <label class="opcion">
+                <input
+                  id="agrega-cuidador"
+                  type="radio"
+                  formControlName="agregaCuidador"
+                  [value]="true"
+                />
+                <span>Sí, voy a agregar un cuidador</span>
+              </label>
+              <label class="opcion">
+                <input type="radio" formControlName="agregaCuidador" [value]="false" />
+                <span>No tengo cuidador</span>
+              </label>
+            </div>
+          </app-campo>
+        }
+      </fieldset>
+
+      <fieldset class="seccion">
+        <legend>
           Persona con discapacidad
           <app-ayuda
             etiqueta="Persona con discapacidad"
@@ -106,19 +160,15 @@
         </div>
       </fieldset>
 
-      <fieldset class="seccion">
-        <legend>
-          Cuidador o asistente personal
-          <app-ayuda
-            etiqueta="Cuidador o asistente personal"
-            texto="El cuidador acompaña a la persona con discapacidad. Una persona solo puede tener un cuidador asociado. Si no tiene cuidador, marque la casilla y continúe."
-          />
-        </legend>
-        <label class="opcion">
-          <input type="checkbox" formControlName="sinCuidador" id="sin-cuidador" />
-          <span>La persona con discapacidad no tiene cuidador</span>
-        </label>
-        @if (!form.controls.sinCuidador.value) {
+      @if (tieneCuidador()) {
+        <fieldset class="seccion">
+          <legend>
+            Cuidador o asistente personal
+            <app-ayuda
+              etiqueta="Cuidador o asistente personal"
+              texto="El cuidador acompaña a la persona con discapacidad. Una persona solo puede tener un cuidador asociado."
+            />
+          </legend>
           <app-campo
             idCampo="cui-nombre"
             etiqueta="Nombre completo"
@@ -163,8 +213,8 @@
               />
             </app-campo>
           </div>
-        }
-      </fieldset>
+        </fieldset>
+      }
 
       <fieldset class="seccion">
         <legend>

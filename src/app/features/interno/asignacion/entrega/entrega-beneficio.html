@@ -55,7 +55,7 @@
                 </td>
                 <td>
                   {{ e.fechaEntrega }}
-                  <small>{{ e.funcionarioEntrega }}</small>
+                  <small>Entregó: {{ e.funcionarioEntrega }}</small>
                 </td>
                 <td>
                   {{ e.receptorNombre }}
@@ -63,6 +63,14 @@
                     {{ nombreReceptor[e.receptorTipo] }}
                     @if (e.receptorNumero) {
                       · {{ e.receptorTipoIdentificacion }} {{ e.receptorNumero }}
+                    }
+                    @if (e.receptorTipo === 'TERCERO') {
+                      ·
+                      {{
+                        e.terceroConAutorizacion
+                          ? 'con autorización'
+                          : 'sin autorización registrada'
+                      }}
                     }
                   </small>
                 </td>
@@ -96,7 +104,11 @@
           <app-campo
             idCampo="ent-tarjeta"
             etiqueta="Identificador de la tarjeta"
-            ayuda="No puede estar asignado a otro beneficiario activo."
+            [ayuda]="
+              'Es el código impreso en la tarjeta' +
+              (prefijoTarjeta() ? ' y debe comenzar por ' + prefijoTarjeta() : '') +
+              '. No puede estar asignado a otro beneficiario activo.'
+            "
             [control]="form.controls.tarjetaId"
           >
             <input
@@ -109,7 +121,7 @@
           </app-campo>
           <app-campo
             idCampo="ent-transporte"
-            etiqueta="Tipo de transporte"
+            etiqueta="Tipo de transporte (el que la persona dijo usar)"
             [control]="form.controls.tipoTransporteId"
           >
             <select appCampoControl formControlName="tipoTransporteId">
@@ -170,14 +182,26 @@
               <input appCampoControl type="text" formControlName="receptorNumero" maxlength="30" />
             </app-campo>
           </div>
+          <fieldset class="autorizacion">
+            <legend>¿Quien recibe presentó la autorización firmada de la persona?</legend>
+            <label class="opcion">
+              <input type="radio" formControlName="terceroConAutorizacion" [value]="true" /> Sí, la
+              presentó
+            </label>
+            <label class="opcion">
+              <input type="radio" formControlName="terceroConAutorizacion" [value]="false" /> No la
+              presentó
+            </label>
+            @if (form.controls.terceroConAutorizacion.value === false) {
+              <p class="mensaje-error" role="alert">
+                Sin la autorización firmada no se puede entregar la tarjeta a un tercero.
+              </p>
+            }
+          </fieldset>
         }
-        <app-campo
-          idCampo="ent-funcionario"
-          etiqueta="Funcionario que realiza la entrega"
-          [control]="form.controls.funcionarioEntrega"
-        >
-          <input appCampoControl type="text" formControlName="funcionarioEntrega" maxlength="150" />
-        </app-campo>
+        <p class="ayuda">
+          Entrega: <strong>{{ funcionario() }}</strong> (quien tiene la sesión abierta).
+        </p>
         <div class="campo-simple">
           <label for="ent-acta">Acta de entrega firmada (PDF, JPG o PNG)</label>
           <input

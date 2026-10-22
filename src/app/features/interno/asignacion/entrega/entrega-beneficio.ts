@@ -22,7 +22,7 @@ import { Confirmar } from '../../../../shared/alertas/confirmar';
 
 /**
  * Entrega del medio de transporte de un beneficio (RF-ASI-05): lo ya entregado a cada persona y el registro de la
- * entrega que falta (identificador de la tarjeta, tipo de transporte, fecha, quién recibe, funcionario y acta). Cuando
+ * entrega que falta (identificador de la tarjeta, tipo de transporte, fecha, quién recibe y acta; el funcionario es quien tiene la sesión). Cuando
  * el beneficio queda pendiente de activación, permite confirmarla.
  */
 @Component({
@@ -83,11 +83,15 @@ export class EntregaBeneficio {
       nonNullable: true,
       validators: [Validators.maxLength(30)],
     }),
-    funcionarioEntrega: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.minLength(3), Validators.maxLength(150)],
-    }),
+    // Solo si recibe un tercero: ¿presentó la autorización firmada de la persona?
+    terceroConAutorizacion: new FormControl<boolean | null>(null),
   });
+
+  /** Quien entrega es la persona con la sesión abierta: no se escribe. */
+  protected readonly funcionario = computed(() => this.sesion.perfil()?.nombres ?? '');
+  protected readonly prefijoTarjeta = computed(
+    () => this.detalle()?.sugerencias.prefijoTarjeta ?? '',
+  );
   protected readonly observacion = new FormControl('', { nonNullable: true });
 
   constructor() {
@@ -110,14 +114,15 @@ export class EntregaBeneficio {
       this.detalle.set(d);
       this.form.reset({
         rol: d.pendientes[0] ?? 'PCD',
-        tarjetaId: '',
-        tipoTransporteId: null,
+        // Las tarjetas comienzan como lo definió la Gerencia; el transporte es el que la persona dijo usar.
+        tarjetaId: d.sugerencias.prefijoTarjeta,
+        tipoTransporteId: d.sugerencias.tipoTransporteId,
         fechaEntrega: d.beneficio.hoy,
         receptorTipo: d.pendientes[0] ?? 'PCD',
         receptorNombre: '',
         receptorTipoIdentificacionId: null,
         receptorNumero: '',
-        funcionarioEntrega: this.sesion.perfil()?.nombres ?? '',
+        terceroConAutorizacion: null,
       });
       this.receptorTipo.set(d.pendientes[0] ?? 'PCD');
     } catch (e) {
@@ -147,6 +152,19 @@ export class EntregaBeneficio {
     this.form.markAllAsTouched();
     this.error.set('');
     if (this.form.invalid) return;
+    if (this.form.controls.receptorTipo.value === 'TERCERO') {
+      const aut = this.form.controls.terceroConAutorizacion.value;
+      if (aut === null) {
+        this.error.set('Indique si quien recibe presentó la autorización firmada de la persona.');
+        return;
+      }
+      if (aut === false) {
+        this.error.set(
+          'Sin la autorización firmada de la persona no se puede entregar la tarjeta a un tercero.',
+        );
+        return;
+      }
+    }
     if (!acta) {
       this.error.set('Adjunte el acta de entrega firmada (PDF, JPG o PNG).');
       return;
@@ -158,9 +176,9 @@ export class EntregaBeneficio {
       tipoTransporteId: Number(v.tipoTransporteId),
       fechaEntrega: v.fechaEntrega,
       receptorTipo: v.receptorTipo,
-      funcionarioEntrega: v.funcionarioEntrega.trim(),
       ...(v.receptorTipo === 'TERCERO'
         ? {
+            terceroConAutorizacion: v.terceroConAutorizacion === true,
             receptorNombre: v.receptorNombre.trim(),
             receptorTipoIdentificacionId: v.receptorTipoIdentificacionId ?? undefined,
             receptorNumero: v.receptorNumero.trim(),
