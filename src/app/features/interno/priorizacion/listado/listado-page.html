@@ -3,7 +3,15 @@
   <h1>Listado priorizado</h1>
   @if (puedeCalcular()) {
     <span class="grupo-botones">
-      <button type="button" class="boton" [disabled]="calculando()" (click)="calcular(false)">
+      <button
+        appConfirmar="¿Calcular el puntaje de los casos?"
+        confirmarTexto="Se calcula con la matriz vigente."
+        confirmarBoton="Sí, calcular"
+        type="button"
+        class="boton"
+        [disabled]="calculando()"
+        (click)="calcular(false)"
+      >
         {{ calculando() ? 'Calculando…' : 'Calcular casos sin puntaje' }}
       </button>
       <button
@@ -214,7 +222,17 @@
     ajustes aprobados sobre el cálculo anterior dejan de aplicarse.
   </p>
   <div class="acciones">
-    <button type="button" class="boton" (click)="calcular(true)">Recalcular</button>
+    <button
+      appConfirmar="¿Recalcular el puntaje de todos los casos?"
+      confirmarTexto="Reemplaza los puntajes vigentes con la matriz vigente."
+      confirmarBoton="Sí, recalcular"
+      [confirmarPeligro]="true"
+      type="button"
+      class="boton"
+      (click)="calcular(true)"
+    >
+      Recalcular
+    </button>
     <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>
   </div>
 </app-dialogo>
@@ -308,7 +326,14 @@
   }
   <div class="acciones">
     @if (puedeCalcular()) {
-      <button type="button" class="boton secundario" (click)="recalcularCaso()">
+      <button
+        appConfirmar="¿Calcular de nuevo este caso?"
+        confirmarTexto="Se usará la matriz vigente."
+        confirmarBoton="Sí, calcular"
+        type="button"
+        class="boton secundario"
+        (click)="recalcularCaso()"
+      >
         Calcular de nuevo con la matriz vigente
       </button>
     }
@@ -362,7 +387,14 @@
       <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
     }
     <div class="acciones">
-      <button type="submit" class="boton" [disabled]="guardando()">
+      <button
+        appConfirmar="¿Proponer este ajuste?"
+        confirmarTexto="Quedará pendiente de la decisión del responsable."
+        confirmarBoton="Sí, proponer"
+        type="submit"
+        class="boton"
+        [disabled]="guardando()"
+      >
         {{ guardando() ? 'Guardando…' : 'Proponer ajuste' }}
       </button>
       <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>

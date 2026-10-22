@@ -24,6 +24,7 @@ import { aplicarErroresApi, igualA, valorDe } from '../../../shared/forms';
 import { PATRON_NOMBRE, numeroSegunTipo, soloDigitos } from '../../../shared/identificacion';
 import { TurnstileCasilla } from '../../../shared/turnstile/turnstile';
 import { Ayuda } from '../../../shared/ayuda/ayuda';
+import { Confirmar } from '../../../shared/alertas/confirmar';
 
 /** Campos que se muestran en el resumen de errores, en el orden del formulario. */
 const CAMPOS = [
@@ -55,6 +56,7 @@ interface ErrorResumen {
 @Component({
   selector: 'app-preinscripcion-page',
   imports: [
+    Confirmar,
     ReactiveFormsModule,
     RouterLink,
     Campo,
@@ -99,6 +101,8 @@ export class PreinscripcionPage implements OnInit {
       nonNullable: true,
       validators: [Validators.required, numeroSegunTipo(() => this.codigoPcd())],
     }),
+    // Marcado cuando la persona no tiene cuidador: entonces no se piden los datos del cuidador.
+    sinCuidador: new FormControl(false, { nonNullable: true }),
     cuidadorNombre: new FormControl('', {
       nonNullable: true,
       validators: [
@@ -172,6 +176,16 @@ export class PreinscripcionPage implements OnInit {
     this.form.controls.cuidadorTipoIdentificacionId.valueChanges.subscribe(() =>
       this.form.controls.cuidadorNumero.updateValueAndValidity(),
     );
+    this.form.controls.sinCuidador.valueChanges.subscribe((sin) => {
+      for (const c of [
+        this.form.controls.cuidadorNombre,
+        this.form.controls.cuidadorTipoIdentificacionId,
+        this.form.controls.cuidadorNumero,
+      ]) {
+        if (sin) c.disable();
+        else c.enable();
+      }
+    });
     this.form.controls.barrioId.disable(); // se habilita al elegir la localidad
     this.form.controls.localidadId.valueChanges.subscribe((localidad) => {
       this.form.controls.barrioId.reset(null);
@@ -249,9 +263,14 @@ export class PreinscripcionPage implements OnInit {
           pcdNombre: v.pcdNombre.trim(),
           pcdTipoIdentificacionId: v.pcdTipoIdentificacionId as number,
           pcdNumero: v.pcdNumero.trim(),
-          cuidadorNombre: v.cuidadorNombre.trim(),
-          cuidadorTipoIdentificacionId: v.cuidadorTipoIdentificacionId as number,
-          cuidadorNumero: v.cuidadorNumero.trim(),
+          tieneCuidador: !v.sinCuidador,
+          ...(v.sinCuidador
+            ? {}
+            : {
+                cuidadorNombre: v.cuidadorNombre.trim(),
+                cuidadorTipoIdentificacionId: v.cuidadorTipoIdentificacionId as number,
+                cuidadorNumero: v.cuidadorNumero.trim(),
+              }),
           direccion: v.direccion.trim() || null,
           localidadId: v.localidadId,
           barrioId: v.barrioId,

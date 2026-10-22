@@ -2,6 +2,7 @@ import { API_BASE } from '../../../../core/api/api';
 import { errorApi, montarPantalla } from '../../../../testing/config';
 import { Bandeja, FilaBandeja } from '../modelos-validacion';
 import { BandejaPage } from './bandeja-page';
+import { esperarTareas } from '../../../../testing/asentar';
 
 const fila = (c: Partial<FilaBandeja>): FilaBandeja => ({
   solicitudId: 1,
@@ -127,6 +128,7 @@ describe('BandejaPage', () => {
     escribir('#validador', '5');
     await asentar();
     el.querySelector<HTMLButtonElement>('.barra-asignar .boton')!.click();
+    await esperarTareas();
     const req = ctrl.expectOne(`${API_BASE}/admin/validacion/asignar`);
     expect(req.request.body).toEqual({ solicitudIds: [1, 2], validadorId: 5 });
     req.flush({ asignados: 2 });

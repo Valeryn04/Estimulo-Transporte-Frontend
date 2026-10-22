@@ -18,6 +18,7 @@ import {
   RolBeneficiario,
   TipoReceptor,
 } from '../modelos-asignacion';
+import { Confirmar } from '../../../../shared/alertas/confirmar';
 
 /**
  * Entrega del medio de transporte de un beneficio (RF-ASI-05): lo ya entregado a cada persona y el registro de la
@@ -26,7 +27,7 @@ import {
  */
 @Component({
   selector: 'app-entrega-beneficio',
-  imports: [DatePipe, ReactiveFormsModule, Campo, CampoControl, Dialogo],
+  imports: [Confirmar, DatePipe, ReactiveFormsModule, Campo, CampoControl, Dialogo],
   templateUrl: './entrega-beneficio.html',
   styleUrl: './entrega-beneficio.scss',
 })

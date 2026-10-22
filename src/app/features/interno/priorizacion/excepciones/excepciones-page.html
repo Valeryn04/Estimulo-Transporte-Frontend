@@ -165,7 +165,15 @@
       <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
     }
     <div class="acciones">
-      <button type="submit" class="boton" [disabled]="guardando()">
+      <button
+        appConfirmar="¿Registrar la decisión sobre la excepción?"
+        confirmarTexto="Queda en la bitácora y no se puede modificar."
+        confirmarBoton="Sí, registrar"
+        [confirmarPeligro]="true"
+        type="submit"
+        class="boton"
+        [disabled]="guardando()"
+      >
         {{
           guardando() ? 'Guardando…' : decidiendo()?.decision === 'APROBAR' ? 'Aprobar' : 'Rechazar'
         }}

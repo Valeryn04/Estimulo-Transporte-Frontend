@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { API_BASE } from '../../../../core/api/api';
 import { erroresInterceptor } from '../../../../core/api/errores.interceptor';
-import { asentar } from '../../../../testing/asentar';
+import { asentar, esperarTareas } from '../../../../testing/asentar';
 import '../../../../testing/locale';
 import { Usuario } from '../modelos';
 import { UsuariosPage } from './usuarios-page';
@@ -117,6 +117,7 @@ describe('UsuariosPage', () => {
   it('desbloquear llama a la API sin pedir motivo', async () => {
     const { fixture, el, ctrl } = await montar([usuario({ estado: 'BLOQUEADO' })]);
     el.querySelector<HTMLButtonElement>('button[title="Desbloquear a maria"]')!.click();
+    await esperarTareas();
     ctrl.expectOne(`${API_BASE}/admin/usuarios/1/desbloquear`).flush(usuario({}));
     await asentar(fixture);
     ctrl
@@ -136,6 +137,7 @@ describe('UsuariosPage', () => {
     expect(dialogo.querySelector('input')).toBeNull();
     expect(dialogo.textContent).toContain('Usted no la verá');
     dialogo.querySelector<HTMLButtonElement>('button.boton:not(.secundario)')!.click();
+    await esperarTareas();
     const req = ctrl.expectOne(`${API_BASE}/admin/usuarios/1/restablecer-password`);
     expect(req.request.body).toEqual({});
     req.flush(null, { status: 204, statusText: 'Sin contenido' });
@@ -152,6 +154,7 @@ describe('UsuariosPage', () => {
   it('muestra el error de la API (por ejemplo, regla del administrador principal)', async () => {
     const { fixture, el, ctrl } = await montar([usuario({ estado: 'BLOQUEADO' })]);
     el.querySelector<HTMLButtonElement>('button[title="Desbloquear a maria"]')!.click();
+    await esperarTareas();
     ctrl
       .expectOne(`${API_BASE}/admin/usuarios/1/desbloquear`)
       .flush(

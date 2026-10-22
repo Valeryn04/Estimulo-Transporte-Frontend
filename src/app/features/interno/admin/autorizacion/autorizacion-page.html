@@ -35,7 +35,14 @@
       <textarea appCampoControl [formControl]="contenido" rows="16"></textarea>
     </app-campo>
     <div class="acciones">
-      <button type="submit" class="boton" [disabled]="guardando() || contenido.pristine">
+      <button
+        appConfirmar="¿Publicar el nuevo texto de autorización?"
+        confirmarTexto="Quedará como la versión vigente y las personas deberán aceptarlo desde ahora."
+        confirmarBoton="Sí, publicar"
+        type="submit"
+        class="boton"
+        [disabled]="guardando() || contenido.pristine"
+      >
         {{ guardando() ? 'Publicando…' : 'Publicar como versión nueva' }}
       </button>
     </div>

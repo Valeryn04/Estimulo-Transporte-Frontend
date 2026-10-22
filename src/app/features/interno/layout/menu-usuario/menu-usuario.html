@@ -30,7 +30,13 @@
         <app-icono nombre="candado" />
         Cambiar contraseña
       </a>
-      <button type="button" class="opcion salir" (click)="salir()">
+      <button
+        appConfirmar="¿Cerrar la sesión?"
+        confirmarBoton="Sí, salir"
+        type="button"
+        class="opcion salir"
+        (click)="salir()"
+      >
         <app-icono nombre="salir" />
         Cerrar sesión
       </button>

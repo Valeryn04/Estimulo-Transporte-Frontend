@@ -18,6 +18,7 @@ import {
   VersionRegistro,
 } from '../config/modelos-config';
 import { Pestanas } from '../../../../shared/pestanas/pestanas';
+import { Confirmar } from '../../../../shared/alertas/confirmar';
 
 type Dialogo_ = 'ninguno' | 'formulario' | 'historial';
 
@@ -27,7 +28,16 @@ type Dialogo_ = 'ninguno' | 'formulario' | 'historial';
  */
 @Component({
   selector: 'app-catalogos-page',
-  imports: [DatePipe, ReactiveFormsModule, Campo, CampoControl, Dialogo, Icono, Pestanas],
+  imports: [
+    Confirmar,
+    DatePipe,
+    ReactiveFormsModule,
+    Campo,
+    CampoControl,
+    Dialogo,
+    Icono,
+    Pestanas,
+  ],
   templateUrl: './catalogos-page.html',
   styleUrl: './catalogos-page.scss',
 })

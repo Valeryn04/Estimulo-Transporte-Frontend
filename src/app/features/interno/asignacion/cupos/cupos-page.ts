@@ -1,5 +1,5 @@
 import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ApiError } from '../../../../core/api/api-error';
@@ -17,6 +17,7 @@ import {
 } from '../modelos-asignacion';
 import { Ayuda } from '../../../../shared/ayuda/ayuda';
 import { Pestanas } from '../../../../shared/pestanas/pestanas';
+import { Alertas } from '../../../../shared/alertas/alertas';
 
 const filaDistribucion = (itemId: number | null = null, cupos: number | null = null) =>
   new FormGroup({
@@ -51,6 +52,8 @@ type Distribucion = FormArray<ReturnType<typeof filaDistribucion>>;
 export class CuposPage implements OnInit {
   private readonly api = inject(AsignacionApi);
   private readonly sesion = inject(Sesion);
+  private readonly alertas = inject(Alertas);
+  private readonly archivo = viewChild<ElementRef<HTMLInputElement>>('archivo');
 
   protected readonly datos = signal<CuposConCatalogos | null>(null);
   protected readonly ajustes = signal<AjusteCupos[]>([]);
@@ -126,6 +129,11 @@ export class CuposPage implements OnInit {
       for (const i of items) lista.push(filaDistribucion(i.itemId, i.cupos));
     }
     this.soporte.set(null);
+    const archivo = this.archivo();
+    if (archivo) archivo.nativeElement.value = '';
+    // Los datos recién guardados no deben mostrarse como errores del envío anterior.
+    this.form.markAsPristine();
+    this.form.markAsUntouched();
   }
 
   protected agregar(lista: Distribucion): void {
@@ -159,17 +167,84 @@ export class CuposPage implements OnInit {
     );
   }
 
+  /** Revisa lo escrito con las mismas reglas del servidor, para decir qué corregir antes de enviar. */
+  private problemas(d: CuposConCatalogos): string[] {
+    const v = this.form.getRawValue();
+    const p: string[] = [];
+    const cupos = v.cuposTotales;
+    if (cupos === null || !Number.isInteger(cupos) || cupos < 0) {
+      p.push('Cupos totales: escriba un número entero, cero o mayor.');
+    } else if (cupos < d.cupos.ocupados) {
+      p.push(
+        `Cupos totales: no pueden ser menos que los ${d.cupos.ocupados} que ya están ocupados.`,
+      );
+    }
+    if (v.valorEstimulo === null || v.valorEstimulo < 0) {
+      p.push('Valor del estímulo: escriba un valor de cero o mayor.');
+    }
+    if (v.presupuestoTotal === null || v.presupuestoTotal < 0) {
+      p.push('Presupuesto total: escriba un valor de cero o mayor.');
+    } else if (v.presupuestoTotal < d.presupuesto.comprometido) {
+      p.push('Presupuesto total: no puede ser menor que lo que ya está comprometido.');
+    }
+    if (v.motivo.trim().length < 10) {
+      p.push('Motivo del cambio: explique el cambio con al menos 10 caracteres.');
+    }
+    const tope = cupos !== null && cupos >= 0 ? cupos : d.cupos.totales;
+    for (const [nombre, lista, vigente] of [
+      ['localidad', this.form.controls.localidades, d.distribucion.localidades],
+      ['tipo de transporte', this.form.controls.transportes, d.distribucion.transportes],
+    ] as const) {
+      const filas = lista.getRawValue();
+      if (filas.some((f) => f.itemId === null || f.cupos === null)) {
+        p.push(`Cupos por ${nombre}: complete cada fila o quítela.`);
+        continue;
+      }
+      const ids = filas.map((f) => f.itemId);
+      if (new Set(ids).size !== ids.length)
+        p.push(`Cupos por ${nombre}: hay un elemento repetido.`);
+      if (filas.some((f) => (f.cupos as number) < 0 || !Number.isInteger(f.cupos))) {
+        p.push(`Cupos por ${nombre}: los cupos son números enteros, cero o mayores.`);
+      }
+      if (filas.reduce((t, f) => t + Number(f.cupos), 0) > tope) {
+        p.push(`Cupos por ${nombre}: la suma no puede superar los ${tope} cupos de la vigencia.`);
+      }
+      for (const f of filas) {
+        const actual = vigente.find((x) => x.itemId === f.itemId);
+        if (actual && Number(f.cupos) < actual.ocupados) {
+          p.push(
+            `Cupos por ${nombre}: «${actual.nombre}» ya tiene ${actual.ocupados} cupos ocupados y no puede quedar con menos.`,
+          );
+        }
+      }
+    }
+    return p;
+  }
+
+  private descripcion(d: CuposConCatalogos, c: CambioCupos): string {
+    const num = (n: number) => n.toLocaleString('es-CO');
+    const partes: string[] = [];
+    if (c.cuposTotales !== undefined)
+      partes.push(`cupos: ${num(d.cupos.totales)} → ${num(c.cuposTotales)}`);
+    if (c.valorEstimulo !== undefined)
+      partes.push(`valor del estímulo: $${num(d.valorEstimulo)} → $${num(c.valorEstimulo)}`);
+    if (c.presupuestoTotal !== undefined)
+      partes.push(`presupuesto: $${num(d.presupuesto.total)} → $${num(c.presupuestoTotal)}`);
+    if (c.distribucionLocalidad !== undefined) partes.push('distribución por localidad');
+    if (c.distribucionTransporte !== undefined) partes.push('distribución por transporte');
+    return `Se modificará: ${partes.join('; ')}.`;
+  }
+
   protected async guardar(): Promise<void> {
     const d = this.datos();
-    if (!d) return;
+    if (!d || this.guardando()) return;
     this.form.markAllAsTouched();
     this.erroresForm.set([]);
     this.mensaje.set('');
     this.error.set('');
-    if (this.form.invalid) {
-      this.erroresForm.set([
-        'Revise los datos: todos los campos son obligatorios y el motivo necesita al menos 10 caracteres.',
-      ]);
+    const problemas = this.problemas(d);
+    if (problemas.length > 0) {
+      this.erroresForm.set(problemas);
       return;
     }
     const v = this.form.getRawValue();
@@ -185,7 +260,9 @@ export class CuposPage implements OnInit {
     if (!this.mismaDistribucion(tra, d.distribucion.transportes))
       cambio.distribucionTransporte = tra;
     if (Object.keys(cambio).length === 1) {
-      this.erroresForm.set(['No hay ningún cambio respecto a lo vigente.']);
+      this.erroresForm.set([
+        'No hay ningún cambio: modifique alguno de los valores vigentes antes de registrar.',
+      ]);
       return;
     }
     if (
@@ -193,20 +270,27 @@ export class CuposPage implements OnInit {
       !this.soporte()
     ) {
       this.erroresForm.set([
-        'Adjunte el soporte del cambio de cupos o presupuesto (por ejemplo, el acto de adición).',
+        'Soporte: adjunte el documento del cambio de cupos o presupuesto (por ejemplo, el acto de adición).',
       ]);
       return;
     }
+    const confirmado = await this.alertas.confirmar({
+      titulo: '¿Registrar este cambio?',
+      texto: `${this.descripcion(d, cambio)} Quedará en el historial con su motivo y su soporte.`,
+      confirmar: 'Sí, registrar',
+    });
+    if (!confirmado) return;
     this.guardando.set(true);
     try {
       this.llenar(await firstValueFrom(this.api.ajustarCupos(cambio, this.soporte())));
       this.ajustes.set(await firstValueFrom(this.api.ajustes()));
-      this.mensaje.set('Cambio registrado con su motivo y su soporte.');
+      this.mensaje.set('Cambio registrado con su motivo y su soporte. Ya aparece en el historial.');
+      this.alertas.exito('Cambio registrado');
     } catch (e) {
       if (e instanceof ApiError && e.errores.length > 0) {
         this.erroresForm.set(e.errores.map((x) => x.mensaje));
       } else {
-        this.error.set(e instanceof ApiError ? e.message : 'No pudimos guardar el cambio.');
+        this.erroresForm.set([e instanceof ApiError ? e.message : 'No pudimos guardar el cambio.']);
       }
     } finally {
       this.guardando.set(false);

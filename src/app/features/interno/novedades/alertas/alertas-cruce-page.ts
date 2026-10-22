@@ -10,6 +10,7 @@ import { Dialogo } from '../../../../shared/dialogo/dialogo';
 import { AlertaCruce, EstadoAlertaCruce } from '../modelos-novedades';
 import { NovedadesApi } from '../novedades-api';
 import { Pestanas } from '../../../../shared/pestanas/pestanas';
+import { Confirmar } from '../../../../shared/alertas/confirmar';
 
 const NOMBRE_ESTADO: Record<EstadoAlertaCruce, string> = {
   PENDIENTE: 'Pendiente de análisis',
@@ -24,7 +25,7 @@ const NOMBRE_ESTADO: Record<EstadoAlertaCruce, string> = {
  */
 @Component({
   selector: 'app-alertas-cruce-page',
-  imports: [DatePipe, ReactiveFormsModule, RouterLink, Dialogo, Pestanas],
+  imports: [Confirmar, DatePipe, ReactiveFormsModule, RouterLink, Dialogo, Pestanas],
   templateUrl: './alertas-cruce-page.html',
   styleUrl: './alertas-cruce-page.scss',
 })

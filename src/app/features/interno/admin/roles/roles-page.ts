@@ -10,6 +10,7 @@ import { Icono } from '../../../../shared/icono/icono';
 import { AdminApi } from '../admin-api';
 import { Permiso, Rol } from '../modelos';
 import { Pestanas } from '../../../../shared/pestanas/pestanas';
+import { Confirmar } from '../../../../shared/alertas/confirmar';
 
 /** Código del rol que siempre tiene todos los permisos y no se modifica. */
 const ROL_ADMINISTRADOR = 'ADMINISTRADOR';
@@ -20,7 +21,7 @@ const ROL_ADMINISTRADOR = 'ADMINISTRADOR';
  */
 @Component({
   selector: 'app-roles-page',
-  imports: [ReactiveFormsModule, Campo, CampoControl, Dialogo, Icono, Pestanas],
+  imports: [Confirmar, ReactiveFormsModule, Campo, CampoControl, Dialogo, Icono, Pestanas],
   templateUrl: './roles-page.html',
   styleUrl: './roles-page.scss',
 })

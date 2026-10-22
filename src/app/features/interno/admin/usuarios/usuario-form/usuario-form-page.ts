@@ -9,11 +9,12 @@ import { CampoControl } from '../../../../../shared/campo-control';
 import { aplicarErroresApi, valorDe } from '../../../../../shared/forms';
 import { AdminApi } from '../../admin-api';
 import { Rol } from '../../modelos';
+import { Confirmar } from '../../../../../shared/alertas/confirmar';
 
 /** Crear o modificar un usuario interno y asignarle su rol (uno solo) (RF-ADM-01). */
 @Component({
   selector: 'app-usuario-form-page',
-  imports: [ReactiveFormsModule, RouterLink, Campo, CampoControl],
+  imports: [Confirmar, ReactiveFormsModule, RouterLink, Campo, CampoControl],
   templateUrl: './usuario-form-page.html',
   styleUrl: './usuario-form-page.scss',
 })

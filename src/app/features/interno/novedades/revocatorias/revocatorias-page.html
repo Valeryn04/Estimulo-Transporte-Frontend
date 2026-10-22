@@ -183,6 +183,8 @@
         </div>
         <div class="acciones">
           <button
+            appConfirmar="¿Registrar el traslado?"
+            confirmarBoton="Sí, registrar"
             type="button"
             class="boton"
             [disabled]="guardando()"
@@ -201,6 +203,10 @@
           </p>
           <div class="acciones">
             <button
+              appConfirmar="¿Registrar que no hubo descargos?"
+              confirmarTexto="Se cierra la etapa de descargos."
+              confirmarBoton="Sí, registrar"
+              [confirmarPeligro]="true"
               type="button"
               class="boton secundario"
               [disabled]="guardando()"
@@ -235,6 +241,8 @@
           </div>
           <div class="acciones">
             <button
+              appConfirmar="¿Registrar los descargos?"
+              confirmarBoton="Sí, registrar"
               type="button"
               class="boton"
               [disabled]="guardando()"
@@ -295,7 +303,16 @@
           />
         </div>
         <div class="acciones">
-          <button type="button" class="boton" [disabled]="guardando()" (click)="decidir()">
+          <button
+            appConfirmar="¿Registrar el acto y decidir?"
+            confirmarTexto="La decisión queda en firme y se avisa a la persona."
+            confirmarBoton="Sí, decidir"
+            [confirmarPeligro]="true"
+            type="button"
+            class="boton"
+            [disabled]="guardando()"
+            (click)="decidir()"
+          >
             Registrar el acto y decidir
           </button>
         </div>

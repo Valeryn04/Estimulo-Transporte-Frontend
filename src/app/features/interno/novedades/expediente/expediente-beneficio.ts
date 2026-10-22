@@ -21,6 +21,7 @@ import { NovedadesApi } from '../novedades-api';
 import { Ayuda } from '../../../../shared/ayuda/ayuda';
 import { ActualizarDatos } from './actualizar-datos';
 import { FinalizarBeneficio } from './finalizar-beneficio';
+import { Confirmar } from '../../../../shared/alertas/confirmar';
 
 /**
  * Expediente de novedades de un beneficio: la secuencia completa de bloqueos, suspensiones y reactivaciones con sus
@@ -29,6 +30,7 @@ import { FinalizarBeneficio } from './finalizar-beneficio';
 @Component({
   selector: 'app-expediente-beneficio',
   imports: [
+    Confirmar,
     DatePipe,
     ReactiveFormsModule,
     RouterLink,

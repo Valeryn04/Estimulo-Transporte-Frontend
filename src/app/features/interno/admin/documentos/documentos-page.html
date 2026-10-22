@@ -89,6 +89,9 @@
                   <span class="solo-lectores">Editar {{ d.nombre }}</span>
                 </button>
                 <button
+                  appConfirmar="¿Cambiar el estado de este documento?"
+                  confirmarTexto="Un documento desactivado deja de pedirse a las personas."
+                  confirmarBoton="Sí, cambiar"
                   type="button"
                   class="accion-icono"
                   [class.peligro]="d.activo"
@@ -145,7 +148,14 @@
       <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
     }
     <div class="acciones">
-      <button type="submit" class="boton" [disabled]="guardando()">
+      <button
+        appConfirmar="¿Guardar el documento?"
+        confirmarTexto="Se conserva el historial de versiones."
+        confirmarBoton="Sí, guardar"
+        type="submit"
+        class="boton"
+        [disabled]="guardando()"
+      >
         {{ guardando() ? 'Guardando…' : 'Guardar' }}
       </button>
       <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>

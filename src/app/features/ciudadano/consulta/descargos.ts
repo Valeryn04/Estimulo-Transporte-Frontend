@@ -7,6 +7,7 @@ import { PublicoApi, RevocatoriaPersona } from '../../../core/publico/publico-ap
 import { Campo } from '../../../shared/campo';
 import { CampoControl } from '../../../shared/campo-control';
 import { aplicarErroresApi } from '../../../shared/forms';
+import { Confirmar } from '../../../shared/alertas/confirmar';
 
 /**
  * Cuando el beneficio está en un trámite de revocatoria, la persona ve las razones que se le trasladaron y, dentro del
@@ -14,7 +15,7 @@ import { aplicarErroresApi } from '../../../shared/forms';
  */
 @Component({
   selector: 'app-descargos',
-  imports: [DatePipe, ReactiveFormsModule, Campo, CampoControl],
+  imports: [Confirmar, DatePipe, ReactiveFormsModule, Campo, CampoControl],
   templateUrl: './descargos.html',
 })
 export class Descargos {

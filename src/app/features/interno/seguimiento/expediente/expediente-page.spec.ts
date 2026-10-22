@@ -3,6 +3,7 @@ import { API_BASE } from '../../../../core/api/api';
 import { errorApi, montarPantalla } from '../../../../testing/config';
 import { Expediente } from '../modelos-seguimiento';
 import { ExpedientePage } from './expediente-page';
+import { esperarTareas } from '../../../../testing/asentar';
 
 const URL = `${API_BASE}/admin/expedientes`;
 
@@ -149,6 +150,7 @@ describe('ExpedientePage', () => {
     await p.asentar();
     expect(p.el.querySelector('tbody')?.textContent).toContain('Ana Pérez');
     p.el.querySelector<HTMLButtonElement>('tbody .enlace')!.click();
+    await esperarTareas();
     p.ctrl.expectOne(`${URL}/5`).flush(expediente());
     await p.asentar();
     expect(p.el.querySelector('h1')?.textContent).toContain('EST-2026-000005');
@@ -236,6 +238,7 @@ describe('ExpedientePage', () => {
     it('reenvía una comunicación rebotada al correo ya corregido', async () => {
       const p = await abrir(['expediente.ver', 'novedades.gestionar']);
       p.el.querySelector<HTMLButtonElement>('.comunicaciones .enlace')!.click();
+      await esperarTareas();
       p.ctrl
         .expectOne(`${URL}/5/comunicaciones/7/reenviar`)
         .flush({ mensaje: 'ok' }, { status: 202, statusText: 'Aceptado' });

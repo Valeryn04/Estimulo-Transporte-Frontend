@@ -11,6 +11,7 @@ import { aplicarErroresApi } from '../../../../shared/forms';
 import { ConfigApi } from '../config/config-api';
 import { Vigencia } from '../config/modelos-config';
 import { Pestanas } from '../../../../shared/pestanas/pestanas';
+import { Confirmar } from '../../../../shared/alertas/confirmar';
 
 /**
  * Vigencias y cupos (RF-ADM-02, RF-ASG-03): el año del programa, su rango de fechas y los cupos totales.
@@ -18,7 +19,16 @@ import { Pestanas } from '../../../../shared/pestanas/pestanas';
  */
 @Component({
   selector: 'app-vigencias-page',
-  imports: [DecimalPipe, ReactiveFormsModule, Campo, CampoControl, Dialogo, Icono, Pestanas],
+  imports: [
+    Confirmar,
+    DecimalPipe,
+    ReactiveFormsModule,
+    Campo,
+    CampoControl,
+    Dialogo,
+    Icono,
+    Pestanas,
+  ],
   templateUrl: './vigencias-page.html',
   styleUrl: './vigencias-page.scss',
 })

@@ -74,6 +74,9 @@
       </select>
     </div>
     <button
+      appConfirmar="¿Asignar los casos a esta persona?"
+      confirmarTexto="Pasan a su bandeja de trabajo."
+      confirmarBoton="Sí, asignar"
       type="button"
       class="boton"
       [disabled]="asignando() || !validadorElegido.value"
@@ -81,7 +84,15 @@
     >
       Asignar
     </button>
-    <button type="button" class="boton secundario" [disabled]="asignando()" (click)="asignar(true)">
+    <button
+      appConfirmar="¿Dejar los casos sin asignar?"
+      confirmarTexto="Vuelven a la bandeja general."
+      confirmarBoton="Sí, dejar"
+      type="button"
+      class="boton secundario"
+      [disabled]="asignando()"
+      (click)="asignar(true)"
+    >
       Dejar sin asignar
     </button>
   </div>

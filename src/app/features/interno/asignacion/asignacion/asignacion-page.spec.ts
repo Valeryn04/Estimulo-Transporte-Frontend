@@ -2,6 +2,7 @@ import { API_BASE } from '../../../../core/api/api';
 import { errorApi, montarPantalla } from '../../../../testing/config';
 import { Beneficiario, FilaPropuesta, Propuesta } from '../modelos-asignacion';
 import { AsignacionPage } from './asignacion-page';
+import { esperarTareas } from '../../../../testing/asentar';
 
 const URL = `${API_BASE}/admin/asignacion`;
 const esPropuesta = (r: { url: string }) => r.url === `${URL}/propuesta`;
@@ -105,6 +106,7 @@ describe('AsignacionPage', () => {
     await asentar();
     expect(boton(el, 'Asignar los marcados').textContent).toContain('(2)');
     boton(el, 'Asignar los marcados').click();
+    await esperarTareas();
     const r = ctrl.expectOne(`${URL}/asignar`);
     expect(r.request.body).toEqual({ solicitudIds: [1, 2], omisiones: [] });
     r.flush(
@@ -155,6 +157,7 @@ describe('AsignacionPage', () => {
     marcar(el, 'EST-2026-000001');
     await asentar();
     boton(el, 'Asignar los marcados').click();
+    await esperarTareas();
     ctrl
       .expectOne(`${URL}/asignar`)
       .flush(errorApi('SIN_CUPO', 'EST-2026-000001: No quedan cupos disponibles.'), {
@@ -174,6 +177,7 @@ describe('AsignacionPage', () => {
     [...el.querySelectorAll<HTMLButtonElement>('dialog[open] .boton')]
       .find((b) => b.textContent?.trim() === 'Pasar a lista de espera')!
       .click();
+    await esperarTareas();
     const r = ctrl.expectOne(`${URL}/lista-espera`);
     r.flush({ enListaDeEspera: 1, radicados: ['EST-2026-000003'] });
     await asentar();

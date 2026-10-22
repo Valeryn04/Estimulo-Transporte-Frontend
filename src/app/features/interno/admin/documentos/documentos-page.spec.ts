@@ -1,6 +1,7 @@
 import { API_BASE } from '../../../../core/api/api';
 import { montarPantalla } from '../../../../testing/config';
 import { DocumentosPage } from './documentos-page';
+import { esperarTareas } from '../../../../testing/asentar';
 
 const doc = (c: object) => ({
   id: 1,
@@ -73,6 +74,7 @@ describe('DocumentosPage', () => {
   it('activa y desactiva sin borrar', async () => {
     const { el, ctrl, asentar } = await montar();
     el.querySelector<HTMLButtonElement>('button[title="Activar Carta de cuidado"]')!.click();
+    await esperarTareas();
     ctrl.expectOne(`${API_BASE}/admin/documentos-requeridos/2/activar`).flush(doc({ id: 2 }));
     await asentar();
     ctrl.expectOne(`${API_BASE}/admin/documentos-requeridos`).flush({ items: [doc({})] });

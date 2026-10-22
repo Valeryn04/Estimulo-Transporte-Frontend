@@ -146,7 +146,14 @@
     }
     <div class="acciones">
       @if (!soloLectura()) {
-        <button type="submit" class="boton" [disabled]="guardando()">
+        <button
+          appConfirmar="¿Guardar el rol?"
+          confirmarTexto="Sus permisos se aplican a las personas con este rol."
+          confirmarBoton="Sí, guardar"
+          type="submit"
+          class="boton"
+          [disabled]="guardando()"
+        >
           {{ guardando() ? 'Guardando…' : 'Guardar' }}
         </button>
       }

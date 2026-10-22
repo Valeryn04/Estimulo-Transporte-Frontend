@@ -59,7 +59,15 @@
                   </button>
                 }
                 @if (puedeAdministrar() && e.estado === 'PUBLICADA') {
-                  <button type="button" class="enlace" (click)="cerrarEncuesta(e)">
+                  <button
+                    appConfirmar="¿Cerrar la encuesta?"
+                    confirmarTexto="Dejará de recibir respuestas."
+                    confirmarBoton="Sí, cerrar"
+                    [confirmarPeligro]="true"
+                    type="button"
+                    class="enlace"
+                    (click)="cerrarEncuesta(e)"
+                  >
                     Cerrar<span class="solo-lectores"> {{ e.titulo }}</span>
                   </button>
                 }
@@ -167,7 +175,13 @@
       </div>
     }
     <div class="acciones">
-      <button type="submit" class="boton" [disabled]="guardando()">
+      <button
+        appConfirmar="¿Guardar la encuesta como borrador?"
+        confirmarBoton="Sí, guardar"
+        type="submit"
+        class="boton"
+        [disabled]="guardando()"
+      >
         {{ guardando() ? 'Guardando…' : 'Guardar borrador' }}
       </button>
       <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>
@@ -190,7 +204,16 @@
     </div>
   }
   <div class="acciones">
-    <button type="button" class="boton" [disabled]="guardando()" (click)="publicar()">
+    <button
+      appConfirmar="¿Publicar la encuesta?"
+      confirmarTexto="Se enviará la invitación y ya no se podrán cambiar las preguntas."
+      confirmarBoton="Sí, publicar"
+      [confirmarPeligro]="true"
+      type="button"
+      class="boton"
+      [disabled]="guardando()"
+      (click)="publicar()"
+    >
       {{ guardando() ? 'Publicando…' : 'Publicar e invitar' }}
     </button>
     <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>

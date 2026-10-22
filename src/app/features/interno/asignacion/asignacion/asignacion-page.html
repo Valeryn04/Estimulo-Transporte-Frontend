@@ -89,6 +89,10 @@
             Quitar marcas
           </button>
           <button
+            appConfirmar="¿Asignar el beneficio a los casos marcados?"
+            confirmarTexto="Se descuentan los cupos y el presupuesto, y se avisa a las personas."
+            confirmarBoton="Sí, asignar"
+            [confirmarPeligro]="true"
             type="button"
             class="boton"
             [disabled]="seleccion().size === 0 || asignando()"
@@ -386,7 +390,13 @@
       <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
     }
     <div class="acciones">
-      <button type="submit" class="boton" [disabled]="asignando()">
+      <button
+        appConfirmar="¿Registrar el cambio?"
+        confirmarBoton="Sí, registrar"
+        type="submit"
+        class="boton"
+        [disabled]="asignando()"
+      >
         {{ asignando() ? 'Asignando…' : 'Registrar causas y asignar' }}
       </button>
       <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>
@@ -409,7 +419,16 @@
     <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
   }
   <div class="acciones">
-    <button type="button" class="boton" [disabled]="asignando()" (click)="confirmarListaEspera()">
+    <button
+      appConfirmar="¿Pasar los casos a la lista de espera?"
+      confirmarTexto="Quedan registrados con la causa que escribió."
+      confirmarBoton="Sí, pasar"
+      [confirmarPeligro]="true"
+      type="button"
+      class="boton"
+      [disabled]="asignando()"
+      (click)="confirmarListaEspera()"
+    >
       Pasar a lista de espera
     </button>
     <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>

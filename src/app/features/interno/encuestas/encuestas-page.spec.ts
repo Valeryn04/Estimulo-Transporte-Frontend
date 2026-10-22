@@ -2,6 +2,7 @@ import { API_BASE } from '../../../core/api/api';
 import { errorApi, montarPantalla } from '../../../testing/config';
 import { EncuestasPage } from './encuestas-page';
 import { Encuesta, ResultadosEncuesta } from './modelos-encuestas';
+import { esperarTareas } from '../../../testing/asentar';
 
 const URL = `${API_BASE}/admin/encuestas`;
 
@@ -111,6 +112,7 @@ describe('EncuestasPage', () => {
     [...el.querySelectorAll<HTMLButtonElement>('dialog[open] .boton')]
       .find((b) => b.textContent?.includes('Publicar e invitar'))!
       .click();
+    await esperarTareas();
     ctrl
       .expectOne(`${URL}/1/publicar`)
       .flush({ ...encuesta({ estado: 'PUBLICADA', invitadas: 12 }), invitadosAhora: 12 });
@@ -125,6 +127,7 @@ describe('EncuestasPage', () => {
     [...el.querySelectorAll<HTMLButtonElement>('tbody .enlace')]
       .find((b) => b.textContent?.includes('Cerrar'))!
       .click();
+    await esperarTareas();
     ctrl.expectOne(`${URL}/1/cerrar`).flush(encuesta({ estado: 'CERRADA' }));
     await asentar();
     ctrl.expectOne(URL).flush({ items: [encuesta({ estado: 'CERRADA' })] });

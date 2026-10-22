@@ -370,7 +370,7 @@ export class CaracterizacionPage implements OnInit, OnDestroy {
     this.c.set(datos);
     this.servidor = datos.datos;
     this.version = datos.version;
-    this.nombresServidor = { pcd: datos.pcd.nombre, cuidador: datos.cuidador.nombre };
+    this.nombresServidor = { pcd: datos.pcd.nombre, cuidador: datos.cuidador?.nombre ?? '' };
     this.escribirDatos(datos);
     this.bloqueado.set(false);
     this.limitarASubsanacion(datos);
@@ -437,7 +437,7 @@ export class CaracterizacionPage implements OnInit, OnDestroy {
     const f = this.form.controls;
     const opciones = { emitEvent: false };
     f.pcdNombre.setValue(r.pcd.nombre, opciones);
-    f.cuidadorNombre.setValue(r.cuidador.nombre, opciones);
+    f.cuidadorNombre.setValue(r.cuidador?.nombre ?? '', opciones);
     f.generoId.setValue(d.generoId, opciones);
     f.telefonoFijo.setValue(d.telefonoFijo ?? '', opciones);
     f.celular.setValue(d.celular ?? '', opciones);
@@ -456,7 +456,8 @@ export class CaracterizacionPage implements OnInit, OnDestroy {
     f.subsidioCual.setValue(d.subsidioCual ?? '', opciones);
     f.tipoTransporteId.setValue(d.tipoTransporteId, opciones);
     f.justificacionTransporte.setValue(d.justificacionTransporte ?? '', opciones);
-    f.requiereCuidador.setValue(d.requiereCuidador);
+    // Sin cuidador registrado no hay servicio para el cuidador: la pregunta no se hace.
+    f.requiereCuidador.setValue(r.cuidador ? d.requiereCuidador : false);
     f.cuidadorGeneroId.setValue(d.cuidadorGeneroId, opciones);
     f.cuidadorTelefonoFijo.setValue(d.cuidadorTelefonoFijo ?? '', opciones);
     f.cuidadorCelular.setValue(d.cuidadorCelular ?? '', opciones);
@@ -590,7 +591,7 @@ export class CaracterizacionPage implements OnInit, OnDestroy {
     }
     const cuidador = textoONulo(this.form.controls.cuidadorNombre.value);
     if (
-      this.c()?.cuidador.nombreEditable &&
+      this.c()?.cuidador?.nombreEditable &&
       cuidador &&
       cuidador !== this.nombresServidor.cuidador &&
       this.enviable(this.form.controls.cuidadorNombre)
@@ -629,7 +630,7 @@ export class CaracterizacionPage implements OnInit, OnDestroy {
       const r = await firstValueFrom(this.api.guardar(cambios));
       this.version = r.version;
       this.servidor = r.datos;
-      this.nombresServidor = { pcd: r.pcdNombre, cuidador: r.cuidadorNombre };
+      this.nombresServidor = { pcd: r.pcdNombre, cuidador: r.cuidadorNombre ?? '' };
       this.c.update((x) =>
         x
           ? {
@@ -639,7 +640,7 @@ export class CaracterizacionPage implements OnInit, OnDestroy {
               version: r.version,
               guardadoAt: r.guardadoAt,
               pcd: { ...x.pcd, nombre: r.pcdNombre },
-              cuidador: { ...x.cuidador, nombre: r.cuidadorNombre },
+              cuidador: x.cuidador ? { ...x.cuidador, nombre: r.cuidadorNombre ?? '' } : null,
             }
           : x,
       );

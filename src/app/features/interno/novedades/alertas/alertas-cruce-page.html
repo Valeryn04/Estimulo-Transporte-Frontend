@@ -153,7 +153,14 @@
       <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
     }
     <div class="acciones">
-      <button type="submit" class="boton" [disabled]="guardando()">
+      <button
+        appConfirmar="¿Registrar el análisis de la alerta?"
+        confirmarTexto="Queda en la bitácora y no se puede modificar."
+        confirmarBoton="Sí, registrar"
+        type="submit"
+        class="boton"
+        [disabled]="guardando()"
+      >
         {{ guardando() ? 'Guardando…' : 'Registrar el análisis' }}
       </button>
       <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>

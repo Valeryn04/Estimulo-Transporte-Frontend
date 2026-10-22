@@ -110,7 +110,14 @@
     />
   </div>
   <div class="acciones">
-    <button type="submit" class="boton secundario" [disabled]="guardando()">
+    <button
+      appConfirmar="¿Guardar el cambio de datos?"
+      confirmarTexto="Se conserva el valor anterior, el soporte y la justificación."
+      confirmarBoton="Sí, guardar"
+      type="submit"
+      class="boton secundario"
+      [disabled]="guardando()"
+    >
       {{ guardando() ? 'Guardando…' : 'Guardar el cambio' }}
     </button>
   </div>

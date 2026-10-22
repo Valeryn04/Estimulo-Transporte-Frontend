@@ -188,7 +188,14 @@
           />
         </div>
         <div class="acciones">
-          <button type="submit" class="boton" [disabled]="guardando()">
+          <button
+            appConfirmar="¿Registrar la entrega?"
+            confirmarTexto="Queda registrada con su acta y no se puede borrar."
+            confirmarBoton="Sí, registrar"
+            type="submit"
+            class="boton"
+            [disabled]="guardando()"
+          >
             {{ guardando() ? 'Guardando…' : 'Registrar la entrega' }}
           </button>
         </div>
@@ -206,7 +213,16 @@
         <input id="ent-obs" type="text" [formControl]="observacion" maxlength="500" />
       </div>
       <div class="acciones">
-        <button type="button" class="boton" [disabled]="guardando()" (click)="activar()">
+        <button
+          appConfirmar="¿Confirmar la activación del beneficio?"
+          confirmarTexto="La persona podrá empezar a usar el beneficio."
+          confirmarBoton="Sí, activar"
+          [confirmarPeligro]="true"
+          type="button"
+          class="boton"
+          [disabled]="guardando()"
+          (click)="activar()"
+        >
           Confirmar la activación
         </button>
       </div>

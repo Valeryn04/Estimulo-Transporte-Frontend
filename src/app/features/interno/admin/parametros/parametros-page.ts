@@ -11,6 +11,7 @@ import { aplicarErroresApi } from '../../../../shared/forms';
 import { ConfigApi } from '../config/config-api';
 import { Parametro, VersionParametro } from '../config/modelos-config';
 import { Pestanas } from '../../../../shared/pestanas/pestanas';
+import { Confirmar } from '../../../../shared/alertas/confirmar';
 
 type Modo = 'ninguno' | 'cambio' | 'historial';
 
@@ -37,7 +38,16 @@ export function validarValorParametro(p: Parametro, valor: string): string | nul
  */
 @Component({
   selector: 'app-parametros-page',
-  imports: [DatePipe, ReactiveFormsModule, Campo, CampoControl, Dialogo, Icono, Pestanas],
+  imports: [
+    Confirmar,
+    DatePipe,
+    ReactiveFormsModule,
+    Campo,
+    CampoControl,
+    Dialogo,
+    Icono,
+    Pestanas,
+  ],
   templateUrl: './parametros-page.html',
   styleUrl: './parametros-page.scss',
 })

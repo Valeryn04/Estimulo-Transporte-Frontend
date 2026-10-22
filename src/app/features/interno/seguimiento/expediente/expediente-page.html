@@ -317,7 +317,14 @@
             <pre class="cuerpo-correo">{{ c.cuerpo }}</pre>
           </details>
           @if (puedeCorregirCorreo() && c.estado === 'REBOTADO' && !c.reenviado) {
-            <button type="button" class="enlace no-imprimir" (click)="reenviar(c)">
+            <button
+              appConfirmar="¿Reenviar este correo?"
+              confirmarTexto="Se enviará de nuevo al correo registrado."
+              confirmarBoton="Sí, reenviar"
+              type="button"
+              class="enlace no-imprimir"
+              (click)="reenviar(c)"
+            >
               Reenviar al correo registrado
             </button>
           }
@@ -362,7 +369,14 @@
           />
         </div>
         <div class="acciones">
-          <button type="submit" class="boton secundario" [disabled]="guardando()">
+          <button
+            appConfirmar="¿Actualizar los datos de contacto?"
+            confirmarTexto="Se guarda el cambio con su justificación."
+            confirmarBoton="Sí, actualizar"
+            type="submit"
+            class="boton secundario"
+            [disabled]="guardando()"
+          >
             {{ guardando() ? 'Guardando…' : 'Actualizar y reenviar' }}
           </button>
         </div>

@@ -5,6 +5,8 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { erroresInterceptor } from '../core/api/errores.interceptor';
 import { Sesion } from '../core/auth/sesion';
+import { Alertas } from '../shared/alertas/alertas';
+import { AlertasPrueba } from './alertas';
 import { asentar } from './asentar';
 import './locale';
 
@@ -21,6 +23,7 @@ export function montarPantalla<T>(
       provideHttpClientTesting(),
       provideRouter([]),
       { provide: LOCALE_ID, useValue: 'es-CO' },
+      { provide: Alertas, useClass: AlertasPrueba },
     ],
   });
   TestBed.inject(Sesion).perfil.set({

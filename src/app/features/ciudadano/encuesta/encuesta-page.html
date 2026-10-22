@@ -79,7 +79,14 @@
             </fieldset>
           }
           <div class="acciones">
-            <button type="submit" class="boton" [disabled]="enviando()">
+            <button
+              appConfirmar="¿Enviar sus respuestas?"
+              confirmarTexto="Una vez enviadas no podrá cambiarlas."
+              confirmarBoton="Sí, enviar"
+              type="submit"
+              class="boton"
+              [disabled]="enviando()"
+            >
               {{ enviando() ? 'Enviando…' : 'Enviar mis respuestas' }}
             </button>
           </div>

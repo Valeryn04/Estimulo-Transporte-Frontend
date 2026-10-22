@@ -2,6 +2,7 @@ import { Component, ElementRef, computed, inject, output, signal } from '@angula
 import { RouterLink } from '@angular/router';
 import { Sesion } from '../../../../core/auth/sesion';
 import { Icono } from '../../../../shared/icono/icono';
+import { Confirmar } from '../../../../shared/alertas/confirmar';
 
 /**
  * Persona que tiene la sesión abierta, en el encabezado: un botón con su nombre que despliega un panel con
@@ -10,7 +11,7 @@ import { Icono } from '../../../../shared/icono/icono';
  */
 @Component({
   selector: 'app-menu-usuario',
-  imports: [RouterLink, Icono],
+  imports: [Confirmar, RouterLink, Icono],
   templateUrl: './menu-usuario.html',
   styleUrl: './menu-usuario.scss',
   host: {

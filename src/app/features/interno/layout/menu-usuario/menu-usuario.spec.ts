@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { esperarTareas } from '../../../../testing/asentar';
 import { provideRouter } from '@angular/router';
 import { PerfilUsuario } from '../../../../core/auth/modelos';
 import { Sesion } from '../../../../core/auth/sesion';
@@ -83,13 +84,14 @@ describe('MenuUsuario', () => {
     el.remove();
   });
 
-  it('«Cerrar sesión» cierra el panel y avisa al marco', () => {
+  it('«Cerrar sesión» cierra el panel y avisa al marco', async () => {
     const { fixture, el, disparador } = abrir();
     let avisos = 0;
     fixture.componentInstance.cerrarSesion.subscribe(() => avisos++);
     disparador().click();
     fixture.detectChanges();
     (el.querySelector('.opcion.salir') as HTMLButtonElement).click();
+    await esperarTareas();
     fixture.detectChanges();
     expect(avisos).toBe(1);
     expect(el.querySelector('.panel')).toBeNull();

@@ -1,6 +1,7 @@
 import { API_BASE } from '../../../../core/api/api';
 import { errorApi, montarPantalla } from '../../../../testing/config';
 import { CatalogosPage } from './catalogos-page';
+import { esperarTareas } from '../../../../testing/asentar';
 
 const item = (c: object) => ({
   id: 1,
@@ -110,6 +111,7 @@ describe('CatalogosPage', () => {
   it('desactivar llama a la API y muestra el error de negocio cuando la localidad tiene barrios activos', async () => {
     const { el, ctrl, asentar } = await montar();
     el.querySelector<HTMLButtonElement>('button[title="Desactivar Cédula de Ciudadanía"]')!.click();
+    await esperarTareas();
     ctrl
       .expectOne(`${API_BASE}/admin/catalogos/items/1/desactivar`)
       .flush(errorApi('TIENE_BARRIOS_ACTIVOS', 'La localidad tiene barrios activos'), {
@@ -125,6 +127,7 @@ describe('CatalogosPage', () => {
     el.querySelector<HTMLButtonElement>(
       'button[title="Historial de Cédula de Ciudadanía"]',
     )!.click();
+    await esperarTareas();
     ctrl.expectOne(`${API_BASE}/admin/catalogos/items/1/versiones`).flush({
       items: [
         {

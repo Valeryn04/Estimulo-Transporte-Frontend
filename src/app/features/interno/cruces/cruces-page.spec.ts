@@ -2,6 +2,7 @@ import { API_BASE } from '../../../core/api/api';
 import { errorApi, montarPantalla } from '../../../testing/config';
 import { CrucesPage } from './cruces-page';
 import { CargaCruce, EstructuraCruce } from './modelos-cruces';
+import { esperarTareas } from '../../../testing/asentar';
 
 const URL = `${API_BASE}/admin/cruces`;
 
@@ -107,6 +108,7 @@ describe('CrucesPage', () => {
     el.querySelector<HTMLButtonElement>(
       'button[title="Desactivar Uso del sistema de transporte masivo"]',
     )!.click();
+    await esperarTareas();
     ctrl.expectOne(`${URL}/1/desactivar`).flush(estructura({ activo: false }));
     await asentar();
     ctrl.expectOne(URL).flush({ items: [estructura({ activo: false })] });
@@ -119,6 +121,7 @@ describe('CrucesPage', () => {
     el.querySelector<HTMLButtonElement>(
       'button[title="Cargar archivo de Uso del sistema de transporte masivo"]',
     )!.click();
+    await esperarTareas();
     ctrl.expectOne(`${URL}/1/cargas`).flush({ items: [] });
     await asentar();
     // Sin elegir archivo no se llama a la API.
@@ -137,6 +140,7 @@ describe('CrucesPage', () => {
     [...el.querySelectorAll<HTMLButtonElement>('dialog[open] .boton')]
       .find((b) => b.textContent?.trim() === 'Cargar')!
       .click();
+    await esperarTareas();
     const r = ctrl.expectOne(`${URL}/1/cargas`);
     expect(r.request.method).toBe('POST');
     expect((r.request.body as FormData).get('archivo')).toBeInstanceOf(File);
@@ -156,6 +160,7 @@ describe('CrucesPage', () => {
     el.querySelector<HTMLButtonElement>(
       'button[title="Cargar archivo de Uso del sistema de transporte masivo"]',
     )!.click();
+    await esperarTareas();
     ctrl.expectOne(`${URL}/1/cargas`).flush({ items: [] });
     await asentar();
     const input = el.querySelector<HTMLInputElement>('#cruce-archivo')!;
@@ -167,6 +172,7 @@ describe('CrucesPage', () => {
     [...el.querySelectorAll<HTMLButtonElement>('dialog[open] .boton')]
       .find((b) => b.textContent?.trim() === 'Cargar')!
       .click();
+    await esperarTareas();
     ctrl.expectOne(`${URL}/1/cargas`).flush(
       errorApi('VALIDACION', 'Revise', [
         {
@@ -187,6 +193,7 @@ describe('CrucesPage', () => {
     el.querySelector<HTMLButtonElement>(
       'button[title="Historial de Uso del sistema de transporte masivo"]',
     )!.click();
+    await esperarTareas();
     ctrl.expectOne(`${URL}/1/versiones`).flush({
       items: [
         {

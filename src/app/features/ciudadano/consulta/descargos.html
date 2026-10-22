@@ -46,7 +46,14 @@
           />
         </div>
         <div class="acciones">
-          <button type="submit" class="boton" [disabled]="enviando()">
+          <button
+            appConfirmar="¿Enviar sus descargos?"
+            confirmarTexto="Una vez enviados no podrá modificarlos."
+            confirmarBoton="Sí, enviar"
+            type="submit"
+            class="boton"
+            [disabled]="enviando()"
+          >
             {{ enviando() ? 'Enviando…' : 'Enviar mis descargos' }}
           </button>
         </div>

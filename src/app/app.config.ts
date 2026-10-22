@@ -3,6 +3,7 @@ import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/
 import localeEsCo from '@angular/common/locales/es-CO';
 import { ApplicationConfig, LOCALE_ID, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { cargaInterceptor } from './core/api/carga.interceptor';
 import { erroresInterceptor } from './core/api/errores.interceptor';
 import { turnstileInterceptor } from './core/seguridad/turnstile';
 import { authInterceptor } from './core/auth/auth.interceptor';
@@ -18,7 +19,12 @@ export const appConfig: ApplicationConfig = {
     // autenticación necesita ver el error ya convertido en ApiError).
     provideHttpClient(
       withFetch(),
-      withInterceptors([turnstileInterceptor, authInterceptor, erroresInterceptor]),
+      withInterceptors([
+        cargaInterceptor,
+        turnstileInterceptor,
+        authInterceptor,
+        erroresInterceptor,
+      ]),
     ),
     { provide: LOCALE_ID, useValue: 'es-CO' },
   ],

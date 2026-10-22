@@ -111,7 +111,13 @@
     }
 
     <div class="acciones">
-      <button type="submit" class="boton" [disabled]="guardando()">
+      <button
+        appConfirmar="¿Guardar el usuario?"
+        confirmarBoton="Sí, guardar"
+        type="submit"
+        class="boton"
+        [disabled]="guardando()"
+      >
         {{ guardando() ? 'Guardando…' : 'Guardar' }}
       </button>
       <a class="boton secundario" routerLink="/interno/admin/usuarios">Cancelar</a>

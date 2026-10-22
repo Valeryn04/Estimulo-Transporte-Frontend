@@ -5,6 +5,7 @@ import { ApiError } from '../../../core/api/api-error';
 import { EncuestaApi, EncuestaPublica, PreguntaPublica } from '../../../core/publico/encuesta-api';
 import { ocultarTokenEnLaUrl } from '../../../shared/enlace';
 import { Ayuda } from '../../../shared/ayuda/ayuda';
+import { Confirmar } from '../../../shared/alertas/confirmar';
 
 type Paso =
   'cargando' | 'responder' | 'gracias' | 'ya-respondida' | 'cerrada' | 'invalida' | 'error';
@@ -15,7 +16,7 @@ type Paso =
  */
 @Component({
   selector: 'app-encuesta-page',
-  imports: [RouterLink, Ayuda],
+  imports: [Confirmar, RouterLink, Ayuda],
   templateUrl: './encuesta-page.html',
   styleUrl: './encuesta-page.scss',
 })

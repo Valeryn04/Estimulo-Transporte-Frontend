@@ -145,6 +145,9 @@
                       </button>
                     } @else {
                       <button
+                        appConfirmar="¿Desbloquear a esta persona?"
+                        confirmarTexto="Podrá volver a ingresar al portal."
+                        confirmarBoton="Sí, desbloquear"
                         type="button"
                         class="accion-icono"
                         [title]="'Desbloquear a ' + u.usuario"
@@ -232,7 +235,17 @@
       <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
     }
     <div class="acciones">
-      <button type="submit" class="boton peligro" [disabled]="trabajando()">
+      <button
+        [appConfirmar]="
+          accion() === 'baja' ? '¿Dar de baja a esta persona?' : '¿Bloquear a esta persona?'
+        "
+        confirmarTexto="Quedará registrado en la bitácora con el motivo que escribió."
+        confirmarBoton="Sí, continuar"
+        [confirmarPeligro]="true"
+        type="submit"
+        class="boton peligro"
+        [disabled]="trabajando()"
+      >
         {{ accion() === 'baja' ? 'Dar de baja' : 'Bloquear usuario' }}
       </button>
       <button type="button" class="boton secundario" (click)="cerrarDialogo()">Cancelar</button>
@@ -256,7 +269,16 @@
     <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
   }
   <div class="acciones">
-    <button type="button" class="boton" [disabled]="trabajando()" (click)="guardarPassword()">
+    <button
+      appConfirmar="¿Enviar una contraseña temporal?"
+      confirmarTexto="Llegará al correo de la persona y la contraseña actual dejará de servir."
+      confirmarBoton="Sí, enviar"
+      [confirmarPeligro]="true"
+      type="button"
+      class="boton"
+      [disabled]="trabajando()"
+      (click)="guardarPassword()"
+    >
       {{ trabajando() ? 'Enviando…' : 'Enviar contraseña temporal' }}
     </button>
     <button type="button" class="boton secundario" (click)="cerrarDialogo()">Cancelar</button>

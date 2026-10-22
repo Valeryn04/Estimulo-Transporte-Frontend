@@ -10,6 +10,7 @@ import { Direccion } from '../../../../shared/direccion/direccion';
 import { aplicarErroresApi, valorDe } from '../../../../shared/forms';
 import { DatoActualizable, DatosActualizacion } from '../modelos-novedades';
 import { NovedadesApi } from '../novedades-api';
+import { Confirmar } from '../../../../shared/alertas/confirmar';
 
 /**
  * Actualización de datos del beneficiario: dirección, correo o cuidador (RF-BEN-05). Cada cambio exige soporte y
@@ -17,7 +18,7 @@ import { NovedadesApi } from '../novedades-api';
  */
 @Component({
   selector: 'app-actualizar-datos',
-  imports: [ReactiveFormsModule, Campo, CampoControl, Direccion, Ayuda],
+  imports: [Confirmar, ReactiveFormsModule, Campo, CampoControl, Direccion, Ayuda],
   templateUrl: './actualizar-datos.html',
 })
 export class ActualizarDatos implements OnInit {

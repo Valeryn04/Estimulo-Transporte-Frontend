@@ -127,53 +127,59 @@
           Cuidador o asistente personal
           <app-ayuda
             etiqueta="Cuidador o asistente personal"
-            texto="El cuidador acompaña a la persona con discapacidad. Una persona solo puede tener un cuidador asociado."
+            texto="El cuidador acompaña a la persona con discapacidad. Una persona solo puede tener un cuidador asociado. Si no tiene cuidador, marque la casilla y continúe."
           />
         </legend>
-        <app-campo
-          idCampo="cui-nombre"
-          etiqueta="Nombre completo"
-          [control]="form.controls.cuidadorNombre"
-          [mensajes]="{ pattern: 'use solo letras, espacios, punto, apóstrofo o guion' }"
-        >
-          <input
-            appCampoControl
-            type="text"
-            formControlName="cuidadorNombre"
-            autocomplete="off"
-            maxlength="150"
-          />
-        </app-campo>
-        <div class="rejilla">
+        <label class="opcion">
+          <input type="checkbox" formControlName="sinCuidador" id="sin-cuidador" />
+          <span>La persona con discapacidad no tiene cuidador</span>
+        </label>
+        @if (!form.controls.sinCuidador.value) {
           <app-campo
-            idCampo="cui-tipo"
-            etiqueta="Tipo de identificación"
-            [control]="form.controls.cuidadorTipoIdentificacionId"
-            [mensajes]="{ required: 'elija una opción de la lista' }"
-          >
-            <select appCampoControl formControlName="cuidadorTipoIdentificacionId">
-              <option [ngValue]="null" disabled>Seleccione</option>
-              @for (t of d.tiposIdentificacion; track t.id) {
-                <option [ngValue]="t.id">{{ t.codigo }} – {{ t.nombre }}</option>
-              }
-            </select>
-          </app-campo>
-          <app-campo
-            idCampo="cui-numero"
-            etiqueta="Número de identificación"
-            ayuda="Escriba el número sin puntos ni espacios."
-            [control]="form.controls.cuidadorNumero"
+            idCampo="cui-nombre"
+            etiqueta="Nombre completo"
+            [control]="form.controls.cuidadorNombre"
+            [mensajes]="{ pattern: 'use solo letras, espacios, punto, apóstrofo o guion' }"
           >
             <input
               appCampoControl
               type="text"
-              formControlName="cuidadorNumero"
+              formControlName="cuidadorNombre"
               autocomplete="off"
-              [attr.inputmode]="modoCuidador()"
-              maxlength="25"
+              maxlength="150"
             />
           </app-campo>
-        </div>
+          <div class="rejilla">
+            <app-campo
+              idCampo="cui-tipo"
+              etiqueta="Tipo de identificación"
+              [control]="form.controls.cuidadorTipoIdentificacionId"
+              [mensajes]="{ required: 'elija una opción de la lista' }"
+            >
+              <select appCampoControl formControlName="cuidadorTipoIdentificacionId">
+                <option [ngValue]="null" disabled>Seleccione</option>
+                @for (t of d.tiposIdentificacion; track t.id) {
+                  <option [ngValue]="t.id">{{ t.codigo }} – {{ t.nombre }}</option>
+                }
+              </select>
+            </app-campo>
+            <app-campo
+              idCampo="cui-numero"
+              etiqueta="Número de identificación"
+              ayuda="Escriba el número sin puntos ni espacios."
+              [control]="form.controls.cuidadorNumero"
+            >
+              <input
+                appCampoControl
+                type="text"
+                formControlName="cuidadorNumero"
+                autocomplete="off"
+                [attr.inputmode]="modoCuidador()"
+                maxlength="25"
+              />
+            </app-campo>
+          </div>
+        }
       </fieldset>
 
       <fieldset class="seccion">
@@ -305,7 +311,14 @@
 
       <app-turnstile />
       <div class="acciones">
-        <button type="submit" class="boton" [disabled]="enviando()">
+        <button
+          appConfirmar="¿Enviar la preinscripción?"
+          confirmarTexto="Le enviaremos un enlace de verificación al correo que escribió. Revise que esté bien escrito."
+          confirmarBoton="Sí, enviar"
+          type="submit"
+          class="boton"
+          [disabled]="enviando()"
+        >
           {{ enviando() ? 'Enviando…' : 'Enviar preinscripción' }}
         </button>
       </div>

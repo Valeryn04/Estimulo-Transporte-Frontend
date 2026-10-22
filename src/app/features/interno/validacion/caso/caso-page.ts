@@ -19,6 +19,7 @@ import {
 import { ValidacionApi } from '../validacion-api';
 import { SECCIONES_DATOS, valorLegible } from './datos-caso';
 import { Ayuda } from '../../../../shared/ayuda/ayuda';
+import { Confirmar } from '../../../../shared/alertas/confirmar';
 
 const NOMBRE_DECISION: Record<DecisionValidacion, string> = {
   APROBAR: 'Aprobar la validación',
@@ -39,7 +40,7 @@ type FormItem = FormGroup<{
  */
 @Component({
   selector: 'app-caso-page',
-  imports: [DatePipe, ReactiveFormsModule, RouterLink, Dialogo, Ayuda],
+  imports: [Confirmar, DatePipe, ReactiveFormsModule, RouterLink, Dialogo, Ayuda],
   templateUrl: './caso-page.html',
   styleUrl: './caso-page.scss',
 })

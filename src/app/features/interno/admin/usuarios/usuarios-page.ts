@@ -11,6 +11,7 @@ import { Icono } from '../../../../shared/icono/icono';
 import { AdminApi } from '../admin-api';
 import { EstadoUsuario, Pagina, Rol, Usuario } from '../modelos';
 import { Pestanas } from '../../../../shared/pestanas/pestanas';
+import { Confirmar } from '../../../../shared/alertas/confirmar';
 
 type Accion = 'ninguna' | 'bloquear' | 'baja' | 'password';
 
@@ -27,6 +28,7 @@ const ETIQUETA_ESTADO: Record<EstadoUsuario, string> = {
 @Component({
   selector: 'app-usuarios-page',
   imports: [
+    Confirmar,
     Icono,
     DatePipe,
     ReactiveFormsModule,

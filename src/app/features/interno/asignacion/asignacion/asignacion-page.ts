@@ -16,6 +16,7 @@ import {
   Propuesta,
 } from '../modelos-asignacion';
 import { Pestanas } from '../../../../shared/pestanas/pestanas';
+import { Confirmar } from '../../../../shared/alertas/confirmar';
 
 type Pestana = 'propuesta' | 'beneficiarios';
 type Dialogos = 'ninguno' | 'omisiones' | 'espera';
@@ -28,6 +29,7 @@ type Dialogos = 'ninguno' | 'omisiones' | 'espera';
 @Component({
   selector: 'app-asignacion-page',
   imports: [
+    Confirmar,
     CurrencyPipe,
     DatePipe,
     DecimalPipe,

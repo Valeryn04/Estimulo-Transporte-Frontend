@@ -18,6 +18,7 @@ import {
 } from '../modelos-priorizacion';
 import { PriorizacionApi } from '../priorizacion-api';
 import { Pestanas } from '../../../../shared/pestanas/pestanas';
+import { Confirmar } from '../../../../shared/alertas/confirmar';
 
 type Vista = 'ninguna' | 'puntaje' | 'excepcion' | 'recalcular';
 
@@ -28,7 +29,16 @@ type Vista = 'ninguna' | 'puntaje' | 'excepcion' | 'recalcular';
  */
 @Component({
   selector: 'app-listado-priorizado-page',
-  imports: [DatePipe, DecimalPipe, ReactiveFormsModule, Campo, CampoControl, Dialogo, Pestanas],
+  imports: [
+    Confirmar,
+    DatePipe,
+    DecimalPipe,
+    ReactiveFormsModule,
+    Campo,
+    CampoControl,
+    Dialogo,
+    Pestanas,
+  ],
   templateUrl: './listado-page.html',
   styleUrl: './listado-page.scss',
 })

@@ -8,6 +8,7 @@ import { PERMISO } from '../../../../core/auth/modelos';
 import { Sesion } from '../../../../core/auth/sesion';
 import { Bandeja, EstadoCaso, FiltroBandeja, Validador } from '../modelos-validacion';
 import { ValidacionApi } from '../validacion-api';
+import { Confirmar } from '../../../../shared/alertas/confirmar';
 
 type Orden = FiltroBandeja['orden'];
 
@@ -18,7 +19,7 @@ type Orden = FiltroBandeja['orden'];
  */
 @Component({
   selector: 'app-bandeja-page',
-  imports: [DatePipe, ReactiveFormsModule, RouterLink],
+  imports: [Confirmar, DatePipe, ReactiveFormsModule, RouterLink],
   templateUrl: './bandeja-page.html',
   styleUrl: './bandeja-page.scss',
 })

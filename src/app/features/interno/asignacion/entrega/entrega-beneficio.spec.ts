@@ -2,6 +2,7 @@ import { API_BASE } from '../../../../core/api/api';
 import { errorApi, montarPantalla } from '../../../../testing/config';
 import { DetalleBeneficio } from '../modelos-asignacion';
 import { EntregaBeneficio } from './entrega-beneficio';
+import { esperarTareas } from '../../../../testing/asentar';
 
 const URL = `${API_BASE}/admin/asignacion/beneficiarios/5`;
 
@@ -186,6 +187,7 @@ describe('EntregaBeneficio', () => {
     [...el.querySelectorAll<HTMLButtonElement>('dialog .boton')]
       .find((b) => b.textContent?.includes('Confirmar la activación'))!
       .click();
+    await esperarTareas();
     const r = ctrl.expectOne(`${URL}/activar`);
     expect(r.request.body).toEqual({ observacion: '' });
     r.flush(

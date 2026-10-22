@@ -56,7 +56,15 @@
     </label>
   </app-campo>
   <div class="acciones">
-    <button type="submit" class="boton secundario" [disabled]="guardando()">
+    <button
+      appConfirmar="¿Finalizar el beneficio?"
+      confirmarTexto="Se libera el cupo y no se puede deshacer."
+      confirmarBoton="Sí, finalizar"
+      [confirmarPeligro]="true"
+      type="submit"
+      class="boton secundario"
+      [disabled]="guardando()"
+    >
       {{ guardando() ? 'Finalizando…' : 'Finalizar el beneficio' }}
     </button>
   </div>

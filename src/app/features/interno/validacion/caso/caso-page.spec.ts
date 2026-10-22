@@ -2,6 +2,7 @@ import { API_BASE } from '../../../../core/api/api';
 import { errorApi, montarPantalla } from '../../../../testing/config';
 import { Caso, ItemCaso } from '../modelos-validacion';
 import { CasoPage } from './caso-page';
+import { esperarTareas } from '../../../../testing/asentar';
 
 const item = (c: Partial<ItemCaso>): ItemCaso => ({
   id: 10,
@@ -174,6 +175,7 @@ describe('CasoPage', () => {
   it('cada cambio en un requisito se guarda y avisa que quedó guardado', async () => {
     const { el, ctrl, asentar } = await montar();
     el.querySelectorAll<HTMLInputElement>('.requisito input[type="radio"]')[0]!.click();
+    await esperarTareas();
     const req = ctrl.expectOne(`${URL_CASO}/items/10`);
     expect(req.request.method).toBe('PUT');
     expect(req.request.body).toEqual({
@@ -195,6 +197,7 @@ describe('CasoPage', () => {
       b.textContent!.includes('Usar'),
     )!;
     usar.click();
+    await esperarTareas();
     const req = ctrl.expectOne(`${URL_CASO}/items/10`);
     expect(req.request.body.fuente).toBe('Consulta del SISBÉN IV');
     req.flush(item({ fuente: 'Consulta del SISBÉN IV' }));
@@ -204,6 +207,7 @@ describe('CasoPage', () => {
   it('muestra el error que devuelve la API al guardar un requisito', async () => {
     const { el, ctrl, asentar } = await montar();
     el.querySelectorAll<HTMLInputElement>('.requisito input[type="radio"]')[0]!.click();
+    await esperarTareas();
     ctrl
       .expectOne(`${URL_CASO}/items/10`)
       .flush(
@@ -240,6 +244,7 @@ describe('CasoPage', () => {
       expect(el.querySelector('dialog[open]')?.textContent).toContain('Aprobar la validación');
       ctrl.expectNone((r) => r.url.endsWith('/decision'));
       el.querySelector<HTMLButtonElement>('dialog[open] .boton:not(.secundario)')!.click();
+      await esperarTareas();
       const req = ctrl.expectOne(`${URL_CASO}/decision`);
       expect(req.request.body).toEqual({ decision: 'APROBAR', motivacion: 'Todo en orden' });
       req.flush(
@@ -259,6 +264,7 @@ describe('CasoPage', () => {
       el.querySelector<HTMLButtonElement>('form button[type="submit"]')!.click();
       await asentar();
       el.querySelector<HTMLButtonElement>('dialog[open] .boton:not(.secundario)')!.click();
+      await esperarTareas();
       ctrl.expectOne(`${URL_CASO}/decision`).flush(
         errorApi('VALIDACION', 'Revise', [
           {
@@ -291,6 +297,7 @@ describe('CasoPage', () => {
         b.textContent!.includes('Devolver a la bandeja'),
       )!;
       devolver.click();
+      await esperarTareas();
       const req = ctrl.expectOne(`${URL_CASO}/liberar`);
       expect(req.request.method).toBe('POST');
       req.flush(null, { status: 204, statusText: 'Sin contenido' });

@@ -172,6 +172,31 @@ describe('PreinscripcionPage', () => {
     });
   });
 
+  it('una persona sin cuidador no tiene que llenar sus datos y se envía sin ellos', async () => {
+    const { el, ctrl, llenar, enviar, asentar } = await montar();
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    await llenar();
+    const casilla = el.querySelector<HTMLInputElement>('#sin-cuidador')!;
+    casilla.click();
+    await asentar();
+    expect(el.querySelector('#cui-nombre')).toBeNull();
+    enviar();
+    const req = ctrl.expectOne(`${API_BASE}/publico/preinscripciones`);
+    expect(req.request.body.tieneCuidador).toBe(false);
+    expect(req.request.body.cuidadorNumero).toBeUndefined();
+    expect(req.request.body.cuidadorNombre).toBeUndefined();
+  });
+
+  it('sin marcar «no tiene cuidador», los datos del cuidador siguen siendo obligatorios', async () => {
+    const { el, ctrl, escribir, llenar, enviar, asentar } = await montar();
+    await llenar();
+    escribir('#cui-nombre', '');
+    enviar();
+    await asentar();
+    ctrl.expectNone((r) => r.method === 'POST');
+    expect(el.querySelector('#cui-nombre-error')).not.toBeNull();
+  });
+
   it('el correo se escribe dos veces: si son diferentes lo dice en el campo y no se envía', async () => {
     const { el, ctrl, llenar, escribir, enviar, asentar } = await montar();
     await llenar();

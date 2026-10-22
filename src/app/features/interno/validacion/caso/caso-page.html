@@ -45,7 +45,11 @@
       </div>
       <div>
         <dt>Cuidador</dt>
-        <dd>{{ c.cuidador.nombre }} · {{ c.cuidador.tipo }} {{ c.cuidador.numero }}</dd>
+        @if (c.cuidador; as cui) {
+          <dd>{{ cui.nombre }} · {{ cui.tipo }} {{ cui.numero }}</dd>
+        } @else {
+          <dd>Sin cuidador</dd>
+        }
       </div>
       <div>
         <dt>Correo de notificaciones</dt>
@@ -88,7 +92,14 @@
     </dl>
     @if (puedeEditar() && !resultado()) {
       <p>
-        <button type="button" class="boton secundario" (click)="devolver()">
+        <button
+          appConfirmar="¿Devolver el caso a la bandeja sin decidir?"
+          confirmarTexto="Lo podrá tomar otra persona."
+          confirmarBoton="Sí, devolver"
+          type="button"
+          class="boton secundario"
+          (click)="devolver()"
+        >
           Devolver a la bandeja sin decidir
         </button>
       </p>

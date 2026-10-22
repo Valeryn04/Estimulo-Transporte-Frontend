@@ -2,7 +2,14 @@
 <div class="encabezado">
   <h1>Matriz de ponderación</h1>
   @if (puedeAdministrar() && !hayAbierta()) {
-    <button type="button" class="boton" (click)="nuevaVersion()">
+    <button
+      appConfirmar="¿Crear una nueva versión?"
+      confirmarTexto="Será una copia de la versión vigente, como borrador."
+      confirmarBoton="Sí, crear"
+      type="button"
+      class="boton"
+      (click)="nuevaVersion()"
+    >
       Nueva versión (copia de la vigente)
     </button>
   }
@@ -89,7 +96,14 @@
                   Simular<span class="solo-lectores"> la versión {{ v.version }}</span>
                 </button>
                 @if (puedeAdministrar() && !hayAbierta()) {
-                  <button type="button" class="enlace" (click)="nuevaVersion(v.id)">
+                  <button
+                    appConfirmar="¿Crear una nueva versión?"
+                    confirmarTexto="Será una copia de esta versión, como borrador."
+                    confirmarBoton="Sí, crear"
+                    type="button"
+                    class="enlace"
+                    (click)="nuevaVersion(v.id)"
+                  >
                     Crear versión a partir de esta
                   </button>
                 }
@@ -268,13 +282,26 @@
         </fieldset>
 
         <div class="acciones">
-          <button type="submit" class="boton" [disabled]="guardando()">
+          <button
+            appConfirmar="¿Guardar el borrador de la matriz?"
+            confirmarBoton="Sí, guardar"
+            type="submit"
+            class="boton"
+            [disabled]="guardando()"
+          >
             {{ guardando() ? 'Guardando…' : 'Guardar borrador' }}
           </button>
           <button type="button" class="boton secundario" (click)="simularBorrador()">
             Guardar y simular
           </button>
-          <button type="button" class="boton secundario" (click)="pedirAprobacion()">
+          <button
+            appConfirmar="¿Pedir la aprobación del responsable?"
+            confirmarTexto="Mientras tanto no se podrá editar el borrador."
+            confirmarBoton="Sí, pedir"
+            type="button"
+            class="boton secundario"
+            (click)="pedirAprobacion()"
+          >
             Pedir aprobación del responsable
           </button>
         </div>
@@ -468,7 +495,15 @@
     <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
   }
   <div class="acciones">
-    <button type="button" class="boton" (click)="decidir()">
+    <button
+      appConfirmar="¿Registrar la decisión sobre la matriz?"
+      confirmarTexto="Si se aprueba, pasa a ser la matriz vigente."
+      confirmarBoton="Sí, registrar"
+      [confirmarPeligro]="true"
+      type="button"
+      class="boton"
+      (click)="decidir()"
+    >
       {{ decision() === 'APROBAR' ? 'Aprobar y activar' : 'Rechazar' }}
     </button>
     <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>

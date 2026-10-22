@@ -810,3 +810,33 @@ h2 app-ayuda {
 app-root {
   display: block;
 }
+
+// Avisos y confirmaciones (SweetAlert2): botones y tipografía del portal.
+.swal2-popup {
+  font-family: inherit;
+  color: var(--color-text);
+  border-radius: 14px;
+
+  .swal2-title {
+    font-size: 1.25rem;
+    color: var(--govco-azul-oscuro);
+  }
+
+  .swal2-html-container {
+    font-size: 1rem;
+    color: var(--color-muted);
+  }
+
+  .swal2-actions {
+    gap: 12px;
+  }
+
+  .swal2-loader {
+    border-color: var(--govco-azul) transparent var(--govco-azul) transparent;
+  }
+}
+
+.swal2-container.swal2-backdrop-show,
+.swal2-container.swal2-noanimation {
+  background: rgb(20 35 52 / 55%);
+}

@@ -7,6 +7,7 @@ import { Campo } from '../../../../shared/campo';
 import { CampoControl } from '../../../../shared/campo-control';
 import { aplicarErroresApi } from '../../../../shared/forms';
 import { NovedadesApi } from '../novedades-api';
+import { Confirmar } from '../../../../shared/alertas/confirmar';
 
 /**
  * Finalización del beneficio por fallecimiento, renuncia, fin de vigencia o pérdida de requisitos (RF-BEN-05). Exige
@@ -14,7 +15,7 @@ import { NovedadesApi } from '../novedades-api';
  */
 @Component({
   selector: 'app-finalizar-beneficio',
-  imports: [ReactiveFormsModule, Campo, CampoControl, Ayuda],
+  imports: [Confirmar, ReactiveFormsModule, Campo, CampoControl, Ayuda],
   templateUrl: './finalizar-beneficio.html',
 })
 export class FinalizarBeneficio {

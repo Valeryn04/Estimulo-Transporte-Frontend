@@ -1,5 +1,6 @@
 import { API_BASE } from '../../../../core/api/api';
 import { errorApi, montarPantalla } from '../../../../testing/config';
+import { esperarTareas } from '../../../../testing/asentar';
 import { AjusteCupos, CuposConCatalogos } from '../modelos-asignacion';
 import { CuposPage } from './cupos-page';
 
@@ -86,7 +87,7 @@ describe('CuposPage', () => {
     enviar('section form');
     await asentar();
     ctrl.expectNone((r) => r.method === 'PUT');
-    expect(el.querySelector('.aviso.error')?.textContent).toContain('Adjunte el soporte');
+    expect(el.querySelector('.aviso.error')?.textContent).toContain('Soporte: adjunte');
   });
 
   it('sin ningún cambio no llama a la API', async () => {
@@ -105,6 +106,7 @@ describe('CuposPage', () => {
     escribir('#cupos-motivo', 'Adición presupuestal de la vigencia');
     archivo(el);
     enviar('section form');
+    await esperarTareas();
     const r = ctrl.expectOne(URL);
     expect(r.request.method).toBe('PUT');
     const form = r.request.body as FormData;
@@ -147,6 +149,7 @@ describe('CuposPage', () => {
     escribir('#cupos-motivo', 'Distribución acordada con la Gerencia');
     await asentar();
     enviar('section form');
+    await esperarTareas();
     const r = ctrl.expectOne(URL);
     expect(JSON.parse((r.request.body as FormData).get('datos') as string)).toEqual({
       motivo: 'Distribución acordada con la Gerencia',
@@ -162,20 +165,21 @@ describe('CuposPage', () => {
 
   it('muestra los errores que devuelve la API', async () => {
     const { el, ctrl, escribir, enviar, asentar } = await montar();
-    escribir('#cupos-totales', '1');
-    escribir('#cupos-motivo', 'Reducción de cupos solicitada');
+    escribir('#cupos-presupuesto', '3000000');
+    escribir('#cupos-motivo', 'Ajuste del presupuesto solicitado');
     archivo(el);
     enviar('section form');
+    await esperarTareas();
     ctrl.expectOne(URL).flush(
       errorApi('VALIDACION', 'Revise', [
         {
-          campo: 'cuposTotales',
-          mensaje: 'Cupos: no pueden ser menos que los 2 que ya están ocupados',
+          campo: 'presupuestoTotal',
+          mensaje: 'Presupuesto: el acto adjunto no corresponde a la vigencia',
         },
       ]),
       { status: 422, statusText: 'No procesable' },
     );
     await asentar();
-    expect(el.querySelector('.aviso.error')?.textContent).toContain('ya están ocupados');
+    expect(el.querySelector('.aviso.error')?.textContent).toContain('no corresponde a la vigencia');
   });
 });

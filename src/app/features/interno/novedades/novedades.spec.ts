@@ -5,6 +5,7 @@ import { ExpedienteBeneficio } from './expediente/expediente-beneficio';
 import { AlertaCruce, ExpedienteNovedades, Revocatoria } from './modelos-novedades';
 import { RevocatoriasPage } from './revocatorias/revocatorias-page';
 import { NovedadesPage } from './resumen/novedades-page';
+import { esperarTareas } from '../../../testing/asentar';
 
 const URL = `${API_BASE}/admin/novedades`;
 const GESTOR = ['novedades.ver', 'novedades.gestionar'];
@@ -257,6 +258,7 @@ describe('RevocatoriasPage', () => {
     [...p.el.querySelectorAll<HTMLButtonElement>('dialog .boton')]
       .find((b) => b.textContent?.includes('Registrar el traslado'))!
       .click();
+    await esperarTareas();
     const r = p.ctrl.expectOne(`${URL}/revocatorias/3/traslado`);
     expect(JSON.parse((r.request.body as FormData).get('datos') as string)).toEqual({
       texto: 'El operador reportó usos incompatibles con su titular.',
@@ -282,6 +284,7 @@ describe('RevocatoriasPage', () => {
     [...p.el.querySelectorAll<HTMLButtonElement>('dialog .boton')]
       .find((b) => b.textContent?.includes('Registrar que no hubo descargos'))!
       .click();
+    await esperarTareas();
     const r = p.ctrl.expectOne(`${URL}/revocatorias/3/descargos`);
     expect(JSON.parse((r.request.body as FormData).get('datos') as string)).toEqual({
       texto: '',
@@ -308,6 +311,7 @@ describe('RevocatoriasPage', () => {
     p.escribir('#rev-motivacion', 'Se verificó el uso indebido de la tarjeta por un tercero.');
     archivo(p.el, '#rev-acto-archivo');
     decidir();
+    await esperarTareas();
     const r = p.ctrl.expectOne(`${URL}/revocatorias/3/decision`);
     expect(JSON.parse((r.request.body as FormData).get('datos') as string)).toEqual({
       resultado: 'REVOCAR',
@@ -329,6 +333,7 @@ describe('RevocatoriasPage', () => {
     [...p.el.querySelectorAll<HTMLButtonElement>('dialog .boton')]
       .find((b) => b.textContent?.includes('Registrar el acto'))!
       .click();
+    await esperarTareas();
     p.ctrl
       .expectOne(`${URL}/revocatorias/3/decision`)
       .flush(

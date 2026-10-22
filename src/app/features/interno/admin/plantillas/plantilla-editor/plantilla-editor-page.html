@@ -62,6 +62,9 @@
     <div class="acciones">
       <button type="button" class="boton secundario" (click)="previsualizar()">Vista previa</button>
       <button
+        appConfirmar="¿Guardar como nueva versión de la plantilla?"
+        confirmarTexto="Los siguientes correos usarán este texto."
+        confirmarBoton="Sí, guardar"
         type="submit"
         class="boton"
         [disabled]="guardando() || form.pristine || conProblemas()"

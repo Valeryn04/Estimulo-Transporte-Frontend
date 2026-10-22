@@ -30,9 +30,11 @@ export interface DatosPreinscripcion {
   pcdNombre: string;
   pcdTipoIdentificacionId: number;
   pcdNumero: string;
-  cuidadorNombre: string;
-  cuidadorTipoIdentificacionId: number;
-  cuidadorNumero: string;
+  /** Falso cuando la persona no tiene cuidador: entonces no se envían sus datos. */
+  tieneCuidador: boolean;
+  cuidadorNombre?: string;
+  cuidadorTipoIdentificacionId?: number;
+  cuidadorNumero?: string;
   direccion: string | null;
   localidadId: number | null;
   barrioId: number | null;

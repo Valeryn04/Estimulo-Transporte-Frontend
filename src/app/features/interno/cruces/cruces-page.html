@@ -87,6 +87,8 @@
                   <span class="solo-lectores">Editar {{ e.nombre }}</span>
                 </button>
                 <button
+                  appConfirmar="¿Cambiar el estado de este cruce?"
+                  confirmarBoton="Sí, cambiar"
                   type="button"
                   class="accion-icono"
                   [class.peligro]="e.activo"
@@ -199,7 +201,13 @@
       <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
     }
     <div class="acciones">
-      <button type="submit" class="boton" [disabled]="guardando()">
+      <button
+        appConfirmar="¿Guardar el cruce?"
+        confirmarBoton="Sí, guardar"
+        type="submit"
+        class="boton"
+        [disabled]="guardando()"
+      >
         {{ guardando() ? 'Guardando…' : 'Guardar' }}
       </button>
       <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>
@@ -227,7 +235,15 @@
       [disabled]="subiendo()"
       (change)="elegirArchivo($event)"
     />
-    <button type="button" class="boton" [disabled]="subiendo()" (click)="subir()">
+    <button
+      appConfirmar="¿Cargar el archivo?"
+      confirmarTexto="Reemplaza el archivo vigente de este cruce y genera las alertas que correspondan."
+      confirmarBoton="Sí, cargar"
+      type="button"
+      class="boton"
+      [disabled]="subiendo()"
+      (click)="subir()"
+    >
       {{ subiendo() ? 'Cargando…' : 'Cargar' }}
     </button>
   </div>

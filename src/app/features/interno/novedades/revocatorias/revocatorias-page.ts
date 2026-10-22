@@ -17,6 +17,7 @@ import {
 import { NovedadesApi } from '../novedades-api';
 import { Ayuda } from '../../../../shared/ayuda/ayuda';
 import { Pestanas } from '../../../../shared/pestanas/pestanas';
+import { Confirmar } from '../../../../shared/alertas/confirmar';
 
 /**
  * Revocatorias con debido proceso (RF-NOV-02): inicio con causal y evidencia, traslado de las razones, descargos y acto
@@ -25,7 +26,7 @@ import { Pestanas } from '../../../../shared/pestanas/pestanas';
  */
 @Component({
   selector: 'app-revocatorias-page',
-  imports: [DatePipe, ReactiveFormsModule, Dialogo, Ayuda, Pestanas],
+  imports: [Confirmar, DatePipe, ReactiveFormsModule, Dialogo, Ayuda, Pestanas],
   templateUrl: './revocatorias-page.html',
   styleUrl: './revocatorias-page.scss',
 })

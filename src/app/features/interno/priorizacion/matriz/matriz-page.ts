@@ -21,6 +21,7 @@ import {
 import { PriorizacionApi } from '../priorizacion-api';
 import { Ayuda } from '../../../../shared/ayuda/ayuda';
 import { Pestanas } from '../../../../shared/pestanas/pestanas';
+import { Confirmar } from '../../../../shared/alertas/confirmar';
 
 type Vista = 'ninguna' | 'simulacion' | 'decision';
 const MAX_CRITERIOS = 4;
@@ -76,7 +77,7 @@ const nuevaVariable = (v?: VariableMatriz) =>
  */
 @Component({
   selector: 'app-matriz-page',
-  imports: [DatePipe, DecimalPipe, ReactiveFormsModule, Dialogo, Ayuda, Pestanas],
+  imports: [Confirmar, DatePipe, DecimalPipe, ReactiveFormsModule, Dialogo, Ayuda, Pestanas],
   templateUrl: './matriz-page.html',
   styleUrl: './matriz-page.scss',
 })

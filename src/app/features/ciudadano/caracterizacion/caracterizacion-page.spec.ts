@@ -346,7 +346,7 @@ describe('CaracterizacionPage', () => {
       const base = respuesta();
       const p = await montar(
         respuesta({
-          cuidador: { ...base.cuidador, nombreEditable: false },
+          cuidador: { ...base.cuidador!, nombreEditable: false },
           datos: { ...vacios(), requiereCuidador: true },
         }),
       );

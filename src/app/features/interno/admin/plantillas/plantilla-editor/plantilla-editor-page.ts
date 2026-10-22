@@ -17,6 +17,7 @@ import { Campo } from '../../../../../shared/campo';
 import { CampoControl } from '../../../../../shared/campo-control';
 import { ConfigApi } from '../../config/config-api';
 import { Plantilla, VersionPlantilla, VistaPrevia } from '../../config/modelos-config';
+import { Confirmar } from '../../../../../shared/alertas/confirmar';
 
 /**
  * Editor de una plantilla de correo (RF-COM-02): asunto y texto con variables, vista previa con datos de
@@ -24,7 +25,7 @@ import { Plantilla, VersionPlantilla, VistaPrevia } from '../../config/modelos-c
  */
 @Component({
   selector: 'app-plantilla-editor-page',
-  imports: [DatePipe, ReactiveFormsModule, RouterLink, Campo, CampoControl],
+  imports: [Confirmar, DatePipe, ReactiveFormsModule, RouterLink, Campo, CampoControl],
   templateUrl: './plantilla-editor-page.html',
   styleUrl: './plantilla-editor-page.scss',
 })

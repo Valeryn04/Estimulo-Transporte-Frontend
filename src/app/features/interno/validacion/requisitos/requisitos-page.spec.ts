@@ -2,6 +2,7 @@ import { API_BASE } from '../../../../core/api/api';
 import { errorApi, montarPantalla } from '../../../../testing/config';
 import { Requisito } from '../modelos-validacion';
 import { RequisitosPage } from './requisitos-page';
+import { esperarTareas } from '../../../../testing/asentar';
 
 const req = (c: Partial<Requisito>): Requisito => ({
   id: 1,
@@ -124,6 +125,7 @@ describe('RequisitosPage', () => {
     el.querySelector<HTMLButtonElement>(
       'button[title="Desactivar SISBÉN IV grupo A, B o C"]',
     )!.click();
+    await esperarTareas();
     ctrl.expectOne(`${URL}/1/desactivar`).flush(req({ activo: false }));
     await asentar();
     ctrl.expectOne(URL).flush({ items: [req({ activo: false })] });
@@ -136,6 +138,7 @@ describe('RequisitosPage', () => {
     el.querySelector<HTMLButtonElement>(
       'button[title="Historial de SISBÉN IV grupo A, B o C"]',
     )!.click();
+    await esperarTareas();
     ctrl.expectOne(`${URL}/1/versiones`).flush({
       items: [
         {

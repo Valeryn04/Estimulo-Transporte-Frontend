@@ -10,6 +10,7 @@ import { CampoControl } from '../../../../shared/campo-control';
 import { igualA, valorDe } from '../../../../shared/forms';
 import { passwordValida } from '../../../../shared/requisitos-password/politica-password';
 import { RequisitosPassword } from '../../../../shared/requisitos-password/requisitos-password';
+import { Confirmar } from '../../../../shared/alertas/confirmar';
 
 /**
  * Cambio de contraseña del funcionario. Es obligatorio en el primer ingreso (contraseña temporal) y
@@ -17,7 +18,7 @@ import { RequisitosPassword } from '../../../../shared/requisitos-password/requi
  */
 @Component({
   selector: 'app-cambiar-password-page',
-  imports: [ReactiveFormsModule, Campo, CampoControl, RequisitosPassword],
+  imports: [Confirmar, ReactiveFormsModule, Campo, CampoControl, RequisitosPassword],
   templateUrl: './cambiar-password-page.html',
 })
 export class CambiarPasswordPage {

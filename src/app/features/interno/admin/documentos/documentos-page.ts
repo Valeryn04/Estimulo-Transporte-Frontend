@@ -10,6 +10,7 @@ import { aplicarErroresApi } from '../../../../shared/forms';
 import { ConfigApi } from '../config/config-api';
 import { AplicaA, DocumentoRequerido, NOMBRE_APLICA_A } from '../config/modelos-config';
 import { Pestanas } from '../../../../shared/pestanas/pestanas';
+import { Confirmar } from '../../../../shared/alertas/confirmar';
 
 /**
  * Documentos exigidos al ciudadano (RN-05, RN-06, RF-CAR-03): los de la persona con discapacidad, los del
@@ -17,7 +18,7 @@ import { Pestanas } from '../../../../shared/pestanas/pestanas';
  */
 @Component({
   selector: 'app-documentos-page',
-  imports: [ReactiveFormsModule, Campo, CampoControl, Dialogo, Icono, Pestanas],
+  imports: [Confirmar, ReactiveFormsModule, Campo, CampoControl, Dialogo, Icono, Pestanas],
   templateUrl: './documentos-page.html',
   styleUrl: './documentos-page.scss',
 })

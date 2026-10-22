@@ -70,6 +70,9 @@
                   <span class="solo-lectores">Editar {{ r.nombre }}</span>
                 </button>
                 <button
+                  appConfirmar="¿Cambiar el estado de este requisito?"
+                  confirmarTexto="Un requisito desactivado deja de evaluarse en la validación."
+                  confirmarBoton="Sí, cambiar"
                   type="button"
                   class="accion-icono"
                   [class.peligro]="r.activo"
@@ -182,7 +185,14 @@
       <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
     }
     <div class="acciones">
-      <button type="submit" class="boton" [disabled]="guardando()">
+      <button
+        appConfirmar="¿Guardar el requisito?"
+        confirmarTexto="Se conserva el historial de versiones."
+        confirmarBoton="Sí, guardar"
+        type="submit"
+        class="boton"
+        [disabled]="guardando()"
+      >
         {{ guardando() ? 'Guardando…' : 'Guardar' }}
       </button>
       <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>

@@ -112,7 +112,8 @@ export interface Caracterizacion {
     radicadaAt: string | null;
   };
   pcd: IdentificacionPersona & { correo: string };
-  cuidador: IdentificacionPersona & { nombreEditable: boolean };
+  /** Nulo cuando la persona se preinscribió sin cuidador. */
+  cuidador: (IdentificacionPersona & { nombreEditable: boolean }) | null;
   datos: DatosCaracterizacion;
   subsanacion: SubsanacionCiudadano | null;
   avance: Avance;
@@ -139,7 +140,7 @@ export interface CaracterizacionGuardada {
   version: number;
   guardadoAt: string | null;
   pcdNombre: string;
-  cuidadorNombre: string;
+  cuidadorNombre: string | null;
   datos: DatosCaracterizacion;
   avance: Avance;
 }

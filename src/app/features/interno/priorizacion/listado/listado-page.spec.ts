@@ -2,6 +2,7 @@ import { API_BASE } from '../../../../core/api/api';
 import { errorApi, montarPantalla } from '../../../../testing/config';
 import { FilaListado, Listado } from '../modelos-priorizacion';
 import { ListadoPriorizadoPage } from './listado-page';
+import { esperarTareas } from '../../../../testing/asentar';
 
 const URL = `${API_BASE}/admin/priorizacion`;
 const esListado = (r: { url: string }) => r.url === `${URL}/listado`;
@@ -97,6 +98,7 @@ describe('ListadoPriorizadoPage', () => {
     [...el.querySelectorAll<HTMLButtonElement>('.encabezado .boton')]
       .find((b) => b.textContent?.includes('Calcular casos'))!
       .click();
+    await esperarTareas();
     const r = ctrl.expectOne(`${URL}/calcular`);
     expect(r.request.body).toEqual({ recalcular: false });
     r.flush({
@@ -123,6 +125,7 @@ describe('ListadoPriorizadoPage', () => {
     [...el.querySelectorAll<HTMLButtonElement>('dialog[open] .boton')]
       .find((b) => b.textContent?.trim() === 'Recalcular')!
       .click();
+    await esperarTareas();
     expect(ctrl.expectOne(`${URL}/calcular`).request.body).toEqual({ recalcular: true });
   });
 
@@ -138,6 +141,7 @@ describe('ListadoPriorizadoPage', () => {
     [...el.querySelectorAll<HTMLButtonElement>('tbody .enlace')]
       .find((b) => b.textContent?.includes('Ver puntaje'))!
       .click();
+    await esperarTareas();
     ctrl.expectOne(`${URL}/casos/7`).flush({
       solicitud: { id: 7, radicado: 'EST-2026-000007', estado: 'PRIORIZADA', pcdNombre: 'María' },
       puntaje: 90,

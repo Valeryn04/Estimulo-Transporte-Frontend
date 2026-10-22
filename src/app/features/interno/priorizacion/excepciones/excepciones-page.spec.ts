@@ -2,6 +2,7 @@ import { API_BASE } from '../../../../core/api/api';
 import { errorApi, montarPantalla } from '../../../../testing/config';
 import { Excepcion } from '../modelos-priorizacion';
 import { ExcepcionesPage } from './excepciones-page';
+import { esperarTareas } from '../../../../testing/asentar';
 
 const URL = `${API_BASE}/admin/priorizacion/excepciones`;
 const esLista = (r: { url: string }) => r.url === URL;
@@ -66,6 +67,7 @@ describe('ExcepcionesPage', () => {
     [...el.querySelectorAll<HTMLButtonElement>('dialog[open] .boton')]
       .find((b) => b.textContent?.trim() === 'Aprobar')!
       .click();
+    await esperarTareas();
     const r = ctrl.expectOne(`${URL}/1/decision`);
     expect(r.request.body).toEqual({ decision: 'APROBAR', motivo: '' });
     r.flush(excepcion({ estado: 'APROBADA', aplicable: true }));

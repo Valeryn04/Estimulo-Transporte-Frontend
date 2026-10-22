@@ -8,6 +8,7 @@ import { CampoControl } from '../../../../shared/campo-control';
 import { ConfigApi } from '../config/config-api';
 import { EstadoAutorizacion } from '../config/modelos-config';
 import { Pestanas } from '../../../../shared/pestanas/pestanas';
+import { Confirmar } from '../../../../shared/alertas/confirmar';
 
 /**
  * Texto de autorización de tratamiento de datos personales (RF-PRE-03). Cada cambio genera una versión
@@ -15,7 +16,7 @@ import { Pestanas } from '../../../../shared/pestanas/pestanas';
  */
 @Component({
   selector: 'app-autorizacion-page',
-  imports: [DatePipe, ReactiveFormsModule, Campo, CampoControl, Pestanas],
+  imports: [Confirmar, DatePipe, ReactiveFormsModule, Campo, CampoControl, Pestanas],
   templateUrl: './autorizacion-page.html',
   styleUrl: './autorizacion-page.scss',
 })

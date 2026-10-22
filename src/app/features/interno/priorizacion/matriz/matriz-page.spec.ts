@@ -2,6 +2,7 @@ import { API_BASE } from '../../../../core/api/api';
 import { errorApi, montarPantalla } from '../../../../testing/config';
 import { Matriz, ResumenMatriz, VariableMatriz } from '../modelos-priorizacion';
 import { derivarCodigo, MatrizPage } from './matriz-page';
+import { esperarTareas } from '../../../../testing/asentar';
 
 const URL = `${API_BASE}/admin/matriz`;
 
@@ -78,6 +79,7 @@ describe('MatrizPage', () => {
     [...p.el.querySelectorAll<HTMLButtonElement>('tbody .enlace')]
       .find((b) => b.textContent?.replace(/\s+/g, ' ').includes(texto))!
       .click();
+    await esperarTareas();
     p.ctrl.expectOne(`${URL}/${m.id}`).flush(m);
     await p.asentar();
   }
@@ -120,6 +122,7 @@ describe('MatrizPage', () => {
   it('crea un borrador copia de la vigente y lo deja listo para editar', async () => {
     const p = await montar();
     p.el.querySelector<HTMLButtonElement>('.encabezado .boton')!.click();
+    await esperarTareas();
     const r = p.ctrl.expectOne(URL);
     expect(r.request.method).toBe('POST');
     expect(r.request.body).toEqual({});
@@ -213,6 +216,7 @@ describe('MatrizPage', () => {
     [...p.el.querySelectorAll<HTMLButtonElement>('tbody .enlace')]
       .find((b) => b.textContent?.includes('Simular'))!
       .click();
+    await esperarTareas();
     p.ctrl.expectOne(`${URL}/1/simulacion`).flush({
       matriz: { id: 1, version: 1, puntajeMaximo: 30 },
       vigenteVersion: 1,
@@ -254,6 +258,7 @@ describe('MatrizPage', () => {
     [...p.el.querySelectorAll<HTMLButtonElement>('form .boton')]
       .find((b) => b.textContent?.includes('Pedir aprobación'))!
       .click();
+    await esperarTareas();
     p.ctrl.expectOne(`${URL}/2`).flush(borrador);
     await p.asentar();
     p.ctrl
@@ -287,6 +292,7 @@ describe('MatrizPage', () => {
     [...p.el.querySelectorAll<HTMLButtonElement>('dialog[open] .boton')]
       .find((b) => b.textContent?.trim() === 'Aprobar y activar')!
       .click();
+    await esperarTareas();
     const r = p.ctrl.expectOne(`${URL}/2/decision`);
     expect(r.request.body).toEqual({ decision: 'APROBAR', motivo: '' });
     r.flush({ ...pendiente, estado: 'VIGENTE' });

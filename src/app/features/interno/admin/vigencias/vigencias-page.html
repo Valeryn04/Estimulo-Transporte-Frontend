@@ -60,6 +60,10 @@
                 </button>
                 @if (!v.activa) {
                   <button
+                    appConfirmar="¿Activar esta vigencia?"
+                    confirmarTexto="Pasará a ser la vigencia en curso para las preinscripciones y el seguimiento."
+                    confirmarBoton="Sí, activar"
+                    [confirmarPeligro]="true"
                     type="button"
                     class="accion-icono"
                     [title]="'Activar la vigencia ' + v.anio"
@@ -119,7 +123,13 @@
       <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
     }
     <div class="acciones">
-      <button type="submit" class="boton" [disabled]="guardando()">
+      <button
+        appConfirmar="¿Guardar la vigencia?"
+        confirmarBoton="Sí, guardar"
+        type="submit"
+        class="boton"
+        [disabled]="guardando()"
+      >
         {{ guardando() ? 'Guardando…' : 'Guardar' }}
       </button>
       <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>

@@ -139,7 +139,14 @@
         <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
       }
       <div class="acciones">
-        <button type="submit" class="boton" [disabled]="guardando()">
+        <button
+          appConfirmar="¿Guardar el nuevo valor del parámetro?"
+          confirmarTexto="Queda una nueva versión en el historial y se aplica de inmediato."
+          confirmarBoton="Sí, guardar"
+          type="submit"
+          class="boton"
+          [disabled]="guardando()"
+        >
           {{ guardando() ? 'Guardando…' : 'Guardar nueva versión' }}
         </button>
         <button type="button" class="boton secundario" (click)="cerrar()">Cancelar</button>

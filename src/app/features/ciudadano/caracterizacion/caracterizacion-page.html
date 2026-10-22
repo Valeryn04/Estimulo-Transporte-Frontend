@@ -561,27 +561,29 @@
                     maxlength="500"
                   ></textarea>
                 </app-campo>
-                <app-campo
-                  idCampo="car-requiereCuidador"
-                  tipo="grupo"
-                  etiqueta="¿Requiere el servicio también para su cuidador o asistente personal?"
-                  ayuda="Si responde que sí, le pediremos los datos del cuidador y sus documentos."
-                  [control]="form.controls.requiereCuidador"
-                  [mensajes]="{ required: MENSAJES.respuesta }"
-                >
-                  <div class="opciones">
-                    <label class="opcion">
-                      <input type="radio" formControlName="requiereCuidador" [value]="true" /> Sí
-                    </label>
-                    <label class="opcion">
-                      <input type="radio" formControlName="requiereCuidador" [value]="false" /> No
-                    </label>
-                  </div>
-                </app-campo>
+                @if (datos.cuidador) {
+                  <app-campo
+                    idCampo="car-requiereCuidador"
+                    tipo="grupo"
+                    etiqueta="¿Requiere el servicio también para su cuidador o asistente personal?"
+                    ayuda="Si responde que sí, le pediremos los datos del cuidador y sus documentos."
+                    [control]="form.controls.requiereCuidador"
+                    [mensajes]="{ required: MENSAJES.respuesta }"
+                  >
+                    <div class="opciones">
+                      <label class="opcion">
+                        <input type="radio" formControlName="requiereCuidador" [value]="true" /> Sí
+                      </label>
+                      <label class="opcion">
+                        <input type="radio" formControlName="requiereCuidador" [value]="false" /> No
+                      </label>
+                    </div>
+                  </app-campo>
+                }
               }
 
               @case ('cuidador') {
-                @if (datos.cuidador.nombreEditable) {
+                @if (datos.cuidador?.nombreEditable) {
                   <app-campo
                     idCampo="car-cuidadorNombre"
                     etiqueta="Nombre completo del cuidador"
@@ -599,19 +601,19 @@
                   </app-campo>
                 }
                 <dl class="fijos">
-                  @if (!datos.cuidador.nombreEditable) {
+                  @if (!datos.cuidador!.nombreEditable) {
                     <div>
                       <dt>Nombre completo</dt>
-                      <dd>{{ datos.cuidador.nombre }}</dd>
+                      <dd>{{ datos.cuidador!.nombre }}</dd>
                     </div>
                   }
                   <div>
                     <dt>Tipo de identificación</dt>
-                    <dd>{{ datos.cuidador.tipoIdentificacion.nombre }}</dd>
+                    <dd>{{ datos.cuidador!.tipoIdentificacion.nombre }}</dd>
                   </div>
                   <div>
                     <dt>Número de identificación</dt>
-                    <dd>{{ datos.cuidador.numero }}</dd>
+                    <dd>{{ datos.cuidador!.numero }}</dd>
                   </div>
                 </dl>
                 <p class="nota-corta">

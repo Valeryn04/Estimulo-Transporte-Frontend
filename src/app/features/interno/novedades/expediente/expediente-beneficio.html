@@ -181,7 +181,15 @@
           />
         </div>
         <div class="acciones">
-          <button type="submit" class="boton" [disabled]="guardando()">
+          <button
+            appConfirmar="¿Registrar la novedad?"
+            confirmarTexto="Puede cambiar el estado del beneficio y queda en la bitácora."
+            confirmarBoton="Sí, registrar"
+            [confirmarPeligro]="true"
+            type="submit"
+            class="boton"
+            [disabled]="guardando()"
+          >
             {{ guardando() ? 'Guardando…' : 'Registrar la novedad' }}
           </button>
         </div>
@@ -228,7 +236,15 @@
           />
         </div>
         <div class="acciones">
-          <button type="submit" class="boton secundario" [disabled]="guardando()">
+          <button
+            appConfirmar="¿Iniciar la revocatoria?"
+            confirmarTexto="La persona recibirá un aviso y tendrá un plazo para presentar descargos."
+            confirmarBoton="Sí, iniciar"
+            [confirmarPeligro]="true"
+            type="submit"
+            class="boton secundario"
+            [disabled]="guardando()"
+          >
             Iniciar la revocatoria
           </button>
         </div>

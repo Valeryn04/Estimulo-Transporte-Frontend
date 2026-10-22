@@ -158,7 +158,7 @@ export interface Caso {
     barrio: string | null;
   };
   pcd: PersonaCaso;
-  cuidador: PersonaCaso;
+  cuidador: PersonaCaso | null;
   validacion: {
     asignadoA: string | null;
     enRevisionPor: string | null;

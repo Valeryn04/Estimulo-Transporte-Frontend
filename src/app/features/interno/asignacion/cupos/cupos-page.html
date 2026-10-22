@@ -8,9 +8,6 @@
   su soporte.
 </p>
 
-@if (mensaje()) {
-  <p class="aviso exito" role="status">{{ mensaje() }}</p>
-}
 @if (error()) {
   <p class="aviso error" role="alert">{{ error() }}</p>
 }
@@ -107,8 +104,12 @@
   @if (puedeAdministrar()) {
     <section class="tarjeta" aria-labelledby="t-mod">
       <h2 id="t-mod">Modificar cupos, valor, presupuesto o distribución</h2>
+      @if (mensaje()) {
+        <p class="aviso exito" role="status">{{ mensaje() }}</p>
+      }
       @if (erroresForm().length > 0) {
         <div class="aviso error" role="alert">
+          <p><strong>Revise lo siguiente antes de registrar el cambio:</strong></p>
           <ul>
             @for (m of erroresForm(); track $index) {
               <li>{{ m }}</li>
@@ -231,6 +232,7 @@
               texto="Obligatorio al cambiar los cupos o el presupuesto: por ejemplo, el acto de adición presupuestal."
           /></label>
           <input
+            #archivo
             id="cupos-soporte"
             type="file"
             accept=".pdf,.jpg,.jpeg,.png"
