@@ -27,7 +27,8 @@ const CLASES = {
 export class Alertas {
   private pendientes = 0;
   private temporizador: ReturnType<typeof setTimeout> | null = null;
-  private visible = false;
+  private velo: HTMLElement | null = null;
+  private seguro: ReturnType<typeof setTimeout> | null = null;
 
   /** Dentro de un <dialog> modal solo se ve (y se puede usar) lo que está dentro de él. */
   private destino(): HTMLElement {
@@ -62,7 +63,8 @@ export class Alertas {
       showConfirmButton: false,
       timer: tipo === 'error' ? 6000 : 3500,
       timerProgressBar: true,
-      target: this.destino(),
+      // En el cuerpo: si el aviso quedara dentro de un diálogo que se cierra, dejaría la ventana a medias.
+      target: document.body,
     });
   }
 
@@ -96,24 +98,33 @@ export class Alertas {
     if (this.pendientes > 0) return;
     if (this.temporizador) clearTimeout(this.temporizador);
     this.temporizador = null;
-    if (this.visible) {
-      this.visible = false;
-      // Solo se cierra la carga: un aviso o una pregunta que se haya abierto mientras tanto se respeta.
-      if (Swal.isVisible() && Swal.isLoading()) Swal.close();
-    }
+    this.quitarCarga();
   }
 
+  /**
+   * La barra de carga es un elemento propio (no una ventana de SweetAlert): así no puede dejar la página bloqueada si
+   * una ventana se cierra a medias, y siempre se retira cuando termina la última petición.
+   */
   private mostrarCarga(): void {
     this.temporizador = null;
-    this.visible = true;
-    void Swal.fire({
-      title: 'Procesando…',
-      text: 'Espere un momento, por favor.',
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      showConfirmButton: false,
-      target: this.destino(),
-      didOpen: () => Swal.showLoading(),
-    });
+    this.quitarCarga();
+    const velo = document.createElement('div');
+    velo.className = 'carga-global';
+    velo.setAttribute('role', 'status');
+    velo.setAttribute('aria-live', 'polite');
+    velo.innerHTML =
+      '<div class="carga-global__caja"><div class="carga-global__barra"><span></span></div>' +
+      '<p>Procesando… espere un momento, por favor.</p></div>';
+    this.destino().appendChild(velo);
+    this.velo = velo;
+    // Seguro: si por alguna razón nunca termina, no deja la pantalla tapada.
+    this.seguro = setTimeout(() => this.quitarCarga(), 90_000);
+  }
+
+  private quitarCarga(): void {
+    if (this.seguro) clearTimeout(this.seguro);
+    this.seguro = null;
+    this.velo?.remove();
+    this.velo = null;
   }
 }

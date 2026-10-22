@@ -51,6 +51,7 @@ export class BandejaPage implements OnInit {
     { valor: 'SUBSANADA', nombre: 'Subsanada' },
     { valor: 'EN_REVISION', nombre: 'En revisión' },
     { valor: 'EN_SUBSANACION', nombre: 'Por subsanar (plazo vencido)' },
+    { valor: 'TODOS', nombre: 'Todos los estados' },
   ];
 
   protected readonly filtros = new FormGroup({

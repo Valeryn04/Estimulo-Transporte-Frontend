@@ -1,4 +1,4 @@
-export type EstadoCaso = 'RADICADA' | 'SUBSANADA' | 'EN_REVISION' | 'EN_SUBSANACION';
+export type EstadoCaso = 'RADICADA' | 'SUBSANADA' | 'EN_REVISION' | 'EN_SUBSANACION' | 'TODOS';
 
 export type ResultadoRequisito = 'CUMPLE' | 'NO_CUMPLE' | 'PENDIENTE' | 'NO_APLICA';
 export type DecisionValidacion = 'APROBAR' | 'SUBSANAR' | 'RECHAZAR';

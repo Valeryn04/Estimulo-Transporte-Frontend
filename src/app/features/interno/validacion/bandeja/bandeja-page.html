@@ -34,17 +34,19 @@
         }
       </select>
     </div>
-    <div class="campo-simple">
-      <label for="asignado">Asignado a</label>
-      <select id="asignado" formControlName="asignado">
-        <option value="">Todos los casos</option>
-        <option value="mios">Mis casos</option>
-        <option value="sin">Sin asignar</option>
-        @for (v of validadores(); track v.id) {
-          <option [value]="v.id">{{ v.nombres }}</option>
-        }
-      </select>
-    </div>
+    @if (puedeAsignar()) {
+      <div class="campo-simple">
+        <label for="asignado">Asignado a</label>
+        <select id="asignado" formControlName="asignado">
+          <option value="">Todos los casos</option>
+          <option value="mios">Mis casos</option>
+          <option value="sin">Sin asignar</option>
+          @for (v of validadores(); track v.id) {
+            <option [value]="v.id">{{ v.nombres }}</option>
+          }
+        </select>
+      </div>
+    }
   </div>
   <label class="opcion">
     <input type="checkbox" formControlName="vencidas" />

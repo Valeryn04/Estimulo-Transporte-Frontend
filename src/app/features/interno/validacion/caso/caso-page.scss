@@ -95,6 +95,11 @@
     }
   }
 
+  &.con-error {
+    border-color: var(--color-error);
+    box-shadow: 0 0 0 1px var(--color-error);
+  }
+
   &.no-cumple {
     border-color: var(--color-error);
   }

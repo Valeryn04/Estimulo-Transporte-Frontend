@@ -197,6 +197,7 @@
       <fieldset
         class="requisito"
         [class.no-cumple]="i.resultado === 'NO_CUMPLE'"
+        [class.con-error]="marcas().items.has(i.id)"
         [disabled]="!puedeEditar()"
       >
         <legend>{{ i.nombre }}</legend>
@@ -246,6 +247,7 @@
           class="resultados"
           role="radiogroup"
           [attr.aria-label]="'Resultado de ' + i.nombre"
+          [attr.aria-invalid]="marcas().items.get(i.id)?.resultado ? 'true' : null"
           [formGroup]="formDe(i)"
         >
           @for (r of resultados; track r) {
@@ -260,6 +262,9 @@
             </label>
           }
         </div>
+        @if (marcas().items.get(i.id)?.resultado; as m) {
+          <p class="mensaje-error" role="alert">{{ m }}</p>
+        }
         <div class="rejilla" [formGroup]="formDe(i)">
           <div class="campo-simple">
             <label [attr.for]="'fuente-' + i.id">Fuente consultada</label>
@@ -268,8 +273,12 @@
               type="text"
               formControlName="fuente"
               maxlength="200"
+              [attr.aria-invalid]="marcas().items.get(i.id)?.fuente ? 'true' : null"
               (blur)="guardarItem(i)"
             />
+            @if (marcas().items.get(i.id)?.fuente; as m) {
+              <span class="mensaje-error" role="alert">{{ m }}</span>
+            }
             @if (i.fuenteSugerida && puedeEditar()) {
               <button type="button" class="enlace" (click)="usarFuenteSugerida(i)">
                 Usar «{{ i.fuenteSugerida }}»
@@ -294,8 +303,12 @@
             rows="2"
             formControlName="observacion"
             maxlength="1000"
+            [attr.aria-invalid]="marcas().items.get(i.id)?.observacion ? 'true' : null"
             (blur)="guardarItem(i)"
           ></textarea>
+          @if (marcas().items.get(i.id)?.observacion; as m) {
+            <span class="mensaje-error" role="alert">{{ m }}</span>
+          }
         </div>
         <p class="estado-guardado" role="status">
           @if (guardando().has(i.id)) {
@@ -315,21 +328,33 @@
 
   @if (c.priorizacion.variables.length > 0 || c.priorizacion.puntaje) {
     <section class="tarjeta" aria-labelledby="t-prio">
-      <h2 id="t-prio">Datos para la priorización</h2>
+      <h2 id="t-prio">
+        Datos para la priorización
+        <app-ayuda
+          etiqueta="Datos para la priorización"
+          [texto]="
+            'La matriz vigente (versión ' +
+            c.priorizacion.matrizVersion +
+            ') pide estos datos para calcular el puntaje. Se necesitan todos para aprobar la validación.'
+          "
+        />
+        @if (puedeEditar() && variablesFaltan() > 0) {
+          <small class="faltan">Faltan {{ variablesFaltan() }}</small>
+        }
+      </h2>
       @if (c.priorizacion.variables.length > 0) {
-        <p class="intro">
-          La matriz vigente (versión {{ c.priorizacion.matrizVersion }}) pide estos datos para
-          calcular el puntaje. Se necesitan todos para aprobar la validación.
-          @if (puedeEditar() && variablesFaltan() > 0) {
-            <strong>Faltan {{ variablesFaltan() }}.</strong>
-          }
-        </p>
         <div class="rejilla">
           @for (v of c.priorizacion.variables; track v.codigo) {
             <div class="campo-simple">
-              <label [attr.for]="'var-' + v.codigo">{{ v.nombre }}</label>
+              <label [attr.for]="'var-' + v.codigo">
+                {{ v.nombre }}
+                @if (v.descripcion) {
+                  <app-ayuda [etiqueta]="v.nombre" [texto]="v.descripcion" />
+                }
+              </label>
               <select
                 [id]="'var-' + v.codigo"
+                [attr.aria-invalid]="marcas().variables.has(v.codigo) ? 'true' : null"
                 [disabled]="!puedeEditar()"
                 (change)="registrarVariable(v.codigo, $any($event.target).value)"
               >
@@ -340,8 +365,8 @@
                   </option>
                 }
               </select>
-              @if (v.descripcion) {
-                <small class="ayuda">{{ v.descripcion }}</small>
+              @if (marcas().variables.has(v.codigo)) {
+                <span class="mensaje-error" role="alert">Elija una opción para poder aprobar.</span>
               }
             </div>
           }
@@ -354,6 +379,11 @@
         <p>
           <strong>Puntaje: {{ p.total }}</strong> (versión {{ p.matrizVersion }} de la matriz,
           {{ p.calculadoAt | date: 'dd/MM/yyyy HH:mm' }}).
+        </p>
+      }
+      @if (!puedeValidarPermiso()) {
+        <p class="aviso advertencia" role="note">
+          Su rol no tiene permiso para registrar estos datos: solo puede consultarlos.
         </p>
       }
     </section>
@@ -433,6 +463,12 @@
         </div>
       </form>
     </section>
+  }
+
+  @if (!puedeValidarPermiso()) {
+    <p class="aviso advertencia" role="note">
+      Su rol no tiene permiso para revisar ni decidir sobre los casos: solo puede consultarlos.
+    </p>
   }
 
   @if (c.decisiones.length > 0) {

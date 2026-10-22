@@ -1,5 +1,15 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  Injector,
+  OnInit,
+  afterNextRender,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -95,6 +105,62 @@ export class CasoPage implements OnInit {
     };
   });
   protected readonly decisionElegida = signal<DecisionValidacion | ''>('');
+  private readonly injector = inject(Injector);
+  private readonly raiz = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  /** Quien no tiene el permiso de validar solo puede consultar el caso. */
+  protected readonly puedeValidarPermiso = computed(() => this.sesion.tiene('validacion.validar'));
+
+  /** Se pulsó «Registrar decisión» con «Aprobar»: desde ahí se marca en rojo lo que impide aprobar. */
+  private readonly intentoAprobar = signal(false);
+
+  /** Lo que impide aprobar, por requisito y por dato de priorización (se actualiza al corregirlo). */
+  protected readonly marcas = computed(() => {
+    const vacio = {
+      items: new Map<number, { resultado: string; fuente: string; observacion: string }>(),
+      variables: new Set<string>(),
+      mensajes: [] as string[],
+    };
+    const c = this.caso();
+    if (!this.intentoAprobar() || !c) return vacio;
+    for (const i of c.items) {
+      const m = { resultado: '', fuente: '', observacion: '' };
+      if (i.resultado === 'NO_CUMPLE') {
+        m.resultado = 'Para aprobar debe estar en «Cumple» o «No aplica»: ahora dice «No cumple».';
+      } else if (i.resultado === 'PENDIENTE') {
+        m.resultado = 'Falta revisarlo: elija «Cumple» o «No aplica» para aprobar.';
+      } else if (i.resultado === 'CUMPLE' && i.fuente.trim() === '') {
+        m.fuente = 'Escriba la fuente que consultó.';
+      } else if (i.resultado === 'NO_APLICA' && i.observacion.trim() === '') {
+        m.observacion = 'Explique por qué no aplica.';
+      }
+      if (m.resultado || m.fuente || m.observacion) {
+        vacio.items.set(i.id, m);
+        vacio.mensajes.push(`${i.nombre}: ${m.resultado || m.fuente || m.observacion}`);
+      }
+    }
+    for (const v of c.priorizacion.variables) {
+      if (v.valor === null) {
+        vacio.variables.add(v.codigo);
+        vacio.mensajes.push(`Datos para la priorización: elija una opción en «${v.nombre}».`);
+      }
+    }
+    return vacio;
+  });
+
+  /** Lleva la vista al primer dato marcado en rojo. */
+  private enfocarPrimerError(): void {
+    afterNextRender(
+      () => {
+        const el = this.raiz.nativeElement.querySelector<HTMLElement>(
+          '[aria-invalid="true"], .con-error input, .con-error select',
+        );
+        el?.scrollIntoView?.({ block: 'center' });
+        el?.focus();
+      },
+      { injector: this.injector },
+    );
+  }
 
   async ngOnInit(): Promise<void> {
     const id = Number(this.id());
@@ -254,6 +320,7 @@ export class CasoPage implements OnInit {
   protected elegirDecision(d: DecisionValidacion): void {
     this.formDecision.controls.decision.setValue(d);
     this.decisionElegida.set(d);
+    this.intentoAprobar.set(false);
     this.erroresDecision.set([]);
   }
 
@@ -262,6 +329,15 @@ export class CasoPage implements OnInit {
     if (!this.formDecision.controls.decision.value) {
       this.erroresDecision.set(['Elija una decisión: aprobar, solicitar subsanación o rechazar.']);
       return;
+    }
+    if (this.formDecision.controls.decision.value === 'APROBAR') {
+      this.intentoAprobar.set(true);
+      const mensajes = this.marcas().mensajes;
+      if (mensajes.length > 0) {
+        this.erroresDecision.set(['No se puede aprobar todavía:', ...mensajes]);
+        this.enfocarPrimerError();
+        return;
+      }
     }
     this.confirmando.set(true);
   }

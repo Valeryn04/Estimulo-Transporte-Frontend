@@ -86,8 +86,26 @@ describe('BandejaPage', () => {
     expect(texto).toContain('Plazo vencido');
   });
 
-  it('filtra por estado, asignación y tiempo, y ordena por la columna elegida', async () => {
+  it('quien valida no ve el filtro por asignado y puede pedir todos los estados', async () => {
     const { el, ctrl, escribir, asentar } = await montar([fila({})]);
+    expect(el.querySelector('#asignado')).toBeNull();
+    const opciones = [...el.querySelectorAll<HTMLOptionElement>('#estado option')].map((o) =>
+      o.textContent!.trim(),
+    );
+    expect(opciones).toContain('Todos los estados');
+    escribir('#estado', 'TODOS');
+    el.querySelector<HTMLFormElement>('form[role="search"]')!.dispatchEvent(new Event('submit'));
+    const r = ctrl.expectOne(URL_BANDEJA);
+    expect(r.request.params.get('estado')).toBe('TODOS');
+    r.flush(BANDEJA([fila({})]));
+    await asentar();
+  });
+
+  it('filtra por estado, asignación y tiempo, y ordena por la columna elegida', async () => {
+    const { el, ctrl, escribir, asentar } = await montar(
+      [fila({})],
+      ['validacion.ver', 'validacion.asignar'],
+    );
     escribir('#q', 'beltr');
     escribir('#estado', 'SUBSANADA');
     escribir('#asignado', 'mios');
@@ -106,7 +124,7 @@ describe('BandejaPage', () => {
     expect(o.request.params.get('direccion')).toBe('asc');
     o.flush(BANDEJA([fila({})]));
     await asentar();
-    expect(el.querySelectorAll('th')[2]?.getAttribute('aria-sort')).toBe('ascending');
+    expect(el.querySelectorAll('th')[3]?.getAttribute('aria-sort')).toBe('ascending');
   });
 
   it('solo quien puede asignar ve las casillas y la barra de asignación', async () => {

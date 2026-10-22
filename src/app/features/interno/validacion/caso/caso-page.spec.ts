@@ -157,6 +157,45 @@ describe('CasoPage', () => {
     await p.asentar();
     expect(p.el.querySelector('#motivacion')).toBeNull();
     expect(p.el.querySelector('fieldset.requisito')?.hasAttribute('disabled')).toBe(true);
+    // Un rol sin permiso para validar ve el aviso, también en los datos de priorización.
+    expect(p.el.textContent).toContain('no tiene permiso para revisar ni decidir');
+  });
+
+  it('los datos de la priorización explican con un tooltip y avisan si el rol no puede registrarlos', async () => {
+    const p = montarPantalla(CasoPage, { id: '7' }, ['validacion.ver']);
+    p.ctrl.expectOne(URL_CASO).flush(
+      caso({
+        validacion: {
+          asignadoA: null,
+          enRevisionPor: null,
+          tomadaAt: null,
+          ronda: 1,
+          subsanado: false,
+          puedeEditar: false,
+          subsanacionesPrevias: 0,
+          maxRondas: 2,
+        },
+        priorizacion: {
+          matrizVersion: 1,
+          variables: [
+            {
+              codigo: 'DEPENDENCIA_FUNCIONAL',
+              nombre: 'Dependencia funcional',
+              descripcion: 'Según el certificado',
+              opciones: [{ codigo: 'SEVERA', etiqueta: 'Severa' }],
+              valor: null,
+            },
+          ],
+          puntaje: null,
+        },
+      }),
+    );
+    await p.asentar();
+    const seccion = p.el.querySelector('#t-prio')!.parentElement!;
+    expect(seccion.querySelectorAll('app-ayuda').length).toBeGreaterThanOrEqual(2);
+    expect(seccion.querySelector('small.ayuda')).toBeNull();
+    expect(seccion.textContent).toContain('Su rol no tiene permiso para registrar estos datos');
+    expect(seccion.querySelector('select')!.disabled).toBe(true);
   });
 
   it('los datos sensibles salen ocultos y sin botón para abrir los documentos cuando el rol no tiene permiso', async () => {
@@ -257,8 +296,52 @@ describe('CasoPage', () => {
       expect(el.querySelector('#motivacion')).toBeNull();
     });
 
+    it('al aprobar con requisitos sin cumplir marca en rojo cada dato que lo impide, sin llamar a la API', async () => {
+      const { el, ctrl, asentar } = await montar(
+        caso(
+          {
+            priorizacion: {
+              matrizVersion: 1,
+              variables: [
+                {
+                  codigo: 'DEPENDENCIA_FUNCIONAL',
+                  nombre: 'Dependencia funcional',
+                  descripcion: 'Según el certificado',
+                  opciones: [{ codigo: 'SEVERA', etiqueta: 'Severa' }],
+                  valor: null,
+                },
+              ],
+              puntaje: null,
+            },
+          },
+          [
+            item({ id: 10, resultado: 'NO_CUMPLE' }),
+            item({ id: 11, nombre: 'Otro requisito', resultado: 'CUMPLE', fuente: '' }),
+          ],
+        ),
+      );
+      el.querySelectorAll<HTMLInputElement>('.opciones-decision input')[0]!.click();
+      await asentar();
+      el.querySelector<HTMLButtonElement>('form button[type="submit"]')!.click();
+      await asentar();
+      ctrl.expectNone((r) => r.url.endsWith('/decision'));
+      expect(el.querySelector('dialog[open]')).toBeNull();
+      const requisitos = el.querySelectorAll('fieldset.requisito');
+      expect(requisitos[0]!.classList.contains('con-error')).toBe(true);
+      expect(requisitos[0]!.textContent).toContain('ahora dice «No cumple»');
+      expect(el.querySelector('#fuente-11')!.getAttribute('aria-invalid')).toBe('true');
+      expect(el.querySelector('#var-DEPENDENCIA_FUNCIONAL')!.getAttribute('aria-invalid')).toBe(
+        'true',
+      );
+      expect(el.querySelector('form .aviso.error')?.textContent).toContain(
+        'No se puede aprobar todavía',
+      );
+    });
+
     it('lista los motivos por los que no se puede registrar la decisión', async () => {
-      const { el, ctrl, asentar } = await montar();
+      const { el, ctrl, asentar } = await montar(
+        caso({}, [item({ resultado: 'CUMPLE', fuente: 'SISBÉN' })]),
+      );
       el.querySelectorAll<HTMLInputElement>('.opciones-decision input')[0]!.click();
       await asentar();
       el.querySelector<HTMLButtonElement>('form button[type="submit"]')!.click();
