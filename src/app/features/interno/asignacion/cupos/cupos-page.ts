@@ -248,7 +248,15 @@ export class CuposPage implements OnInit {
       return;
     }
     const v = this.form.getRawValue();
-    const cambio: CambioCupos = { motivo: v.motivo.trim() };
+    // Lo que se tenía cargado: si otra persona lo cambió mientras se editaba, el servidor no pisa su cambio.
+    const cambio: CambioCupos = {
+      motivo: v.motivo.trim(),
+      base: {
+        cuposTotales: d.cupos.totales,
+        valorEstimulo: d.valorEstimulo,
+        presupuestoTotal: d.presupuesto.total,
+      },
+    };
     if (v.cuposTotales !== d.cupos.totales) cambio.cuposTotales = Number(v.cuposTotales);
     if (v.valorEstimulo !== d.valorEstimulo) cambio.valorEstimulo = Number(v.valorEstimulo);
     if (v.presupuestoTotal !== d.presupuesto.total)
@@ -259,7 +267,7 @@ export class CuposPage implements OnInit {
     const tra = this.filas(this.form.controls.transportes);
     if (!this.mismaDistribucion(tra, d.distribucion.transportes))
       cambio.distribucionTransporte = tra;
-    if (Object.keys(cambio).length === 1) {
+    if (Object.keys(cambio).length === 2) {
       this.erroresForm.set([
         'No hay ningún cambio: modifique alguno de los valores vigentes antes de registrar.',
       ]);

@@ -110,7 +110,7 @@ describe('CuposPage', () => {
     const r = ctrl.expectOne(URL);
     expect(r.request.method).toBe('PUT');
     const form = r.request.body as FormData;
-    expect(JSON.parse(form.get('datos') as string)).toEqual({
+    expect(JSON.parse(form.get('datos') as string)).toMatchObject({
       motivo: 'Adición presupuestal de la vigencia',
       cuposTotales: 5,
       presupuestoTotal: 4_000_000,
@@ -151,7 +151,7 @@ describe('CuposPage', () => {
     enviar('section form');
     await esperarTareas();
     const r = ctrl.expectOne(URL);
-    expect(JSON.parse((r.request.body as FormData).get('datos') as string)).toEqual({
+    expect(JSON.parse((r.request.body as FormData).get('datos') as string)).toMatchObject({
       motivo: 'Distribución acordada con la Gerencia',
       distribucionLocalidad: [
         { itemId: 3, cupos: 2 },

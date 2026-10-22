@@ -13,6 +13,41 @@ export interface OpcionesConfirmacion {
 /** Espera antes de mostrar la barra de carga, para no parpadear en las respuestas rápidas. */
 const ESPERA_CARGA_MS = 300;
 
+/**
+ * Quita lo que SweetAlert2 deja en la página mientras hay una ventana abierta (bloqueo del desplazamiento, etc.). Si una
+ * ventana se cierra a medias, la página no debe quedar congelada.
+ */
+function limpiarResiduos(): void {
+  if (document.querySelector('.swal2-container')) return;
+  for (const el of [document.documentElement, document.body]) {
+    el.classList.remove(
+      'swal2-shown',
+      'swal2-height-auto',
+      'swal2-toast-shown',
+      'swal2-no-backdrop',
+    );
+    el.style.removeProperty('overflow');
+    el.style.removeProperty('padding-right');
+  }
+  for (const el of Array.from(document.body.children)) {
+    if (el.hasAttribute('data-previous-aria-hidden')) {
+      el.removeAttribute('data-previous-aria-hidden');
+      el.removeAttribute('aria-hidden');
+    }
+  }
+}
+
+/**
+ * Sin animaciones: SweetAlert2 espera a que termine la animación de cierre para retirar la ventana y devolver el
+ * desplazamiento a la página; si el navegador no la completa (pestaña en segundo plano, animaciones desactivadas), la
+ * página queda bloqueada. Sin animación se cierra y se limpia de inmediato.
+ */
+const SIN_ANIMACION = {
+  showClass: { popup: '', backdrop: '', icon: '' },
+  hideClass: { popup: '', backdrop: '', icon: '' },
+  didDestroy: limpiarResiduos,
+};
+
 const CLASES = {
   confirmButton: 'boton',
   cancelButton: 'boton secundario',
@@ -37,6 +72,7 @@ export class Alertas {
 
   async confirmar(o: OpcionesConfirmacion): Promise<boolean> {
     const r = await Swal.fire({
+      ...SIN_ANIMACION,
       icon: o.peligro ? 'warning' : 'question',
       title: o.titulo,
       text: o.texto,
@@ -55,6 +91,7 @@ export class Alertas {
   /** Aviso breve en una esquina; se cierra solo. */
   aviso(tipo: SweetAlertIcon, titulo: string, texto?: string): void {
     void Swal.fire({
+      ...SIN_ANIMACION,
       toast: true,
       position: 'top-end',
       icon: tipo,
@@ -75,6 +112,7 @@ export class Alertas {
   /** Aviso que la persona debe leer y cerrar. */
   async problema(titulo: string, texto?: string): Promise<void> {
     await Swal.fire({
+      ...SIN_ANIMACION,
       icon: 'error',
       title: titulo,
       text: texto,

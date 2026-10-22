@@ -898,3 +898,10 @@ app-root {
     animation: none;
   }
 }
+
+// Si una ventana de aviso se cierra a medias, la página no se queda sin desplazamiento.
+html.swal2-shown:not(:has(.swal2-container)),
+body.swal2-shown:not(:has(.swal2-container)) {
+  padding-right: 0 !important;
+  overflow: auto !important;
+}
