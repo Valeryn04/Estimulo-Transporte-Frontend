@@ -85,6 +85,7 @@ export class PreinscripcionPage implements OnInit {
   } | null>(null);
   protected readonly resumen = signal<ErrorResumen[]>([]);
   protected readonly resumenEl = viewChild<ElementRef<HTMLElement>>('resumenEl');
+  protected readonly avisoEl = viewChild<ElementRef<HTMLElement>>('avisoEl');
 
   protected readonly form = new FormGroup({
     pcdNombre: new FormControl('', {
@@ -234,6 +235,18 @@ export class PreinscripcionPage implements OnInit {
   }
 
   /** Lleva el foco al resumen cuando ya está en pantalla, para que los lectores de pantalla lo anuncien. */
+  /** El aviso queda junto al botón de enviar: se lleva a la vista, sobre todo en el teléfono. */
+  private mostrarAviso(): void {
+    afterNextRender(
+      () => {
+        const el = this.avisoEl()?.nativeElement;
+        el?.scrollIntoView?.({ block: 'center' });
+        el?.focus();
+      },
+      { injector: this.injector },
+    );
+  }
+
   private enfocarResumen(): void {
     afterNextRender(() => this.resumenEl()?.nativeElement.focus(), { injector: this.injector });
   }
@@ -302,11 +315,17 @@ export class PreinscripcionPage implements OnInit {
     }
     if (e.codigo === 'SOLICITUD_EXISTENTE') {
       this.aviso.set({ tipo: 'advertencia', texto: e.message, consulta: true });
+      // También se marca en el campo de la persona, para que se vea qué dato es el repetido.
+      this.form.controls.pcdNumero.setErrors({
+        ocupado: 'esta persona ya tiene una solicitud en esta vigencia',
+      });
+      this.mostrarAviso();
     } else if (e.codigo === 'AUTORIZACION_CAMBIO' || e.codigo === 'FORMULARIO_INVALIDO') {
       // El texto cambió o el formulario venció: se trae de nuevo y la persona vuelve a aceptar.
       await this.cargar();
       this.form.controls.aceptaAutorizacion.setValue(false);
       this.aviso.set({ tipo: 'advertencia', texto: e.message });
+      this.mostrarAviso();
     } else if (e.errores.length > 0) {
       const sueltos = aplicarErroresApi(this.form, e.errores);
       this.resumen.set(this.construirResumen());
@@ -314,6 +333,7 @@ export class PreinscripcionPage implements OnInit {
       this.enfocarResumen();
     } else {
       this.aviso.set({ tipo: 'error', texto: e.message });
+      this.mostrarAviso();
     }
     if (e.codigo === 'PREINSCRIPCION_CERRADA') await this.cargar();
   }

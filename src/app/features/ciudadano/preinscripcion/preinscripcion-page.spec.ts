@@ -267,6 +267,9 @@ describe('PreinscripcionPage', () => {
     const aviso = el.querySelector('.aviso[role="alert"]')!;
     expect(aviso.textContent).toContain('Ya existe una solicitud');
     expect(aviso.querySelector('a')!.getAttribute('href')).toBe('/consulta');
+    // El aviso queda junto al botón de enviar y el campo de la persona marca el dato repetido.
+    expect(el.querySelector('form')!.contains(aviso)).toBe(true);
+    expect(el.querySelector('#pcd-numero-error')?.textContent).toContain('ya tiene una solicitud');
   });
 
   it('si el texto de la autorización cambió, vuelve a cargarlo y pide aceptarlo de nuevo', async () => {

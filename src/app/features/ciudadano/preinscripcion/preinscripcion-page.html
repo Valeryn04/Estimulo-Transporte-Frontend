@@ -51,22 +51,6 @@
       </div>
     }
 
-    @if (aviso(); as a) {
-      <div
-        class="aviso"
-        [class.error]="a.tipo === 'error'"
-        [class.advertencia]="a.tipo === 'advertencia'"
-        role="alert"
-      >
-        <span>
-          {{ a.texto }}
-          @if (a.consulta) {
-            <a routerLink="/consulta">Consultar el estado de mi solicitud</a>
-          }
-        </span>
-      </div>
-    }
-
     <form [formGroup]="form" (ngSubmit)="enviar()" novalidate>
       <fieldset class="seccion">
         <legend>
@@ -308,6 +292,24 @@
           autocomplete="off"
         />
       </div>
+
+      @if (aviso(); as a) {
+        <div
+          #avisoEl
+          tabindex="-1"
+          class="aviso"
+          [class.error]="a.tipo === 'error'"
+          [class.advertencia]="a.tipo === 'advertencia'"
+          role="alert"
+        >
+          <span>
+            {{ a.texto }}
+            @if (a.consulta) {
+              <a routerLink="/consulta">Consultar el estado de mi solicitud</a>
+            }
+          </span>
+        </div>
+      }
 
       <app-turnstile />
       <div class="acciones">

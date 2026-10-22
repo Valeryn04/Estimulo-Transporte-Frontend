@@ -2,7 +2,7 @@ import { Component, ElementRef, computed, inject, output, signal } from '@angula
 import { RouterLink } from '@angular/router';
 import { Sesion } from '../../../../core/auth/sesion';
 import { Icono } from '../../../../shared/icono/icono';
-import { Confirmar } from '../../../../shared/alertas/confirmar';
+import { Alertas } from '../../../../shared/alertas/alertas';
 
 /**
  * Persona que tiene la sesión abierta, en el encabezado: un botón con su nombre que despliega un panel con
@@ -11,7 +11,7 @@ import { Confirmar } from '../../../../shared/alertas/confirmar';
  */
 @Component({
   selector: 'app-menu-usuario',
-  imports: [Confirmar, RouterLink, Icono],
+  imports: [RouterLink, Icono],
   templateUrl: './menu-usuario.html',
   styleUrl: './menu-usuario.scss',
   host: {
@@ -22,6 +22,7 @@ import { Confirmar } from '../../../../shared/alertas/confirmar';
 })
 export class MenuUsuario {
   private readonly sesion = inject(Sesion);
+  private readonly alertas = inject(Alertas);
   private readonly raiz = inject<ElementRef<HTMLElement>>(ElementRef);
 
   readonly cerrarSesion = output<void>();
@@ -58,8 +59,13 @@ export class MenuUsuario {
     if (destino && !this.raiz.nativeElement.contains(destino)) this.abierto.set(false);
   }
 
-  protected salir(): void {
+  protected async salir(): Promise<void> {
     this.abierto.set(false);
-    this.cerrarSesion.emit();
+    // El panel ya se cerró: la pregunta no depende de que el botón siga en pantalla.
+    const si = await this.alertas.confirmar({
+      titulo: '¿Cerrar la sesión?',
+      confirmar: 'Sí, salir',
+    });
+    if (si) this.cerrarSesion.emit();
   }
 }
