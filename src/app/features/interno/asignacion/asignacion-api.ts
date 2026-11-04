@@ -99,6 +99,14 @@ export class AsignacionApi {
     });
   }
 
+  /** Planilla en PDF para que las personas firmen el día de la entrega. */
+  actaDeEntrega(beneficios: number[]): Observable<Blob> {
+    return this.http.get(`${ASIGNACION}/actas-entrega`, {
+      params: { beneficios: beneficios.join(',') },
+      responseType: 'blob',
+    });
+  }
+
   acta(entregaId: number): Observable<Blob> {
     return this.http.get(`${ASIGNACION}/entregas/${entregaId}/soporte`, { responseType: 'blob' });
   }

@@ -56,6 +56,7 @@ const caso = (c: Partial<Caso> = {}, items: ItemCaso[] = [item({})]): Caso => ({
   catalogos: { '7': 'Femenino', '9': 'Sanitas' },
   sensiblesOcultos: false,
   alertas: [],
+  duplicidades: [],
   priorizacion: { matrizVersion: 1, variables: [], puntaje: null },
   version: 3,
   documentos: [
@@ -425,6 +426,25 @@ describe('CasoPage', () => {
     expect(alerta?.getAttribute('role')).toBe('alert');
     expect(alerta?.textContent).toContain('Apoyos de transporte incompatibles');
     expect(alerta?.textContent).toContain('la persona con discapacidad: ESTE');
+  });
+
+  it('avisa cuando el cuidador también es persona con discapacidad y tiene su propia solicitud', async () => {
+    const { el } = await montar(
+      caso({
+        duplicidades: [
+          {
+            tipo: 'CUIDADOR_ES_PCD',
+            solicitudId: 9,
+            radicado: 'EST-2026-000009',
+            mensaje:
+              'El cuidador también es persona con discapacidad y tiene su propia solicitud: EST-2026-000009. Solo podrá recibir un beneficio (una sola tarjeta).',
+          },
+        ],
+      }),
+    );
+    const aviso = el.querySelector('.duplicidad');
+    expect(aviso?.getAttribute('role')).toBe('note');
+    expect(aviso?.textContent).toContain('una sola tarjeta');
   });
 
   it('sin coincidencias en el archivo lo dice, sin alerta', async () => {

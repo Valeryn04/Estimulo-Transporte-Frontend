@@ -14,7 +14,7 @@ import { reducirImagen, tamanoLegible } from '../../../../shared/imagen';
 const NOMBRE_GRUPO: Record<DocumentoSolicitud['aplicaA'], string> = {
   PCD: 'Documentos de la persona con discapacidad',
   CUIDADOR: 'Documentos del cuidador o asistente personal',
-  COMUN: 'Carta de solicitud (firmada por la persona con discapacidad y por el cuidador)',
+  COMUN: 'Cartas que genera el sistema',
 };
 
 const ESTADO: Record<DocumentoSolicitud['estado'], string> = {
@@ -197,6 +197,23 @@ export class DocumentosPanel implements OnInit {
         this.errores,
         doc.id,
         e instanceof ApiError ? e.message : 'No pudimos descargar el archivo.',
+      );
+    }
+  }
+
+  /** Abre la carta que el sistema arma con los datos escritos hasta ahora. */
+  protected async verCarta(doc: DocumentoSolicitud): Promise<void> {
+    this.fijar(this.errores, doc.id, null);
+    try {
+      const blob = await firstValueFrom(this.api.cartaGenerada(doc.id));
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener');
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (e) {
+      this.fijar(
+        this.errores,
+        doc.id,
+        e instanceof ApiError ? e.message : 'No pudimos armar la carta. Intente de nuevo.',
       );
     }
   }

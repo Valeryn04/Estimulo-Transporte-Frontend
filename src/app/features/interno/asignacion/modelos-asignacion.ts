@@ -190,7 +190,12 @@ export interface DetalleBeneficio {
     tiposIdentificacion: { id: number; nombre: string }[];
   };
   /** Lo que el formulario trae listo. */
-  sugerencias: { tipoTransporteId: number | null; prefijoTarjeta: string };
+  sugerencias: {
+    tipoTransporteId: number | null;
+    prefijoTarjeta: string;
+    /** Dígitos que lleva el identificador después del prefijo (0 = sin cantidad fija). */
+    digitosTarjeta: number;
+  };
 }
 
 export interface DatosEntrega {

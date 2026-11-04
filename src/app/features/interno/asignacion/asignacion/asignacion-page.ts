@@ -250,6 +250,48 @@ export class AsignacionPage implements OnInit {
     }
   }
 
+  // ---- planilla de entrega para firmar
+
+  protected readonly marcados = signal<ReadonlySet<number>>(new Set());
+  protected readonly generando = signal(false);
+
+  /** Beneficios a los que todavía les falta recibir alguna tarjeta. */
+  protected pendiente(x: Beneficiario): boolean {
+    return x.entregas < x.personas && (x.estado === 'PENDIENTE_ENTREGA' || x.estado === 'ACTIVO');
+  }
+
+  protected marcar(x: Beneficiario): void {
+    this.marcados.update((s) => {
+      const n = new Set(s);
+      if (!n.delete(x.id)) n.add(x.id);
+      return n;
+    });
+  }
+
+  protected marcarTodos(): void {
+    const pendientes = (this.beneficiarios()?.items ?? []).filter((x) => this.pendiente(x));
+    const todos = pendientes.length > 0 && pendientes.every((x) => this.marcados().has(x.id));
+    this.marcados.set(todos ? new Set() : new Set(pendientes.map((x) => x.id)));
+  }
+
+  /** Genera la planilla con una fila por persona que recibe; se firma el día de la entrega y luego se adjunta la foto. */
+  protected async generarActa(): Promise<void> {
+    const ids = [...this.marcados()];
+    if (ids.length === 0) return;
+    this.error.set('');
+    this.generando.set(true);
+    try {
+      const blob = await firstValueFrom(this.api.actaDeEntrega(ids));
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener');
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (e) {
+      this.error.set(e instanceof ApiError ? e.message : 'No pudimos generar el acta de entrega.');
+    } finally {
+      this.generando.set(false);
+    }
+  }
+
   protected limpiarBeneficiarios(): void {
     this.filtroBen.reset({ q: '', estado: '' });
     void this.cargarBeneficiarios();

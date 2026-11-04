@@ -50,7 +50,15 @@
               }
             </th>
             <td>{{ aplicaA[d.aplicaA] }}</td>
-            <td>{{ d.obligatorio ? 'Obligatorio' : 'Opcional' }}</td>
+            <td>
+              {{ d.obligatorio ? 'Obligatorio' : 'Opcional' }}
+              @if (d.generado) {
+                <small>La genera el sistema</small>
+              }
+              @if (d.hojasMinimas > 1) {
+                <small>{{ d.hojasMinimas }} hojas</small>
+              }
+            </td>
             <td class="modelo">
               @if (d.modelo; as m) {
                 <span class="nombre-modelo">{{ m.nombre }}</span>
@@ -144,6 +152,14 @@
       <input type="checkbox" formControlName="obligatorio" />
       <span>Es obligatorio para radicar la solicitud</span>
     </label>
+    <app-campo
+      idCampo="doc-hojas"
+      etiqueta="Hojas mínimas del PDF"
+      ayuda="El certificado de discapacidad trae dos: la segunda lleva un código QR."
+      [control]="form.controls.hojasMinimas"
+    >
+      <input appCampoControl type="number" min="1" max="10" formControlName="hojasMinimas" />
+    </app-campo>
     @if (errorDialogo()) {
       <p class="aviso error" role="alert">{{ errorDialogo() }}</p>
     }

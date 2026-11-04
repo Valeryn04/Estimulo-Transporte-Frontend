@@ -176,6 +176,8 @@ export interface Caso {
   documentos: DocumentoCaso[];
   items: ItemCaso[];
   alertas: AlertaCruce[];
+  /** Personas de este caso que también figuran en otra solicitud (por ejemplo, un cuidador que también es persona con discapacidad). */
+  duplicidades: { tipo: string; solicitudId: number; radicado: string | null; mensaje: string }[];
   priorizacion: PriorizacionCaso;
   decisiones: DecisionCaso[];
   subsanacion: SubsanacionCaso | null;

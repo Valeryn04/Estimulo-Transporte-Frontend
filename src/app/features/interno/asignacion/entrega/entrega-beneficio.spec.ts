@@ -34,7 +34,7 @@ const detalle = (c: Partial<DetalleBeneficio> = {}): DetalleBeneficio => ({
     tiposTransporte: [{ id: 8, nombre: 'Transmetro' }],
     tiposIdentificacion: [{ id: 1, nombre: 'Cédula' }],
   },
-  sugerencias: { tipoTransporteId: 8, prefijoTarjeta: 'TM' },
+  sugerencias: { tipoTransporteId: 8, prefijoTarjeta: 'MFPLUS-EV-', digitosTarjeta: 8 },
   ...c,
 });
 
@@ -105,14 +105,28 @@ describe('EntregaBeneficio', () => {
     expect(el.querySelector('#ent-tarjeta-error')?.textContent).toBeTruthy();
   });
 
+  it('el identificador de la tarjeta es MFPLUS-EV- seguido de 8 dígitos', async () => {
+    const { el, ctrl, escribir, enviar, asentar } = await montar();
+    for (const malo of ['TM00001234', 'MFPLUS-EV-123', 'MFPLUS-EV-1234567A']) {
+      escribir('#ent-tarjeta', malo);
+      enviar('dialog form');
+      await asentar();
+      expect(el.querySelector('#ent-tarjeta-error')?.textContent).toMatch(/MFPLUS-EV-/);
+    }
+    ctrl.expectNone((r) => r.method === 'POST');
+    escribir('#ent-tarjeta', 'MFPLUS-EV-00001234');
+    await asentar();
+    expect(el.querySelector('#ent-tarjeta-error')).toBeNull();
+  });
+
   it('registra la entrega a la persona con quien la recibe y envía los datos con el acta', async () => {
     const { el, ctrl, escribir, enviar, asentar } = await montar();
     // El formulario trae listo el prefijo de la tarjeta y el transporte que la persona dijo usar.
-    expect(el.querySelector<HTMLInputElement>('#ent-tarjeta')!.value).toBe('TM');
+    expect(el.querySelector<HTMLInputElement>('#ent-tarjeta')!.value).toBe('MFPLUS-EV-');
     expect(
       el.querySelector<HTMLSelectElement>('#ent-transporte')!.selectedOptions[0]!.textContent,
     ).toContain('Transmetro');
-    escribir('#ent-tarjeta', 'TM00001234');
+    escribir('#ent-tarjeta', 'MFPLUS-EV-00001234');
     await asentar();
     expect(el.querySelector<HTMLInputElement>('#ent-fecha')!.value).toBe('2026-10-19');
     expect(el.querySelector<HTMLInputElement>('#ent-fecha')!.min).toBe('2026-10-05');
@@ -130,7 +144,7 @@ describe('EntregaBeneficio', () => {
     const form = r.request.body as FormData;
     expect(JSON.parse(form.get('datos') as string)).toEqual({
       rol: 'PCD',
-      tarjetaId: 'TM00001234',
+      tarjetaId: 'MFPLUS-EV-00001234',
       tipoTransporteId: 8,
       fechaEntrega: '2026-10-19',
       receptorTipo: 'PCD',
@@ -145,7 +159,7 @@ describe('EntregaBeneficio', () => {
 
   it('si recibe un tercero pide su nombre y su documento', async () => {
     const { el, ctrl, escribir, enviar, asentar } = await montar();
-    escribir('#ent-tarjeta', 'TM00005678');
+    escribir('#ent-tarjeta', 'MFPLUS-EV-00005678');
     const rec = el.querySelector<HTMLSelectElement>('#ent-receptor')!;
     rec.value = 'TERCERO';
     rec.dispatchEvent(new Event('change'));

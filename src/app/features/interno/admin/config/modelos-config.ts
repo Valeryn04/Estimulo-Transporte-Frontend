@@ -76,6 +76,10 @@ export interface DocumentoRequerido {
   descripcion: string;
   aplicaA: AplicaA;
   obligatorio: boolean;
+  /** Hojas que debe traer el PDF (el certificado de discapacidad trae dos). */
+  hojasMinimas: number;
+  /** Carta que arma el sistema con los datos del formulario: la persona no la sube. */
+  generado: 'CARTA_SOLICITUD' | 'CARTA_CUIDADO' | null;
   activo: boolean;
   version: number;
   /** Modelo descargable que publicó la Gerencia (carta de solicitud, carta de cuidador...). */
@@ -92,6 +96,7 @@ export interface DatosDocumento {
   descripcion: string;
   aplicaA: AplicaA;
   obligatorio: boolean;
+  hojasMinimas: number;
 }
 
 export interface VersionParametro {

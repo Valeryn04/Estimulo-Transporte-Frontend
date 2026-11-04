@@ -47,6 +47,10 @@ export class DocumentosPage implements OnInit {
     }),
     aplicaA: new FormControl<AplicaA>('PCD', { nonNullable: true }),
     obligatorio: new FormControl(true, { nonNullable: true }),
+    hojasMinimas: new FormControl(1, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.min(1), Validators.max(10)],
+    }),
   });
 
   ngOnInit(): void {
@@ -98,7 +102,13 @@ export class DocumentosPage implements OnInit {
   protected abrirNuevo(): void {
     this.editando.set(null);
     this.errorDialogo.set('');
-    this.form.reset({ nombre: '', descripcion: '', aplicaA: 'PCD', obligatorio: true });
+    this.form.reset({
+      nombre: '',
+      descripcion: '',
+      aplicaA: 'PCD',
+      obligatorio: true,
+      hojasMinimas: 1,
+    });
     this.abierto.set(true);
   }
 
@@ -110,6 +120,7 @@ export class DocumentosPage implements OnInit {
       descripcion: d.descripcion,
       aplicaA: d.aplicaA,
       obligatorio: d.obligatorio,
+      hojasMinimas: d.hojasMinimas,
     });
     this.abierto.set(true);
   }

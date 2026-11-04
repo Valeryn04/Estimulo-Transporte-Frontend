@@ -53,6 +53,22 @@
             @if (doc.descripcion) {
               <p class="descripcion">{{ doc.descripcion }}</p>
             }
+            @if (doc.hojasMinimas > 1) {
+              <p class="descripcion">
+                Debe traer <strong>{{ doc.hojasMinimas }} hojas</strong> en un solo PDF.
+              </p>
+            }
+            @if (doc.generado) {
+              <p class="descripcion">
+                La carta se llena sola con lo que escribe en el formulario y se adjunta sola al
+                enviar la solicitud: no tiene que subirla.
+              </p>
+              <div class="acciones">
+                <button type="button" class="boton secundario chico" (click)="verCarta(doc)">
+                  Ver la carta con mis datos
+                </button>
+              </div>
+            }
 
             @if (doc.archivo; as a) {
               <div class="archivo">
@@ -99,7 +115,7 @@
             }
 
             <div class="acciones">
-              @if (puedeCargar(doc)) {
+              @if (puedeCargar(doc) && !doc.generado) {
                 <label class="boton chico" [class.desactivado]="subiendo()[doc.id] !== undefined">
                   {{ doc.archivo ? 'Reemplazar archivo' : 'Cargar archivo' }}
                   <input
@@ -129,7 +145,7 @@
                   </label>
                 }
               }
-              @if (doc.tieneModelo) {
+              @if (doc.tieneModelo && !doc.generado) {
                 <a class="boton secundario chico" [href]="modelo(doc)" download>
                   Descargar el modelo
                 </a>

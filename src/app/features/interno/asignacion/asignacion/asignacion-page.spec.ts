@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { API_BASE } from '../../../../core/api/api';
 import { errorApi, montarPantalla } from '../../../../testing/config';
 import { Beneficiario, FilaPropuesta, Propuesta } from '../modelos-asignacion';
@@ -250,5 +251,60 @@ describe('AsignacionPage', () => {
     expect(filas[0]?.textContent).toContain('Reasignado del cupo de EST-2026-000001');
     expect(filas[1]?.textContent).toContain('Finalizado');
     expect(filas[1]?.textContent).toContain('Renuncia voluntaria');
+  });
+
+  it('genera la planilla de entrega solo con los beneficios marcados que esperan su tarjeta', async () => {
+    const { el, ctrl, asentar } = await montar();
+    boton(el, 'Beneficiarios').click();
+    const base = {
+      solicitudId: 3,
+      pcdNombre: 'Persona',
+      valorComprometido: 1,
+      localidad: null,
+      transporte: null,
+      puntajeFinal: 70,
+      posicion: 1,
+      asignadoPor: 'asignador',
+      asignadoAt: '2026-10-06T10:00:00Z',
+      reemplazaRadicado: null,
+      finalizadoAt: null,
+      motivoFin: null,
+    };
+    const items: Beneficiario[] = [
+      {
+        ...base,
+        id: 2,
+        radicado: 'EST-2026-000003',
+        estado: 'PENDIENTE_ENTREGA',
+        personas: 2,
+        entregas: 0,
+      },
+      {
+        ...base,
+        id: 1,
+        radicado: 'EST-2026-000001',
+        estado: 'FINALIZADO',
+        personas: 1,
+        entregas: 0,
+      },
+    ];
+    ctrl.expectOne(esBeneficiarios).flush({ items, total: 2 });
+    await asentar();
+    const marcas = el.querySelectorAll<HTMLInputElement>('tbody input[type="checkbox"]');
+    expect(marcas).toHaveLength(1);
+    const generar = [...el.querySelectorAll<HTMLButtonElement>('.acta-entrega button')][0]!;
+    expect(generar.disabled).toBe(true);
+    marcas[0]!.click();
+    await asentar();
+    expect(generar.disabled).toBe(false);
+    globalThis.URL.createObjectURL = () => 'blob:acta';
+    globalThis.URL.revokeObjectURL = () => undefined;
+    const abrir = vi.spyOn(window, 'open').mockReturnValue(null);
+    generar.click();
+    const r = ctrl.expectOne((x) => x.url === `${URL}/actas-entrega`);
+    expect(r.request.params.get('beneficios')).toBe('2');
+    r.flush(new Blob(['%PDF'], { type: 'application/pdf' }));
+    await asentar();
+    expect(abrir).toHaveBeenCalledWith('blob:acta', '_blank', 'noopener');
   });
 });

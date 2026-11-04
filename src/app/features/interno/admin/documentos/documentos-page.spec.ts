@@ -5,11 +5,13 @@ import { esperarTareas } from '../../../../testing/asentar';
 
 const doc = (c: object) => ({
   id: 1,
-  codigo: 'PCD_SISBEN',
-  nombre: 'Soporte SISBÉN IV',
-  descripcion: 'Grupo A, B o C',
+  codigo: 'PCD_CERTIFICADO_DISCAPACIDAD',
+  nombre: 'Certificado de discapacidad',
+  descripcion: 'Vigente y completo',
   aplicaA: 'PCD',
   obligatorio: true,
+  hojasMinimas: 1,
+  generado: null,
   activo: true,
   version: 1,
   ...c,
@@ -54,6 +56,7 @@ describe('DocumentosPage', () => {
     ctrl.expectNone((r) => r.method === 'POST');
     escribir('#doc-nombre', 'Registro RLCPD');
     escribir('#doc-aplica', 'COMUN');
+    escribir('#doc-hojas', '2');
     enviar();
     const req = ctrl.expectOne(`${API_BASE}/admin/documentos-requeridos`);
     expect(req.request.body).toEqual({
@@ -61,6 +64,7 @@ describe('DocumentosPage', () => {
       descripcion: '',
       aplicaA: 'COMUN',
       obligatorio: true,
+      hojasMinimas: 2,
     });
     req.flush(doc({ id: 3 }), { status: 201, statusText: 'Creado' });
     await asentar();
@@ -105,7 +109,7 @@ describe('DocumentosPage', () => {
               cargadoAt: '2026-10-07T00:00:00Z',
             },
           }),
-          doc({ id: 2, nombre: 'Soporte SISBÉN IV' }),
+          doc({ id: 2, nombre: 'Certificado de discapacidad' }),
         ],
       });
       await p.asentar();

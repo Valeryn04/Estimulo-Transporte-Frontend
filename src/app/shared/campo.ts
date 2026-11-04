@@ -24,6 +24,7 @@ const MENSAJES: Record<string, (valor: unknown) => string> = {
   direccion: (motivo) => String(motivo),
   correoDiferente: () => 'los dos correos no coinciden, revíselos',
   ocupado: (motivo) => String(motivo),
+  formato: (motivo) => String(motivo),
 };
 
 /** Mensaje que explica qué corregir en un control (el mismo que muestra el campo y el resumen de errores). */

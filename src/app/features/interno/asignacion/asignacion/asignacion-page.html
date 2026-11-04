@@ -248,6 +248,23 @@
 
     @if (beneficiarios(); as b) {
       <p class="total" role="status">{{ b.total }} beneficio(s).</p>
+      <div class="acta-entrega">
+        <button
+          type="button"
+          class="boton"
+          [disabled]="marcados().size === 0 || generando()"
+          (click)="generarActa()"
+        >
+          Generar acta de entrega (PDF)
+        </button>
+        <small>
+          Marque a quienes recibirán su tarjeta, imprima la planilla y haga que firmen el día de la
+          entrega. Después tome la foto o escanee la planilla y adjúntela al registrar cada entrega.
+          @if (marcados().size > 0) {
+            {{ marcados().size }} seleccionado(s).
+          }
+        </small>
+      </div>
       <div class="tabla-contenedor" tabindex="0" role="region" aria-label="Beneficiarios">
         <table class="tabla">
           <caption class="solo-lectores">
@@ -255,6 +272,13 @@
           </caption>
           <thead>
             <tr>
+              <th scope="col">
+                <input
+                  type="checkbox"
+                  aria-label="Marcar todos los que esperan su tarjeta"
+                  (change)="marcarTodos()"
+                />
+              </th>
               <th scope="col">Radicado</th>
               <th scope="col">Persona con discapacidad</th>
               <th scope="col">Estado</th>
@@ -267,6 +291,16 @@
           <tbody>
             @for (x of b.items; track x.id) {
               <tr>
+                <td>
+                  @if (pendiente(x)) {
+                    <input
+                      type="checkbox"
+                      [checked]="marcados().has(x.id)"
+                      [attr.aria-label]="'Incluir a ' + x.radicado + ' en el acta de entrega'"
+                      (change)="marcar(x)"
+                    />
+                  }
+                </td>
                 <th scope="row">
                   <span class="radicado">{{ x.radicado }}</span>
                 </th>
@@ -323,7 +357,7 @@
               </tr>
             } @empty {
               <tr>
-                <td colspan="7">No hay beneficios con esos filtros.</td>
+                <td colspan="8">No hay beneficios con esos filtros.</td>
               </tr>
             }
           </tbody>

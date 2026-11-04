@@ -167,6 +167,10 @@ export interface DocumentoSolicitud {
   reemplazos: number;
   archivo: ArchivoDocumento | null;
   tieneModelo: boolean;
+  /** La carta la genera el sistema con los datos escritos: no se carga. */
+  generado: boolean;
+  /** Hojas que debe traer el PDF (el certificado de discapacidad trae dos). */
+  hojasMinimas: number;
 }
 
 export interface DocumentosSolicitud {
@@ -246,6 +250,14 @@ export class CaracterizacionApi {
   /** Descarga el archivo que cargó la persona. */
   descargarDocumento(documentoId: number): Observable<Blob> {
     return this.http.get(`${this.base}/documentos/${documentoId}/archivo`, {
+      ...this.cabeceras(),
+      responseType: 'blob',
+    });
+  }
+
+  /** La carta que genera el sistema, tal como queda con los datos escritos hasta ahora. */
+  cartaGenerada(documentoId: number): Observable<Blob> {
+    return this.http.get(`${this.base}/documentos/${documentoId}/carta`, {
       ...this.cabeceras(),
       responseType: 'blob',
     });

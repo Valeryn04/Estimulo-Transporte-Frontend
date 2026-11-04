@@ -38,6 +38,9 @@
 
   <section class="tarjeta" aria-labelledby="t-resumen">
     <h2 id="t-resumen">Solicitante</h2>
+    @for (d of c.duplicidades; track d.solicitudId + d.tipo) {
+      <p class="aviso duplicidad" role="note">{{ d.mensaje }}</p>
+    }
     <dl class="datos">
       <div>
         <dt>Persona con discapacidad</dt>

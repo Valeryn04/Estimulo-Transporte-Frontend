@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { API_BASE } from '../../../../core/api/api';
 import {
   DocumentoSolicitud,
@@ -18,6 +19,8 @@ const doc = (parcial: Partial<DocumentoSolicitud> & { id: number }): DocumentoSo
   reemplazos: 0,
   archivo: null,
   tieneModelo: false,
+  generado: false,
+  hojasMinimas: 1,
   ...parcial,
 });
 
@@ -83,7 +86,7 @@ describe('DocumentosPanel', () => {
     expect(grupos).toEqual([
       'Documentos de la persona con discapacidad',
       'Documentos del cuidador o asistente personal',
-      'Carta de solicitud (firmada por la persona con discapacidad y por el cuidador)',
+      'Cartas que genera el sistema',
     ]);
     const estados = [...p.el.querySelectorAll('.documento .estado')].map((e) =>
       e.textContent!.trim(),
@@ -120,6 +123,30 @@ describe('DocumentosPanel', () => {
     const enlaces = p.el.querySelectorAll<HTMLAnchorElement>('.documento a[download]');
     expect(enlaces).toHaveLength(1);
     expect(enlaces[0]!.getAttribute('href')).toBe(`${API_BASE}/publico/documentos/4/modelo`);
+  });
+
+  it('la carta que genera el sistema no se carga: se ve con los datos escritos', async () => {
+    const p = await montar(
+      lista([
+        doc({ id: 1 }),
+        doc({ id: 4, nombre: 'Carta de solicitud', aplicaA: 'COMUN', generado: true }),
+      ]),
+    );
+    const cartas = p.el.querySelectorAll('.documento');
+    expect(cartas[1]!.querySelector('input[type="file"]')).toBeNull();
+    expect(cartas[1]!.textContent).toContain('no tiene que subirla');
+    const abrir = vi.spyOn(window, 'open').mockReturnValue(null);
+    globalThis.URL.createObjectURL = vi.fn(() => 'blob:carta');
+    globalThis.URL.revokeObjectURL = vi.fn();
+    cartas[1]!.querySelector<HTMLButtonElement>('button')!.click();
+    p.ctrl.expectOne(`${URL}/4/carta`).flush(new Blob(['%PDF'], { type: 'application/pdf' }));
+    await p.asentar();
+    expect(abrir).toHaveBeenCalledWith('blob:carta', '_blank', 'noopener');
+  });
+
+  it('avisa cuántas hojas debe traer un documento de varias hojas', async () => {
+    const p = await montar(lista([doc({ id: 2, hojasMinimas: 2 })]));
+    expect(p.q('.documento')?.textContent).toContain('Debe traer 2 hojas');
   });
 
   it('carga un archivo, lo envía por el formulario y actualiza la lista', async () => {

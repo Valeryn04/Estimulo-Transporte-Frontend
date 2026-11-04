@@ -106,7 +106,11 @@
             etiqueta="Identificador de la tarjeta"
             [ayuda]="
               'Es el código impreso en la tarjeta' +
-              (prefijoTarjeta() ? ' y debe comenzar por ' + prefijoTarjeta() : '') +
+              (prefijoTarjeta()
+                ? ' y debe comenzar por ' +
+                  prefijoTarjeta() +
+                  (digitosTarjeta() ? ' seguido de ' + digitosTarjeta() + ' dígitos' : '')
+                : '') +
               '. No puede estar asignado a otro beneficiario activo.'
             "
             [control]="form.controls.tarjetaId"

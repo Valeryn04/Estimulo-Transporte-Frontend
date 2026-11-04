@@ -1,6 +1,13 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ApiError } from '../../../../core/api/api-error';
 import { Sesion } from '../../../../core/auth/sesion';
@@ -69,7 +76,11 @@ export class EntregaBeneficio {
     rol: new FormControl<RolBeneficiario>('PCD', { nonNullable: true }),
     tarjetaId: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.minLength(4), Validators.maxLength(30)],
+      validators: [
+        Validators.required,
+        Validators.maxLength(30),
+        (c) => this.formatoTarjeta(c as AbstractControl<string>),
+      ],
     }),
     tipoTransporteId: new FormControl<number | null>(null, { validators: [Validators.required] }),
     fechaEntrega: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -92,6 +103,9 @@ export class EntregaBeneficio {
   protected readonly prefijoTarjeta = computed(
     () => this.detalle()?.sugerencias.prefijoTarjeta ?? '',
   );
+  protected readonly digitosTarjeta = computed(
+    () => this.detalle()?.sugerencias.digitosTarjeta ?? 0,
+  );
   protected readonly observacion = new FormControl('', { nonNullable: true });
 
   constructor() {
@@ -103,6 +117,24 @@ export class EntregaBeneficio {
       }
       void this.cargar(id);
     });
+  }
+
+  /** El identificador es el prefijo de la Gerencia (MFPLUS-EV-) seguido de la cantidad de dígitos definida. */
+  private formatoTarjeta(control: AbstractControl<string>): ValidationErrors | null {
+    const id = control.value.trim();
+    const prefijo = this.detalle()?.sugerencias.prefijoTarjeta ?? '';
+    const digitos = this.detalle()?.sugerencias.digitosTarjeta ?? 0;
+    const ejemplo = `${prefijo}${'12345678901234567890'.slice(0, digitos || 8)}`;
+    if (prefijo && !id.startsWith(prefijo)) {
+      return { formato: `debe comenzar por ${prefijo} (por ejemplo ${ejemplo})` };
+    }
+    const resto = prefijo ? id.slice(prefijo.length) : id;
+    if (digitos > 0 && !new RegExp(`^[0-9]{${digitos}}$`).test(resto)) {
+      return {
+        formato: `después de ${prefijo || 'el prefijo'} deben ir exactamente ${digitos} dígitos (por ejemplo ${ejemplo})`,
+      };
+    }
+    return null;
   }
 
   private async cargar(id: number): Promise<void> {
