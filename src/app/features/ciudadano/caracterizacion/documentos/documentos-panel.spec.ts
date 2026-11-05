@@ -137,7 +137,8 @@ describe('DocumentosPanel', () => {
     );
     const cartas = p.el.querySelectorAll('.documento');
     expect(cartas[1]!.querySelector('input[type="file"]')).toBeNull();
-    expect(cartas[1]!.textContent).toContain('no tiene que subirla');
+    // No aparece como «pendiente»: se genera y se adjunta sola.
+    expect(cartas[1]!.querySelector('.estado')?.textContent).toContain('Se genera sola al enviar');
     const abrir = vi.spyOn(window, 'open').mockReturnValue(null);
     globalThis.URL.createObjectURL = vi.fn(() => 'blob:carta');
     globalThis.URL.revokeObjectURL = vi.fn();

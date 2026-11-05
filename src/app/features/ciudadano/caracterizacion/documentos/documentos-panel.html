@@ -47,7 +47,11 @@
                 [class.ok]="doc.estado === 'CARGADO'"
                 [class.mal]="doc.estado === 'RECHAZADO'"
               >
-                {{ ESTADO[doc.estado] }}
+                @if (doc.estado === 'PENDIENTE' && doc.generado) {
+                  Se genera sola al enviar
+                } @else {
+                  {{ ESTADO[doc.estado] }}
+                }
               </span>
             </div>
             @if (doc.descripcion) {
@@ -94,10 +98,6 @@
               </div>
             }
             @if (doc.generado) {
-              <p class="descripcion">
-                La carta se llena sola con lo que escribe en el formulario y se adjunta sola al
-                enviar la solicitud: no tiene que subirla.
-              </p>
               <div class="acciones">
                 <button type="button" class="boton secundario chico" (click)="verCarta(doc)">
                   Ver la carta con mis datos
