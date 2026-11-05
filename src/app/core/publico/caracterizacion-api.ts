@@ -169,8 +169,18 @@ export interface DocumentoSolicitud {
   tieneModelo: boolean;
   /** La carta la genera el sistema con los datos escritos: no se carga. */
   generado: boolean;
+  /** Se consulta solo con el documento de la persona: no se carga (régimen subsidiado). */
+  automatico: boolean;
+  /** Resultado de la consulta del régimen de salud (solo el soporte de afiliación). */
+  consulta: ConsultaRegimen | null;
   /** Hojas que debe traer el PDF (el certificado de discapacidad trae dos). */
   hojasMinimas: number;
+}
+
+export interface ConsultaRegimen {
+  estado: 'SUBSIDIADO' | 'NO_SUBSIDIADO' | 'NO_DISPONIBLE';
+  mensaje: string;
+  consultadaAt: string;
 }
 
 export interface DocumentosSolicitud {
@@ -253,6 +263,14 @@ export class CaracterizacionApi {
       ...this.cabeceras(),
       responseType: 'blob',
     });
+  }
+
+  /** Consulta con el documento de la persona si es del régimen subsidiado y adjunta la constancia. */
+  consultarRegimen(): Observable<{ consulta: ConsultaRegimen | null }> {
+    return this.http.get<{ consulta: ConsultaRegimen | null }>(
+      `${this.base}/regimen`,
+      this.cabeceras(),
+    );
   }
 
   /** La carta que genera el sistema, tal como queda con los datos escritos hasta ahora. */

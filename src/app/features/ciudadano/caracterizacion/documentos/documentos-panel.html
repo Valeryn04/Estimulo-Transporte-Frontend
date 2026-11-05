@@ -58,6 +58,35 @@
                 Debe traer <strong>{{ doc.hojasMinimas }} hojas</strong> en un solo PDF.
               </p>
             }
+            @if (doc.automatico) {
+              <div class="consulta" role="status" aria-live="polite">
+                @if (consultando()) {
+                  <p>Consultando su afiliación con su documento de identidad…</p>
+                } @else if (doc.consulta?.estado === 'SUBSIDIADO') {
+                  <p class="exito">
+                    Confirmado: la persona con discapacidad figura afiliada y activa en el régimen
+                    subsidiado. La constancia de la consulta se adjuntó sola; no tiene que subir
+                    nada.
+                  </p>
+                } @else if (doc.consulta?.estado === 'NO_SUBSIDIADO') {
+                  <p class="error" role="alert">
+                    La consulta no muestra a la persona con discapacidad como afiliada y activa en
+                    el régimen subsidiado de salud, que es requisito para solicitar el beneficio.
+                    Verifique que el tipo y el número de documento sean los correctos.
+                  </p>
+                } @else if (doc.consulta?.estado === 'NO_DISPONIBLE') {
+                  <p class="error" role="alert">
+                    No pudimos confirmar su afiliación porque el servicio de consulta no respondió.
+                    Intente de nuevo en unos minutos.
+                  </p>
+                }
+                @if (!consultando() && doc.consulta?.estado !== 'SUBSIDIADO' && editable()) {
+                  <button type="button" class="boton secundario chico" (click)="consultarRegimen()">
+                    Volver a consultar
+                  </button>
+                }
+              </div>
+            }
             @if (doc.generado) {
               <p class="descripcion">
                 La carta se llena sola con lo que escribe en el formulario y se adjunta sola al
@@ -115,7 +144,7 @@
             }
 
             <div class="acciones">
-              @if (puedeCargar(doc) && !doc.generado) {
+              @if (puedeCargar(doc) && !doc.generado && !doc.automatico) {
                 <label class="boton chico" [class.desactivado]="subiendo()[doc.id] !== undefined">
                   {{ doc.archivo ? 'Reemplazar archivo' : 'Cargar archivo' }}
                   <input

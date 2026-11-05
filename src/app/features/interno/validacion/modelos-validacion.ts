@@ -177,6 +177,12 @@ export interface Caso {
   items: ItemCaso[];
   alertas: AlertaCruce[];
   /** Personas de este caso que también figuran en otra solicitud (por ejemplo, un cuidador que también es persona con discapacidad). */
+  /** Consulta automática del régimen de salud (BDUA/ADRES) hecha por la persona al caracterizar. */
+  regimen: {
+    resultado: 'SUBSIDIADO' | 'NO_SUBSIDIADO' | 'NO_DISPONIBLE';
+    mensaje: string;
+    consultadaAt: string;
+  } | null;
   duplicidades: { tipo: string; solicitudId: number; radicado: string | null; mensaje: string }[];
   priorizacion: PriorizacionCaso;
   decisiones: DecisionCaso[];

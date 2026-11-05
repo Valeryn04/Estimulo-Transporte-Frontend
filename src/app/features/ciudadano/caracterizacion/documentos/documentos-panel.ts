@@ -62,6 +62,7 @@ export class DocumentosPanel implements OnInit {
   protected readonly mensajes = signal<Record<number, string>>({});
   protected readonly tactil = typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0;
   protected readonly ESTADO = ESTADO;
+  protected readonly consultando = signal(false);
 
   protected readonly grupos = computed(() => {
     const d = this.datos();
@@ -100,7 +101,15 @@ export class DocumentosPanel implements OnInit {
     this.cargando.set(true);
     this.error.set('');
     try {
-      this.poner(await firstValueFrom(this.api.documentos()));
+      const d = await firstValueFrom(this.api.documentos());
+      this.poner(d);
+      // Filtro de régimen: se consulta solo, con el documento que la persona ya escribió.
+      if (
+        this.editable() &&
+        d.documentos.some((x) => x.automatico && x.consulta?.estado !== 'SUBSIDIADO')
+      ) {
+        void this.consultarRegimen();
+      }
     } catch (e) {
       this.error.set(
         e instanceof ApiError ? e.message : 'No pudimos cargar la lista de documentos.',
@@ -198,6 +207,19 @@ export class DocumentosPanel implements OnInit {
         doc.id,
         e instanceof ApiError ? e.message : 'No pudimos descargar el archivo.',
       );
+    }
+  }
+
+  /** Busca a la persona en el servicio de afiliación y, si es subsidiada, la constancia queda adjunta. */
+  protected async consultarRegimen(): Promise<void> {
+    this.consultando.set(true);
+    try {
+      await firstValueFrom(this.api.consultarRegimen());
+      this.poner(await firstValueFrom(this.api.documentos()));
+    } catch {
+      // Si la consulta falla se muestra el estado guardado; la persona puede reintentar.
+    } finally {
+      this.consultando.set(false);
     }
   }
 

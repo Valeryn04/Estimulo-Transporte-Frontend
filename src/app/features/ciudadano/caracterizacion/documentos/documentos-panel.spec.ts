@@ -20,6 +20,8 @@ const doc = (parcial: Partial<DocumentoSolicitud> & { id: number }): DocumentoSo
   archivo: null,
   tieneModelo: false,
   generado: false,
+  automatico: false,
+  consulta: null,
   hojasMinimas: 1,
   ...parcial,
 });
@@ -147,6 +149,69 @@ describe('DocumentosPanel', () => {
   it('avisa cuántas hojas debe traer un documento de varias hojas', async () => {
     const p = await montar(lista([doc({ id: 2, hojasMinimas: 2 })]));
     expect(p.q('.documento')?.textContent).toContain('Debe traer 2 hojas');
+  });
+
+  describe('filtro de régimen subsidiado', () => {
+    const afiliacion = (c: Partial<DocumentoSolicitud> = {}) =>
+      doc({
+        id: 3,
+        codigo: 'PCD_AFILIACION_SUBSIDIADO',
+        nombre: 'Soporte de afiliación al régimen subsidiado',
+        automatico: true,
+        ...c,
+      });
+
+    it('consulta sola con el documento y, si es subsidiada, adjunta la constancia sin pedir archivo', async () => {
+      const p = montarPantalla(DocumentosPanel, { editable: true });
+      p.ctrl.expectOne(URL).flush(lista([afiliacion()]));
+      await p.asentar();
+      p.ctrl.expectOne(`${API_BASE}/publico/caracterizacion/regimen`).flush({
+        consulta: { estado: 'SUBSIDIADO', mensaje: 'AC', consultadaAt: '2026-11-04T10:00:00Z' },
+      });
+      await p.asentar();
+      p.ctrl.expectOne(URL).flush(
+        lista([
+          afiliacion({
+            estado: 'CARGADO',
+            archivo: archivoCargado('constancia-regimen-subsidiado.pdf'),
+            consulta: { estado: 'SUBSIDIADO', mensaje: 'AC', consultadaAt: '2026-11-04T10:00:00Z' },
+          }),
+        ]),
+      );
+      await p.asentar();
+      const caja = p.el.querySelector('.consulta')!;
+      expect(caja.textContent).toContain('Confirmado');
+      expect(caja.textContent).toContain('no tiene que subir');
+      expect(p.el.querySelector('.documento input[type="file"]')).toBeNull();
+      expect(p.el.querySelector('.consulta button')).toBeNull();
+    });
+
+    it('si no es subsidiada lo dice y permite volver a consultar, sin cargar archivo', async () => {
+      const p = montarPantalla(DocumentosPanel, { editable: true });
+      p.ctrl.expectOne(URL).flush(lista([afiliacion()]));
+      await p.asentar();
+      p.ctrl.expectOne(`${API_BASE}/publico/caracterizacion/regimen`).flush({
+        consulta: { estado: 'NO_SUBSIDIADO', mensaje: 'no', consultadaAt: '2026-11-04T10:00:00Z' },
+      });
+      await p.asentar();
+      p.ctrl.expectOne(URL).flush(
+        lista([
+          afiliacion({
+            consulta: {
+              estado: 'NO_SUBSIDIADO',
+              mensaje: 'no',
+              consultadaAt: '2026-11-04T10:00:00Z',
+            },
+          }),
+        ]),
+      );
+      await p.asentar();
+      expect(p.el.querySelector('.consulta')?.getAttribute('role')).toBe('status');
+      expect(p.el.querySelector('.consulta .error')?.textContent).toContain('régimen subsidiado');
+      expect(p.el.querySelector('.documento input[type="file"]')).toBeNull();
+      p.el.querySelector<HTMLButtonElement>('.consulta button')!.click();
+      p.ctrl.expectOne(`${API_BASE}/publico/caracterizacion/regimen`);
+    });
   });
 
   it('carga un archivo, lo envía por el formulario y actualiza la lista', async () => {

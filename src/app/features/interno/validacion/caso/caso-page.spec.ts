@@ -57,6 +57,7 @@ const caso = (c: Partial<Caso> = {}, items: ItemCaso[] = [item({})]): Caso => ({
   sensiblesOcultos: false,
   alertas: [],
   duplicidades: [],
+  regimen: null,
   priorizacion: { matrizVersion: 1, variables: [], puntaje: null },
   version: 3,
   documentos: [
@@ -445,6 +446,21 @@ describe('CasoPage', () => {
     const aviso = el.querySelector('.duplicidad');
     expect(aviso?.getAttribute('role')).toBe('note');
     expect(aviso?.textContent).toContain('una sola tarjeta');
+  });
+
+  it('muestra al validador el resultado de la consulta del régimen de salud', async () => {
+    const { el } = await montar(
+      caso({
+        regimen: {
+          resultado: 'SUBSIDIADO',
+          mensaje: 'AC',
+          consultadaAt: '2026-10-05T15:00:00Z',
+        },
+      }),
+    );
+    expect(el.querySelector('.regimen')?.textContent).toContain(
+      'afiliada y activa en el régimen subsidiado',
+    );
   });
 
   it('sin coincidencias en el archivo lo dice, sin alerta', async () => {

@@ -30,6 +30,8 @@ const documentos = (cargados = 0) => ({
       archivo: null,
       tieneModelo: false,
       generado: false,
+      automatico: false,
+      consulta: null,
       hojasMinimas: 1,
     },
     {
@@ -44,6 +46,8 @@ const documentos = (cargados = 0) => ({
       archivo: null,
       tieneModelo: false,
       generado: true,
+      automatico: false,
+      consulta: null,
       hojasMinimas: 1,
     },
   ],

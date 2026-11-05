@@ -38,6 +38,19 @@
 
   <section class="tarjeta" aria-labelledby="t-resumen">
     <h2 id="t-resumen">Solicitante</h2>
+    @if (c.regimen; as g) {
+      <p class="aviso regimen" role="note">
+        Consulta del régimen de salud (BDUA/ADRES):
+        <strong>{{
+          g.resultado === 'SUBSIDIADO'
+            ? 'afiliada y activa en el régimen subsidiado'
+            : g.resultado === 'NO_SUBSIDIADO'
+              ? 'no figura como subsidiada activa'
+              : 'no se pudo consultar'
+        }}</strong>
+        el {{ g.consultadaAt | date: 'dd/MM/yyyy HH:mm' }}.
+      </p>
+    }
     @for (d of c.duplicidades; track d.solicitudId + d.tipo) {
       <p class="aviso duplicidad" role="note">{{ d.mensaje }}</p>
     }
