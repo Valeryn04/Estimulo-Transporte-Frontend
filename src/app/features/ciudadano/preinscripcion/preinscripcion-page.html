@@ -213,6 +213,37 @@
               />
             </app-campo>
           </div>
+          <app-campo
+            tipo="grupo"
+            idCampo="cui-es-pcd"
+            etiqueta="¿El cuidador también es una persona con discapacidad?"
+            ayuda="Si el cuidador también tiene una discapacidad, solo recibirá un beneficio (una sola tarjeta), aunque cuide a otra persona con discapacidad."
+            [control]="form.controls.cuidadorEsPcd"
+            [mensajes]="{ required: 'responda sí o no' }"
+          >
+            <div class="opciones">
+              <label class="opcion">
+                <input
+                  id="cui-es-pcd"
+                  type="radio"
+                  formControlName="cuidadorEsPcd"
+                  [value]="true"
+                />
+                <span>Sí, el cuidador también tiene una discapacidad</span>
+              </label>
+              <label class="opcion">
+                <input type="radio" formControlName="cuidadorEsPcd" [value]="false" />
+                <span>No</span>
+              </label>
+            </div>
+          </app-campo>
+          @if (cuidadorEsPcd() === true) {
+            <p class="aviso" role="note">
+              Una persona recibe un solo beneficio. Si el cuidador también presenta su propia
+              solicitud como persona con discapacidad, tendrá una sola tarjeta y el equipo de
+              validación revisará a cuál solicitud corresponde.
+            </p>
+          }
         </fieldset>
       }
 

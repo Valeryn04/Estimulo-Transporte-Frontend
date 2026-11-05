@@ -22,6 +22,7 @@ const doc = (parcial: Partial<DocumentoSolicitud> & { id: number }): DocumentoSo
   generado: false,
   automatico: false,
   consulta: null,
+  documentoConsultado: null,
   hojasMinimas: 1,
   ...parcial,
 });

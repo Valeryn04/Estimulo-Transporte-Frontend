@@ -37,6 +37,8 @@ export interface DatosPreinscripcion {
   cuidadorNombre?: string;
   cuidadorTipoIdentificacionId?: number;
   cuidadorNumero?: string;
+  /** El cuidador también es una persona con discapacidad (recibiría un solo beneficio). */
+  cuidadorEsPcd?: boolean;
   direccion: string | null;
   localidadId: number | null;
   barrioId: number | null;

@@ -36,6 +36,7 @@ const CAMPOS = [
   ['cuidadorNombre', 'cui-nombre', 'Nombre completo del cuidador'],
   ['cuidadorTipoIdentificacionId', 'cui-tipo', 'Tipo de identificación del cuidador'],
   ['cuidadorNumero', 'cui-numero', 'Número de identificación del cuidador'],
+  ['cuidadorEsPcd', 'cui-es-pcd', '¿El cuidador también es una persona con discapacidad?'],
   ['direccion', 'direccion', 'Dirección de residencia'],
   ['localidadId', 'localidad', 'Localidad'],
   ['barrioId', 'barrio', 'Barrio'],
@@ -124,6 +125,8 @@ export class PreinscripcionPage implements OnInit {
       nonNullable: true,
       validators: [Validators.required, numeroSegunTipo(() => this.codigoCuidador())],
     }),
+    // ¿El cuidador también es una persona con discapacidad? Solo recibiría un beneficio (una sola tarjeta).
+    cuidadorEsPcd: new FormControl<boolean | null>(null, [Validators.required]),
     direccion: new FormControl('', {
       nonNullable: true,
       // El componente de dirección la arma por partes con un formato estándar.
@@ -157,6 +160,7 @@ export class PreinscripcionPage implements OnInit {
   private readonly localidad: Signal<number | null> = valorDe(this.form.controls.localidadId);
   protected readonly diligencia = valorDe(this.form.controls.diligencia);
   protected readonly agregaCuidador = valorDe(this.form.controls.agregaCuidador);
+  protected readonly cuidadorEsPcd = valorDe(this.form.controls.cuidadorEsPcd);
   /** El cuidador es obligatorio si quien llena es el cuidador, o si la persona con discapacidad dijo que lo agregará. */
   protected readonly tieneCuidador = computed(
     () =>
@@ -216,7 +220,12 @@ export class PreinscripcionPage implements OnInit {
     const pide =
       f.diligencia.value === 'CUIDADOR' ||
       (f.diligencia.value === 'PCD' && f.agregaCuidador.value === true);
-    for (const c of [f.cuidadorNombre, f.cuidadorTipoIdentificacionId, f.cuidadorNumero]) {
+    for (const c of [
+      f.cuidadorNombre,
+      f.cuidadorTipoIdentificacionId,
+      f.cuidadorNumero,
+      f.cuidadorEsPcd,
+    ]) {
       if (pide) c.enable({ emitEvent: false });
       else c.disable({ emitEvent: false });
     }
@@ -311,6 +320,7 @@ export class PreinscripcionPage implements OnInit {
                 cuidadorNombre: v.cuidadorNombre.trim(),
                 cuidadorTipoIdentificacionId: v.cuidadorTipoIdentificacionId as number,
                 cuidadorNumero: v.cuidadorNumero.trim(),
+                cuidadorEsPcd: v.cuidadorEsPcd === true,
               }),
           direccion: v.direccion.trim() || null,
           localidadId: v.localidadId,

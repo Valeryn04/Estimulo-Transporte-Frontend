@@ -60,6 +60,12 @@
             }
             @if (doc.automatico) {
               <div class="consulta" role="status" aria-live="polite">
+                @if (doc.documentoConsultado) {
+                  <p>
+                    Documento con el que se consulta: <strong>{{ doc.documentoConsultado }}</strong
+                    >. Es el que escribió al preinscribirse.
+                  </p>
+                }
                 @if (consultando()) {
                   <p>Consultando su afiliación con su documento de identidad…</p>
                 } @else if (doc.consulta?.estado === 'SUBSIDIADO') {

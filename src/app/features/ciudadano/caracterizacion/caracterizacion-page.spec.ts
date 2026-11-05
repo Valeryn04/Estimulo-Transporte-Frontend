@@ -32,6 +32,7 @@ const documentos = (cargados = 0) => ({
       generado: false,
       automatico: false,
       consulta: null,
+      documentoConsultado: null,
       hojasMinimas: 1,
     },
     {

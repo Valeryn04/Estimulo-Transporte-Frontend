@@ -41,7 +41,7 @@ describe('PreinscripcionPage', () => {
       await p.asentar();
     };
     /** Por defecto: quien llena es la persona con discapacidad y sí agregará un cuidador. */
-    const llenar = async () => {
+    const llenar = async (respondeEsPcd = true) => {
       await elegirRadio('diligencia', 0);
       await elegirRadio('agregaCuidador', 0);
       p.escribir('#pcd-nombre', 'María Fernanda Pérez');
@@ -50,6 +50,7 @@ describe('PreinscripcionPage', () => {
       p.escribir('#cui-nombre', 'Carlos López');
       elegir('#cui-tipo', 'CC');
       p.escribir('#cui-numero', '98765432');
+      if (respondeEsPcd) await elegirRadio('cuidadorEsPcd', 1);
       p.escribir('#correo', 'familia@correo.com');
       p.escribir('#correo-confirmacion', 'familia@correo.com');
       p.el.querySelector<HTMLInputElement>('#acepta')!.click();
@@ -224,6 +225,29 @@ describe('PreinscripcionPage', () => {
     const req = ctrl.expectOne(`${API_BASE}/publico/preinscripciones`);
     expect(req.request.body).toMatchObject({ diligenciadaPor: 'CUIDADOR', tieneCuidador: true });
     expect(req.request.body.cuidadorNumero).toBe('98765432');
+  });
+
+  it('pregunta si el cuidador también es persona con discapacidad y envía la respuesta', async () => {
+    const { el, ctrl, elegirRadio, llenar, enviar, asentar } = await montar();
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    await llenar();
+    expect(el.querySelector('#cui-es-pcd')).not.toBeNull();
+    expect(el.querySelector('.seccion .aviso')).toBeNull();
+    await elegirRadio('cuidadorEsPcd', 0);
+    expect(el.textContent).toContain('Una persona recibe un solo beneficio');
+    enviar();
+    await asentar();
+    const req = ctrl.expectOne(`${API_BASE}/publico/preinscripciones`);
+    expect(req.request.body.cuidadorEsPcd).toBe(true);
+  });
+
+  it('no se puede enviar sin responder si el cuidador también tiene discapacidad', async () => {
+    const { el, ctrl, llenar, enviar, asentar } = await montar();
+    await llenar(false);
+    enviar();
+    await asentar();
+    ctrl.expectNone((r) => r.method === 'POST');
+    expect(el.querySelector('#cui-es-pcd-error')?.textContent).toContain('responda sí o no');
   });
 
   it('sin responder quién diligencia o si agregará cuidador no se puede enviar', async () => {

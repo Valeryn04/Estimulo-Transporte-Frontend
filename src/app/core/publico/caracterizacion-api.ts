@@ -173,6 +173,8 @@ export interface DocumentoSolicitud {
   automatico: boolean;
   /** Resultado de la consulta del régimen de salud (solo el soporte de afiliación). */
   consulta: ConsultaRegimen | null;
+  /** Tipo y número del documento con el que se consulta (solo el soporte de afiliación). */
+  documentoConsultado: string | null;
   /** Hojas que debe traer el PDF (el certificado de discapacidad trae dos). */
   hojasMinimas: number;
 }

@@ -57,6 +57,7 @@ const caso = (c: Partial<Caso> = {}, items: ItemCaso[] = [item({})]): Caso => ({
   sensiblesOcultos: false,
   alertas: [],
   duplicidades: [],
+  cuidadorEsPcd: null,
   regimen: null,
   priorizacion: { matrizVersion: 1, variables: [], puntaje: null },
   version: 3,

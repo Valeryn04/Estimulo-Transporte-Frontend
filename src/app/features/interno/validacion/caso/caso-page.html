@@ -51,6 +51,12 @@
         el {{ g.consultadaAt | date: 'dd/MM/yyyy HH:mm' }}.
       </p>
     }
+    @if (c.cuidadorEsPcd) {
+      <p class="aviso duplicidad" role="note">
+        La persona declaró que su cuidador también es una persona con discapacidad: solo podrá
+        recibir un beneficio (una sola tarjeta).
+      </p>
+    }
     @for (d of c.duplicidades; track d.solicitudId + d.tipo) {
       <p class="aviso duplicidad" role="note">{{ d.mensaje }}</p>
     }

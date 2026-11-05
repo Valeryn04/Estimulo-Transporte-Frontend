@@ -183,6 +183,8 @@ export interface Caso {
     mensaje: string;
     consultadaAt: string;
   } | null;
+  /** Declaró que el cuidador también es una persona con discapacidad (null = sin cuidador). */
+  cuidadorEsPcd: boolean | null;
   duplicidades: { tipo: string; solicitudId: number; radicado: string | null; mensaje: string }[];
   priorizacion: PriorizacionCaso;
   decisiones: DecisionCaso[];
