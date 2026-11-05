@@ -108,9 +108,7 @@
                   </div>
                 </dl>
                 @if (!consultando()) {
-                  @if (doc.consulta?.estado === 'SUBSIDIADO') {
-                    <p class="consulta-nota">La constancia de la consulta se adjuntó sola.</p>
-                  } @else if (doc.consulta?.estado === 'NO_SUBSIDIADO') {
+                  @if (doc.consulta?.estado === 'NO_SUBSIDIADO') {
                     <p class="consulta-nota" role="alert">
                       Es un requisito para solicitar el beneficio. Revise que el tipo y el número de
                       documento sean correctos.
@@ -138,7 +136,7 @@
               </div>
             }
 
-            @if (doc.archivo; as a) {
+            @if (!doc.automatico && doc.archivo; as a) {
               <div class="archivo">
                 <app-icono nombre="documento" />
                 <div class="datos">

@@ -184,7 +184,9 @@ describe('DocumentosPanel', () => {
       const caja = p.el.querySelector('.consulta')!;
       expect(caja.textContent).toContain('Afiliada y activa en el régimen subsidiado');
       expect(p.el.querySelector('.estado')?.textContent).toContain('Verificado');
-      expect(caja.textContent).toContain('se adjuntó sola');
+      // La constancia es interna: no se muestra ni la nota ni el archivo.
+      expect(caja.textContent).not.toContain('constancia');
+      expect(p.el.querySelector('.archivo')).toBeNull();
       expect(p.el.querySelector('.documento input[type="file"]')).toBeNull();
       expect(p.el.querySelector('.consulta button')).toBeNull();
     });
