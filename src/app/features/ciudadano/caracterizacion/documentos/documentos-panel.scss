@@ -201,3 +201,63 @@ label.boton {
     cursor: not-allowed;
   }
 }
+
+// Resultado de la consulta del régimen de salud: un solo cuadro con el documento y el resultado.
+.consulta {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: var(--alc-gris);
+  border-left: 4px solid var(--color-line);
+  border-radius: 8px;
+
+  &[data-resultado='SUBSIDIADO'] {
+    border-left-color: var(--alc-verde);
+  }
+
+  &[data-resultado='NO_SUBSIDIADO'],
+  &[data-resultado='NO_DISPONIBLE'] {
+    border-left-color: var(--color-error);
+  }
+
+  .consulta-datos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px 24px;
+    margin: 0;
+
+    dt {
+      font-size: 0.8rem;
+      color: var(--color-muted);
+    }
+
+    dd {
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .resultado {
+      font-weight: 700;
+    }
+  }
+
+  &[data-resultado='SUBSIDIADO'] .resultado {
+    color: var(--alc-verde-texto);
+  }
+
+  &[data-resultado='NO_SUBSIDIADO'] .resultado,
+  &[data-resultado='NO_DISPONIBLE'] .resultado {
+    color: var(--color-error);
+  }
+
+  .consulta-nota {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--color-muted);
+  }
+
+  .boton {
+    justify-self: start;
+  }
+}

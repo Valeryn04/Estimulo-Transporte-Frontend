@@ -44,17 +44,33 @@
               </div>
               <span
                 class="estado"
-                [class.ok]="doc.estado === 'CARGADO'"
-                [class.mal]="doc.estado === 'RECHAZADO'"
+                [class.ok]="doc.estado === 'CARGADO' || doc.consulta?.estado === 'SUBSIDIADO'"
+                [class.mal]="
+                  doc.estado === 'RECHAZADO' ||
+                  doc.consulta?.estado === 'NO_SUBSIDIADO' ||
+                  doc.consulta?.estado === 'NO_DISPONIBLE'
+                "
               >
-                @if (doc.estado === 'PENDIENTE' && doc.generado) {
+                @if (doc.automatico) {
+                  {{
+                    consultando()
+                      ? 'Consultando…'
+                      : doc.consulta?.estado === 'SUBSIDIADO'
+                        ? 'Verificado'
+                        : doc.consulta?.estado === 'NO_SUBSIDIADO'
+                          ? 'No cumple'
+                          : doc.consulta?.estado === 'NO_DISPONIBLE'
+                            ? 'Sin respuesta'
+                            : 'Se consulta sola'
+                  }}
+                } @else if (doc.estado === 'PENDIENTE' && doc.generado) {
                   Se genera sola al enviar
                 } @else {
                   {{ ESTADO[doc.estado] }}
                 }
               </span>
             </div>
-            @if (doc.descripcion) {
+            @if (doc.descripcion && !doc.automatico) {
               <p class="descripcion">{{ doc.descripcion }}</p>
             }
             @if (doc.hojasMinimas > 1) {
@@ -63,37 +79,54 @@
               </p>
             }
             @if (doc.automatico) {
-              <div class="consulta" role="status" aria-live="polite">
-                @if (doc.documentoConsultado) {
-                  <p>
-                    Documento con el que se consulta: <strong>{{ doc.documentoConsultado }}</strong
-                    >. Es el que escribió al preinscribirse.
-                  </p>
-                }
-                @if (consultando()) {
-                  <p>Consultando su afiliación con su documento de identidad…</p>
-                } @else if (doc.consulta?.estado === 'SUBSIDIADO') {
-                  <p class="exito">
-                    Confirmado: la persona con discapacidad figura afiliada y activa en el régimen
-                    subsidiado. La constancia de la consulta se adjuntó sola; no tiene que subir
-                    nada.
-                  </p>
-                } @else if (doc.consulta?.estado === 'NO_SUBSIDIADO') {
-                  <p class="error" role="alert">
-                    La consulta no muestra a la persona con discapacidad como afiliada y activa en
-                    el régimen subsidiado de salud, que es requisito para solicitar el beneficio.
-                    Verifique que el tipo y el número de documento sean los correctos.
-                  </p>
-                } @else if (doc.consulta?.estado === 'NO_DISPONIBLE') {
-                  <p class="error" role="alert">
-                    No pudimos confirmar su afiliación porque el servicio de consulta no respondió.
-                    Intente de nuevo en unos minutos.
-                  </p>
-                }
-                @if (!consultando() && doc.consulta?.estado !== 'SUBSIDIADO' && editable()) {
-                  <button type="button" class="boton secundario chico" (click)="consultarRegimen()">
-                    Volver a consultar
-                  </button>
+              <div
+                class="consulta"
+                [attr.data-resultado]="consultando() ? 'CONSULTANDO' : doc.consulta?.estado"
+                role="status"
+                aria-live="polite"
+              >
+                <dl class="consulta-datos">
+                  <div>
+                    <dt>Documento consultado</dt>
+                    <dd>{{ doc.documentoConsultado }}</dd>
+                  </div>
+                  <div>
+                    <dt>Resultado</dt>
+                    <dd class="resultado">
+                      @if (consultando()) {
+                        Consultando su afiliación…
+                      } @else if (doc.consulta?.estado === 'SUBSIDIADO') {
+                        Afiliada y activa en el régimen subsidiado
+                      } @else if (doc.consulta?.estado === 'NO_SUBSIDIADO') {
+                        No figura como afiliada y activa en el régimen subsidiado
+                      } @else if (doc.consulta?.estado === 'NO_DISPONIBLE') {
+                        El servicio de consulta no respondió
+                      } @else {
+                        Pendiente de consultar
+                      }
+                    </dd>
+                  </div>
+                </dl>
+                @if (!consultando()) {
+                  @if (doc.consulta?.estado === 'SUBSIDIADO') {
+                    <p class="consulta-nota">La constancia de la consulta se adjuntó sola.</p>
+                  } @else if (doc.consulta?.estado === 'NO_SUBSIDIADO') {
+                    <p class="consulta-nota" role="alert">
+                      Es un requisito para solicitar el beneficio. Revise que el tipo y el número de
+                      documento sean correctos.
+                    </p>
+                  } @else if (doc.consulta?.estado === 'NO_DISPONIBLE') {
+                    <p class="consulta-nota" role="alert">Intente de nuevo en unos minutos.</p>
+                  }
+                  @if (doc.consulta?.estado !== 'SUBSIDIADO' && editable()) {
+                    <button
+                      type="button"
+                      class="boton secundario chico"
+                      (click)="consultarRegimen()"
+                    >
+                      Volver a consultar
+                    </button>
+                  }
                 }
               </div>
             }

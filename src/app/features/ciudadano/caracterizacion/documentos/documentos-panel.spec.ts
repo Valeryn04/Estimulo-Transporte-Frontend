@@ -182,8 +182,9 @@ describe('DocumentosPanel', () => {
       );
       await p.asentar();
       const caja = p.el.querySelector('.consulta')!;
-      expect(caja.textContent).toContain('Confirmado');
-      expect(caja.textContent).toContain('no tiene que subir');
+      expect(caja.textContent).toContain('Afiliada y activa en el régimen subsidiado');
+      expect(p.el.querySelector('.estado')?.textContent).toContain('Verificado');
+      expect(caja.textContent).toContain('se adjuntó sola');
       expect(p.el.querySelector('.documento input[type="file"]')).toBeNull();
       expect(p.el.querySelector('.consulta button')).toBeNull();
     });
@@ -209,7 +210,10 @@ describe('DocumentosPanel', () => {
       );
       await p.asentar();
       expect(p.el.querySelector('.consulta')?.getAttribute('role')).toBe('status');
-      expect(p.el.querySelector('.consulta .error')?.textContent).toContain('régimen subsidiado');
+      expect(p.el.querySelector('.consulta .resultado')?.textContent).toContain(
+        'No figura como afiliada y activa',
+      );
+      expect(p.el.querySelector('.estado')?.textContent).toContain('No cumple');
       expect(p.el.querySelector('.documento input[type="file"]')).toBeNull();
       p.el.querySelector<HTMLButtonElement>('.consulta button')!.click();
       p.ctrl.expectOne(`${API_BASE}/publico/caracterizacion/regimen`);
