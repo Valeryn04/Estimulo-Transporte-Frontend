@@ -73,7 +73,7 @@ describe('lectura en voz alta', () => {
       const d = fragmento(
         '<label for="x">Nombre <span class="solo-lectores">(obligatorio)</span></label><input id="x" required />',
       );
-      expect(describirControl(d.querySelector('input')!)).toBe('Nombre, campo, obligatorio');
+      expect(describirControl(d.querySelector('input')!)).toBe('Nombre, campo de texto, obligatorio');
     });
 
     it('lee el valor ya escrito, salvo en contraseñas', () => {
