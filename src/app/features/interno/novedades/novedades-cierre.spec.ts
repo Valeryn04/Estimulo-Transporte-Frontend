@@ -59,7 +59,7 @@ describe('finalización y actualización de datos del beneficio (RF-BEN-05)', ()
   }
 
   describe('finalizar', () => {
-    it('exige causal, justificación, soporte y la confirmación antes de enviar', async () => {
+    it('exige causal, justificación y la confirmación antes de enviar (sin soporte)', async () => {
       const p = await montar(undefined, true, 'Finalizar el beneficio');
       p.enviar('app-finalizar-beneficio form');
       await p.asentar();
@@ -76,7 +76,7 @@ describe('finalización y actualización de datos del beneficio (RF-BEN-05)', ()
       ).not.toBeNull();
     });
 
-    it('finaliza el beneficio con soporte y vuelve a cargar el expediente', async () => {
+    it('finaliza el beneficio solo con la justificación y vuelve a cargar el expediente', async () => {
       const p = await montar(undefined, true, 'Finalizar el beneficio');
       const causal = p.el.querySelector<HTMLSelectElement>('#fin-causal')!;
       causal.selectedIndex = 2;
@@ -85,7 +85,7 @@ describe('finalización y actualización de datos del beneficio (RF-BEN-05)', ()
       p.el
         .querySelector<HTMLInputElement>('app-finalizar-beneficio input[type="checkbox"]')!
         .click();
-      archivo(p.el, '#fin-archivo');
+      expect(p.el.querySelector('#fin-archivo')).toBeNull();
       await p.asentar();
       p.enviar('app-finalizar-beneficio form');
       const r = p.ctrl.expectOne(`${URL}/beneficios/5/finalizar`);
@@ -94,7 +94,7 @@ describe('finalización y actualización de datos del beneficio (RF-BEN-05)', ()
         fechaEfectiva: '2026-10-19',
         observacion: 'La persona renunció por escrito al beneficio.',
       });
-      expect((r.request.body as FormData).get('archivo')).toBeInstanceOf(File);
+      expect((r.request.body as FormData).get('archivo')).toBeNull();
       r.flush(expediente(), { status: 201, statusText: 'Creado' });
       await p.asentar();
       p.ctrl
@@ -116,7 +116,6 @@ describe('finalización y actualización de datos del beneficio (RF-BEN-05)', ()
       p.el
         .querySelector<HTMLInputElement>('app-finalizar-beneficio input[type="checkbox"]')!
         .click();
-      archivo(p.el, '#fin-archivo');
       await p.asentar();
       p.enviar('app-finalizar-beneficio form');
       p.ctrl

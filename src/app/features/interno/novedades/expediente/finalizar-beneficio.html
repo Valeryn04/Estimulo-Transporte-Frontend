@@ -34,15 +34,6 @@
   >
     <textarea appCampoControl formControlName="observacion" rows="2" maxlength="1000"></textarea>
   </app-campo>
-  <div class="campo-simple">
-    <label for="fin-archivo">Soporte (PDF, JPG o PNG)</label>
-    <input
-      id="fin-archivo"
-      type="file"
-      accept=".pdf,.jpg,.jpeg,.png"
-      (change)="elegirArchivo($event)"
-    />
-  </div>
   <app-campo
     idCampo="fin-confirmo"
     etiqueta="Confirmación"

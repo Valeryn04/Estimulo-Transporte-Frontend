@@ -19,7 +19,8 @@ export interface Novedad {
   causal: string | null;
   fechaEfectiva: string;
   observacion: string;
-  evidencia: { nombre: string; tamanoBytes: number };
+  /** Archivo opcional: lo único obligatorio es la justificación. */
+  evidencia: { nombre: string; tamanoBytes: number } | null;
   responsable: string;
   levantamientoProgramado: string | null;
   estadoPrevio: string;

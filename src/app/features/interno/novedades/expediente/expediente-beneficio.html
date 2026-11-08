@@ -32,7 +32,7 @@
             <th scope="col">Novedad</th>
             <th scope="col">Fecha efectiva</th>
             <th scope="col">Responsable</th>
-            <th scope="col">Evidencia</th>
+            <th scope="col">Archivo</th>
           </tr>
         </thead>
         <tbody>
@@ -61,9 +61,13 @@
                 <small>{{ n.creadaAt | date: 'dd/MM/yyyy HH:mm' }}</small>
               </td>
               <td>
-                <button type="button" class="enlace" (click)="verEvidencia(n)">
-                  {{ n.evidencia.nombre }}
-                </button>
+                @if (n.evidencia) {
+                  <button type="button" class="enlace" (click)="verEvidencia(n)">
+                    {{ n.evidencia.nombre }}
+                  </button>
+                } @else {
+                  —
+                }
               </td>
             </tr>
           } @empty {
@@ -192,7 +196,8 @@
         </div>
         <app-campo
           idCampo="nov-obs"
-          [etiqueta]="tipo() === 'LEVANTAMIENTO' ? 'Observación (obligatoria)' : 'Observación'"
+          etiqueta="Justificación"
+          ayuda="Es lo único obligatorio: explique la novedad (mínimo 5 caracteres). Queda en la bitácora y en el correo a la persona."
           [control]="form.controls.observacion"
         >
           <textarea
@@ -202,15 +207,6 @@
             maxlength="1000"
           ></textarea>
         </app-campo>
-        <div class="campo-simple">
-          <label for="nov-evidencia">Evidencia de soporte (PDF, JPG o PNG)</label>
-          <input
-            id="nov-evidencia"
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png"
-            (change)="elegirEvidencia($event)"
-          />
-        </div>
         <div class="acciones">
           <button
             appConfirmar="¿Registrar la novedad?"

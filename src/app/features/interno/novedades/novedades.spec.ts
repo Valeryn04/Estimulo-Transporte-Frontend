@@ -161,7 +161,7 @@ describe('ExpedienteBeneficio', () => {
     ).toEqual(['BLOQUEO', 'SUSPENSION']);
   });
 
-  it('exige causal y evidencia, y registra la novedad con la fecha efectiva', async () => {
+  it('exige causal y justificación, y registra la novedad sin archivo con la fecha efectiva', async () => {
     const p = await montar(undefined, true, 'Bloquear o suspender');
     p.enviar('dialog form');
     await p.asentar();
@@ -169,13 +169,15 @@ describe('ExpedienteBeneficio', () => {
     const causal = p.el.querySelector<HTMLSelectElement>('#nov-causal')!;
     causal.selectedIndex = 1;
     causal.dispatchEvent(new Event('change'));
-    p.escribir('#nov-obs', 'Reporte recibido en la línea de atención');
+    // Sin justificación no se envía, y ya no hay campo de archivo.
+    expect(p.el.querySelector('#nov-evidencia')).toBeNull();
     p.enviar('dialog form');
     await p.asentar();
-    expect(p.el.querySelector('.aviso.error')?.textContent).toContain('evidencia');
-    archivo(p.el, '#nov-evidencia');
+    p.ctrl.expectNone((r) => r.method === 'POST');
+    p.escribir('#nov-obs', 'Reporte recibido en la línea de atención');
     p.enviar('dialog form');
     const r = p.ctrl.expectOne(`${URL}/beneficios/5/novedades`);
+    expect((r.request.body as FormData).get('archivo')).toBeNull();
     expect(JSON.parse((r.request.body as FormData).get('datos') as string)).toEqual({
       tipo: 'BLOQUEO',
       causalId: 11,
@@ -221,7 +223,7 @@ describe('ExpedienteBeneficio', () => {
     const causal = p.el.querySelector<HTMLSelectElement>('#nov-causal')!;
     causal.selectedIndex = 1;
     causal.dispatchEvent(new Event('change'));
-    archivo(p.el, '#nov-evidencia');
+    p.escribir('#nov-obs', 'Reporte recibido en la línea de atención');
     p.enviar('dialog form');
     p.ctrl
       .expectOne(`${URL}/beneficios/5/novedades`)

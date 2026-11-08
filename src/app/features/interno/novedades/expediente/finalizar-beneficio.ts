@@ -29,7 +29,6 @@ export class FinalizarBeneficio {
 
   protected readonly error = signal('');
   protected readonly guardando = signal(false);
-  protected readonly archivo = signal<File | null>(null);
 
   protected readonly form = new FormGroup({
     causalId: new FormControl<number | null>(null, { validators: [Validators.required] }),
@@ -41,33 +40,20 @@ export class FinalizarBeneficio {
     confirmo: new FormControl(false, { nonNullable: true, validators: [Validators.requiredTrue] }),
   });
 
-  protected elegirArchivo(e: Event): void {
-    this.archivo.set((e.target as HTMLInputElement).files?.[0] ?? null);
-  }
-
   protected async finalizar(): Promise<void> {
     if (!this.form.value.fechaEfectiva) this.form.controls.fechaEfectiva.setValue(this.hoy());
     this.form.markAllAsTouched();
     this.error.set('');
     if (this.form.invalid) return;
-    const archivo = this.archivo();
-    if (!archivo) {
-      this.error.set('Adjunte el soporte de la finalización (PDF, JPG o PNG).');
-      return;
-    }
     const v = this.form.getRawValue();
     this.guardando.set(true);
     try {
       await firstValueFrom(
-        this.api.finalizar(
-          this.beneficioId(),
-          {
-            causalId: Number(v.causalId),
-            fechaEfectiva: v.fechaEfectiva,
-            observacion: v.observacion.trim(),
-          },
-          archivo,
-        ),
+        this.api.finalizar(this.beneficioId(), {
+          causalId: Number(v.causalId),
+          fechaEfectiva: v.fechaEfectiva,
+          observacion: v.observacion.trim(),
+        }),
       );
       this.hecho.emit();
     } catch (e) {

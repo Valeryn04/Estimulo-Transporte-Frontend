@@ -47,20 +47,15 @@ export class NovedadesApi {
     return this.http.get<ExpedienteNovedades>(`${NOVEDADES}/beneficios/${beneficioId}`);
   }
 
-  registrarNovedad(
-    beneficioId: number,
-    d: DatosNovedad,
-    evidencia: File,
-  ): Observable<ExpedienteNovedades> {
-    return this.multipart(`${NOVEDADES}/beneficios/${beneficioId}/novedades`, d, evidencia);
+  registrarNovedad(beneficioId: number, d: DatosNovedad): Observable<ExpedienteNovedades> {
+    return this.multipart(`${NOVEDADES}/beneficios/${beneficioId}/novedades`, d, null);
   }
 
   finalizar(
     beneficioId: number,
     d: { causalId: number; fechaEfectiva: string; observacion: string },
-    soporte: File,
   ): Observable<ExpedienteNovedades> {
-    return this.multipart(`${NOVEDADES}/beneficios/${beneficioId}/finalizar`, d, soporte);
+    return this.multipart(`${NOVEDADES}/beneficios/${beneficioId}/finalizar`, d, null);
   }
 
   actualizarDatos(

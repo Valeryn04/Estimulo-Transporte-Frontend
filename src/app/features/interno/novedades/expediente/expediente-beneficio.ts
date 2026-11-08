@@ -56,7 +56,6 @@ export class ExpedienteBeneficio {
   protected readonly error = signal('');
   protected readonly mensaje = signal('');
   protected readonly guardando = signal(false);
-  protected readonly evidencia = signal<File | null>(null);
   protected readonly evidenciaRev = signal<File | null>(null);
   protected readonly estados = NOMBRE_ESTADO_BENEFICIO;
   protected readonly estadoRev = NOMBRE_ESTADO_REVOCATORIA;
@@ -104,9 +103,10 @@ export class ExpedienteBeneficio {
     tipo: new FormControl<TipoNovedad>('BLOQUEO', { nonNullable: true }),
     causalId: new FormControl<number | null>(null),
     fechaEfectiva: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    // La justificación es lo único obligatorio de una novedad.
     observacion: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.maxLength(1000)],
+      validators: [Validators.required, Validators.minLength(5), Validators.maxLength(1000)],
     }),
     levantamientoProgramado: new FormControl('', { nonNullable: true }),
   });
@@ -132,7 +132,6 @@ export class ExpedienteBeneficio {
   private async cargar(id: number): Promise<void> {
     this.error.set('');
     this.mensaje.set('');
-    this.evidencia.set(null);
     this.evidenciaRev.set(null);
     this.accion.set(null);
     try {
@@ -157,10 +156,6 @@ export class ExpedienteBeneficio {
     this.tipo.set(this.form.controls.tipo.value);
   }
 
-  protected elegirEvidencia(e: Event): void {
-    this.evidencia.set((e.target as HTMLInputElement).files?.[0] ?? null);
-  }
-
   protected elegirEvidenciaRev(e: Event): void {
     this.evidenciaRev.set((e.target as HTMLInputElement).files?.[0] ?? null);
   }
@@ -176,27 +171,18 @@ export class ExpedienteBeneficio {
       this.error.set('Elija la causal de la novedad.');
       return;
     }
-    const evidencia = this.evidencia();
-    if (!evidencia) {
-      this.error.set('Adjunte la evidencia que sustenta la novedad (PDF, JPG o PNG).');
-      return;
-    }
     this.guardando.set(true);
     try {
       await firstValueFrom(
-        this.api.registrarNovedad(
-          d.beneficio.id,
-          {
-            tipo: v.tipo,
-            ...(v.causalId ? { causalId: v.causalId } : {}),
-            fechaEfectiva: v.fechaEfectiva,
-            observacion: v.observacion.trim(),
-            ...(v.levantamientoProgramado
-              ? { levantamientoProgramado: v.levantamientoProgramado }
-              : {}),
-          },
-          evidencia,
-        ),
+        this.api.registrarNovedad(d.beneficio.id, {
+          tipo: v.tipo,
+          ...(v.causalId ? { causalId: v.causalId } : {}),
+          fechaEfectiva: v.fechaEfectiva,
+          observacion: v.observacion.trim(),
+          ...(v.levantamientoProgramado
+            ? { levantamientoProgramado: v.levantamientoProgramado }
+            : {}),
+        }),
       );
       await this.cargar(d.beneficio.id);
       this.mensaje.set('Novedad registrada y comunicada a la persona.');
