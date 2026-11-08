@@ -1,0 +1,25 @@
+:host {
+  display: block;
+}
+
+.barra-voz {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 8px 16px;
+}
+
+.chico {
+  min-height: 44px;
+  padding: 8px 16px;
+  font-size: 0.95rem;
+}
+
+.nota {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+}

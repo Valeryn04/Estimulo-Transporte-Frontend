@@ -3,15 +3,17 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
 import { Icono } from '../../../shared/icono/icono';
+import { LecturaVozBarra } from '../../../shared/lectura-voz/lectura-voz-barra';
 import { LockupDependencia } from '../../../shared/lockup-dependencia/lockup-dependencia';
 
 /**
  * Marco del portal ciudadano con la identidad de la Alcaldía de Barranquilla: logo con el nombre de la
- * dependencia, contenido principal y salto de navegación para teclado y lectores de pantalla (RNF-02).
+ * dependencia, contenido principal y salto de navegación para teclado y lectores de pantalla (RNF-02). Trae al
+ * principio la barra de lectura en voz alta, para quien no tiene lector de pantalla.
  */
 @Component({
   selector: 'app-ciudadano-shell',
-  imports: [RouterOutlet, RouterLink, LockupDependencia, Icono],
+  imports: [RouterOutlet, RouterLink, LockupDependencia, Icono, LecturaVozBarra],
   templateUrl: './ciudadano-shell.html',
   styleUrl: './ciudadano-shell.scss',
 })
