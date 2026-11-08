@@ -10,6 +10,7 @@ class Enunciado {
   lang = '';
   voice: unknown = null;
   rate = 1;
+  volume = 0.5;
   onstart: (() => void) | null = null;
   onend: (() => void) | null = null;
   onerror: (() => void) | null = null;
@@ -17,10 +18,12 @@ class Enunciado {
 }
 
 const dichas: string[] = [];
+const ajustes: { volume: number; voz: string }[] = [];
 const cancelar = vi.fn();
 const sintesis = {
   speak: (u: Enunciado) => {
     dichas.push(u.text);
+    ajustes.push({ volume: u.volume, voz: (u.voice as { name: string } | null)?.name ?? '' });
     u.onstart?.();
     u.onend?.();
   },
@@ -30,6 +33,7 @@ const sintesis = {
   getVoices: () => [
     { lang: 'en-US', name: 'Ingles' },
     { lang: 'es-MX', name: 'Mexico' },
+    { lang: 'es-ES', name: 'Microsoft Elvira Online (Natural)' },
     { lang: 'es-CO', name: 'Colombia' },
   ],
 };
@@ -144,6 +148,12 @@ describe('lectura en voz alta', () => {
       voz.hablar('Hola');
       expect(cancelar).toHaveBeenCalled();
       expect(dichas).toEqual(['Hola']);
+    });
+
+    it('habla al máximo volumen y prefiere una voz «Natural» o de la nube sobre la del sistema', () => {
+      ajustes.length = 0;
+      TestBed.inject(LecturaVoz).hablar('Hola');
+      expect(ajustes).toEqual([{ volume: 1, voz: 'Microsoft Elvira Online (Natural)' }]);
     });
 
     it('un texto largo se parte en frases cortas', () => {

@@ -199,6 +199,9 @@ export class LecturaVoz {
   private elegirVoz(): SpeechSynthesisVoice | null {
     const voces = this.sintesis?.getVoices() ?? [];
     const es = voces.filter((v) => v.lang.toLowerCase().startsWith('es'));
+    // Las voces «Natural» (Edge) o de Google en la nube suenan más claras y más fuertes que las del sistema.
+    const mejor = es.find((v) => /natural|online|google/i.test(v.name));
+    if (mejor) return mejor;
     for (const preferida of ['es-co', 'es-mx', 'es-us', 'es-419', 'es-es']) {
       const v = es.find((x) => x.lang.toLowerCase().replace('_', '-') === preferida);
       if (v) return v;
@@ -219,6 +222,8 @@ export class LecturaVoz {
       u.lang = voz?.lang ?? 'es-CO';
       if (voz) u.voice = voz;
       u.rate = 0.95;
+      // El volumen más alto que permite el navegador; el resto depende del volumen del equipo.
+      u.volume = 1;
       if (i === 0) u.onstart = () => this.hablando.set(true);
       if (i === partes.length - 1) {
         u.onend = () => this.hablando.set(false);
