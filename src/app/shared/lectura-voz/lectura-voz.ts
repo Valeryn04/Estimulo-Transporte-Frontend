@@ -145,15 +145,20 @@ export function describirControl(el: HTMLElement): string {
   return extra ? `${partes}. ${extra}` : partes;
 }
 
+/** Texto de un título, pregunta o etiqueta con su ayuda («?») a continuación. */
+export function textoConAyuda(n: Element): string {
+  const base = textoVisible(n);
+  const ayuda = limpio(n.querySelector('app-ayuda [role="tooltip"]')?.textContent);
+  return ayuda ? `${base}${/[.!?:;]$/.test(base) ? '' : '.'} ${ayuda}` : base;
+}
+
 /** Texto de la página para leerla de corrido: títulos, preguntas, párrafos y avisos, en el orden en que aparecen. */
 export function textoDePagina(raiz: ParentNode): string {
   const vistos = new Set<string>();
   const partes: string[] = [];
   for (const n of Array.from(raiz.querySelectorAll('h1, h2, h3, legend, label, p, li, .aviso'))) {
     // Los títulos, las preguntas y las etiquetas llevan su ayuda («?») a continuación.
-    const base = textoVisible(n);
-    const ayuda = limpio(n.querySelector('app-ayuda [role="tooltip"]')?.textContent);
-    const t = ayuda ? `${base}${/[.!?:;]$/.test(base) ? '' : '.'} ${ayuda}` : base;
+    const t = textoConAyuda(n);
     if (t && !vistos.has(t)) {
       vistos.add(t);
       // Cada bloque termina en punto (si no lo trae) para que la voz haga su pausa.
@@ -178,6 +183,10 @@ function frases(texto: string): string[] {
   if (actual) salida.push(actual);
   return salida;
 }
+
+export const SALUDO =
+  'Bienvenido. La lectura en voz alta está activada: use la tecla Tab para recorrer el formulario y escuchará cada campo. ' +
+  'Si no la necesita, pulse Alt, Mayús y L para desactivarla.';
 
 /**
  * Lectura en voz alta del portal para las personas con discapacidad visual que no tienen lector de pantalla: usa la
@@ -209,6 +218,52 @@ export class LecturaVoz {
     return es[0] ?? null;
   }
 
+  private enunciado(texto: string, voz: SpeechSynthesisVoice | null): SpeechSynthesisUtterance {
+    const u = new SpeechSynthesisUtterance(texto);
+    u.lang = voz?.lang ?? 'es-CO';
+    if (voz) u.voice = voz;
+    u.rate = 0.95;
+    // El volumen más alto que permite el navegador; el resto depende del volumen del equipo.
+    u.volume = 1;
+    return u;
+  }
+
+  /**
+   * Intenta hablar sin que la persona haya tocado nada. Responde si el navegador lo permitió: muchos lo bloquean
+   * hasta el primer toque o tecla; entonces no se dice nada y se vuelve a intentar con ese primer toque.
+   */
+  intentar(texto: string): Promise<boolean> {
+    const sintesis = this.sintesis;
+    const dicho = limpio(texto);
+    if (!sintesis || !dicho) return Promise.resolve(false);
+    return new Promise((resolver) => {
+      let resuelto = false;
+      const fin = (ok: boolean): void => {
+        if (resuelto) return;
+        resuelto = true;
+        if (!ok) sintesis.cancel();
+        resolver(ok);
+      };
+      sintesis.cancel();
+      const partes = frases(dicho);
+      const voz = this.elegirVoz();
+      partes.forEach((parte, i) => {
+        const u = this.enunciado(parte, voz);
+        u.onstart = () => {
+          this.hablando.set(true);
+          fin(true);
+        };
+        u.onerror = () => {
+          this.hablando.set(false);
+          fin(false);
+        };
+        if (i === partes.length - 1) u.onend = () => this.hablando.set(false);
+        sintesis.speak(u);
+      });
+      setTimeout(() => fin(false), 1200);
+    });
+  }
+
   /** Dice el texto; por defecto corta lo que se estaba leyendo (al cambiar de foco no se acumulan). */
   hablar(texto: string, anadir = false): void {
     const sintesis = this.sintesis;
@@ -218,16 +273,9 @@ export class LecturaVoz {
     const partes = frases(dicho);
     const voz = this.elegirVoz();
     partes.forEach((parte, i) => {
-      const u = new SpeechSynthesisUtterance(parte);
-      u.lang = voz?.lang ?? 'es-CO';
-      if (voz) u.voice = voz;
-      u.rate = 0.95;
-      // El volumen más alto que permite el navegador; el resto depende del volumen del equipo.
-      u.volume = 1;
+      const u = this.enunciado(parte, voz);
       if (i === 0) u.onstart = () => this.hablando.set(true);
-      if (i === partes.length - 1) {
-        u.onend = () => this.hablando.set(false);
-      }
+      if (i === partes.length - 1) u.onend = () => this.hablando.set(false);
       u.onerror = () => this.hablando.set(false);
       sintesis.speak(u);
     });
@@ -242,14 +290,11 @@ export class LecturaVoz {
    * Se presenta sola con el primer toque o tecla de la persona (los navegadores no dejan hablar antes). Dice cómo
    * recorrer el formulario y cómo apagar la lectura si no se necesita.
    */
-  saludar(): void {
+  saludar(extra = ''): void {
     if (!this.soportado || !this.activa() || this.saludada) return;
     this.saludada = true;
     this.saludando.set(true);
-    this.hablar(
-      'Bienvenido. La lectura en voz alta está activada: use la tecla Tab para recorrer el formulario y escuchará cada campo. ' +
-        'Si no la necesita, pulse Alt, Mayús y L para desactivarla.',
-    );
+    this.hablar(`${SALUDO}${extra ? ' ' + extra : ''}`);
     // La presentación termina cuando la voz deja de hablar.
     const espera = setInterval(() => {
       if (!this.hablando()) {

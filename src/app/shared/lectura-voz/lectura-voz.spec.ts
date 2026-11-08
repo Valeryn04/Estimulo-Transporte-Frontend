@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 import { LecturaVoz, describirControl, textoDePagina } from './lectura-voz';
-import { LecturaVozBarra } from './lectura-voz-barra';
+import { LecturaVozBarra, RETRASO_ENTRADA } from './lectura-voz-barra';
 
 /** Voz simulada: guarda lo que se «dice» y permite comprobar que se corta lo anterior. */
 class Enunciado {
@@ -20,8 +20,14 @@ class Enunciado {
 const dichas: string[] = [];
 const ajustes: { volume: number; voz: string }[] = [];
 const cancelar = vi.fn();
+/** Simula un navegador que no deja hablar antes del primer toque. */
+let bloqueada = false;
 const sintesis = {
   speak: (u: Enunciado) => {
+    if (bloqueada) {
+      u.onerror?.();
+      return;
+    }
     dichas.push(u.text);
     ajustes.push({ volume: u.volume, voz: (u.voice as { name: string } | null)?.name ?? '' });
     u.onstart?.();
@@ -44,6 +50,7 @@ class Vacia {}
 describe('lectura en voz alta', () => {
   beforeEach(() => {
     dichas.length = 0;
+    bloqueada = false;
     cancelar.mockClear();
     localStorage.clear();
     vi.stubGlobal('SpeechSynthesisUtterance', Enunciado);
@@ -272,6 +279,42 @@ describe('lectura en voz alta', () => {
       expect(dichas.join(' ')).toContain('Preinscripción. Complete sus datos.');
     });
 
+    it('al entrar lee sola la bienvenida, el título y la introducción de la pantalla', async () => {
+      const { main } = await montar();
+      main.innerHTML =
+        '<h1>Preinscripción <app-ayuda><span role="tooltip">Es el primer paso.</span></app-ayuda></h1>' +
+        '<p>Complete los datos básicos de la persona con discapacidad.</p><p>corto</p>';
+      await new Promise((r) => setTimeout(r, RETRASO_ENTRADA + 150));
+      const dicho = dichas.join(' ');
+      expect(dicho).toContain('Bienvenido. La lectura en voz alta está activada');
+      expect(dicho).toContain('Preinscripción. Es el primer paso.');
+      expect(dicho).toContain('Complete los datos básicos de la persona con discapacidad.');
+      expect(dicho).toContain('Pulse Tab para recorrer los campos.');
+    });
+
+    it('si el navegador bloquea la voz al entrar, no dice nada y lo dice con el primer toque', async () => {
+      bloqueada = true;
+      const { main } = await montar();
+      main.innerHTML = '<h1>Consulta de estado</h1><p>Escriba su documento para consultar.</p>';
+      await new Promise((r) => setTimeout(r, RETRASO_ENTRADA + 150));
+      expect(dichas).toEqual([]);
+      // Con el primer toque el navegador ya deja hablar.
+      bloqueada = false;
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
+      const dicho = dichas.join(' ');
+      expect(dicho).toContain('Bienvenido');
+      expect(dicho).toContain('Consulta de estado');
+    });
+
+    it('si la persona la desactivó, no lee nada al entrar', async () => {
+      localStorage.setItem('lectura_voz_activa', '0');
+      TestBed.resetTestingModule();
+      const { main } = await montar();
+      main.innerHTML = '<h1>Consulta de estado</h1>';
+      await new Promise((r) => setTimeout(r, RETRASO_ENTRADA + 150));
+      expect(dichas).toEqual([]);
+    });
+
     it('el atajo Alt + Mayús + L alterna la lectura (viene activada: la primera vez la desactiva)', async () => {
       await montar();
       const voz = TestBed.inject(LecturaVoz);
@@ -304,7 +347,7 @@ describe('lectura en voz alta', () => {
       TestBed.inject(LecturaVoz).activar();
       dichas.length = 0;
       await TestBed.inject(Router).navigateByUrl('/consulta');
-      await new Promise((r) => setTimeout(r, 450));
+      await new Promise((r) => setTimeout(r, RETRASO_ENTRADA + 150));
       expect(dichas.join(' ')).toContain('Consulta de estado');
     });
   });

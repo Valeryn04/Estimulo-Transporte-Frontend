@@ -2,7 +2,10 @@ import { Component, DestroyRef, ElementRef, OnInit, inject } from '@angular/core
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
-import { LecturaVoz, describirControl, textoDePagina, textoVisible } from './lectura-voz';
+import { LecturaVoz, SALUDO, describirControl, textoConAyuda, textoDePagina } from './lectura-voz';
+
+/** Espera a que la pantalla termine de dibujarse antes de leerla. */
+export const RETRASO_ENTRADA = 700;
 
 /**
  * Barra de lectura en voz alta del portal ciudadano. Viene activada de entrada para quien no ve: se presenta sola con
@@ -28,20 +31,15 @@ export class LecturaVozBarra implements OnInit {
   private readonly raiz = inject(ElementRef<HTMLElement>);
 
   ngOnInit(): void {
-    // Al cambiar de pantalla se dice su título, para quien no ve qué pasó.
+    // Al entrar y al cambiar de pantalla se lee el título y la introducción, sin que la persona tenga que pedirlo.
     this.router.events
       .pipe(
         filter((e) => e instanceof NavigationEnd),
         takeUntilDestroyed(this.destruir),
       )
-      .subscribe(() => {
-        setTimeout(() => {
-          if (!this.voz.activa()) return;
-          const h1 = this.principal()?.querySelector('h1');
-          const titulo = h1 ? textoVisible(h1) : '';
-          if (titulo) this.voz.hablar(titulo);
-        }, 400);
-      });
+      .subscribe(() => this.programarEntrada());
+    this.programarEntrada();
+    this.destruir.onDestroy(() => clearTimeout(this.temporizador));
     // Los avisos y errores que aparecen se leen solos.
     const principal = this.principal();
     if (principal && typeof MutationObserver !== 'undefined') {
@@ -65,6 +63,46 @@ export class LecturaVozBarra implements OnInit {
     }
   }
 
+  /** Título, ayuda del título e introducción de la pantalla actual: lo que se dice al entrar. */
+  private textoDeEntrada(): string {
+    const principal = this.principal();
+    if (!principal) return '';
+    const h1 = principal.querySelector('h1');
+    const intro = Array.from(principal.querySelectorAll('p'))
+      .map((p) => textoConAyuda(p))
+      .filter((t) => t.length > 20)
+      .slice(0, 2)
+      .join(' ');
+    return [h1 ? textoConAyuda(h1) : '', intro, 'Pulse Tab para recorrer los campos.']
+      .filter(Boolean)
+      .join(' ');
+  }
+
+  private temporizador: ReturnType<typeof setTimeout> | undefined;
+
+  /** Espera a que la pantalla se dibuje; si llega otra pantalla antes, solo se lee la última. */
+  private programarEntrada(): void {
+    clearTimeout(this.temporizador);
+    this.temporizador = setTimeout(() => void this.alEntrar(), RETRASO_ENTRADA);
+  }
+
+  /** Aún no se pudo hablar solos (el navegador lo bloquea): se hará con el primer toque o tecla. */
+  private pendiente = false;
+
+  /** Lee la pantalla al entrar. Si el navegador no deja hablar todavía, queda pendiente para el primer toque. */
+  private async alEntrar(): Promise<void> {
+    if (!this.voz.activa() || !this.voz.soportado) return;
+    const primera = !this.voz.saludada;
+    const texto = this.textoDeEntrada();
+    const completo = primera ? `${SALUDO} ${texto}` : texto;
+    if (await this.voz.intentar(completo)) {
+      this.voz.saludada = true;
+      this.pendiente = false;
+    } else {
+      this.pendiente = true;
+    }
+  }
+
   private principal(): HTMLElement | null {
     return this.raiz.nativeElement.ownerDocument.querySelector('main');
   }
@@ -80,7 +118,12 @@ export class LecturaVozBarra implements OnInit {
 
   /** El primer toque o tecla es el permiso que el navegador pide para hablar. */
   protected primerContacto(): void {
-    this.voz.saludar();
+    if (!this.voz.activa()) return;
+    if (this.pendiente || !this.voz.saludada) {
+      this.pendiente = false;
+      if (!this.voz.saludada) this.voz.saludar(this.textoDeEntrada());
+      else this.voz.hablar(this.textoDeEntrada());
+    }
   }
 
   protected alTeclear(e: KeyboardEvent): void {
