@@ -5,7 +5,9 @@ import { filter } from 'rxjs';
 import { LecturaVoz, describirControl, textoDePagina, textoVisible } from './lectura-voz';
 
 /**
- * Barra de lectura en voz alta del portal ciudadano. Es lo primero que se alcanza con Tab. Activada, dice el nombre
+ * Barra de lectura en voz alta del portal ciudadano. Viene activada de entrada para quien no ve: se presenta sola con
+ * el primer toque o tecla, y quien no la necesita la desactiva (queda guardado). Es lo primero que se alcanza con Tab.
+ * Activada, dice el nombre
  * de cada campo al enfocarlo, lee los errores y avisos cuando aparecen, dice el título al cambiar de pantalla y puede
  * leer la página completa. Atajo de teclado: Alt + Mayús + L.
  */
@@ -16,6 +18,7 @@ import { LecturaVoz, describirControl, textoDePagina, textoVisible } from './lec
   host: {
     '(document:focusin)': 'alEnfocar($event)',
     '(document:keydown)': 'alTeclear($event)',
+    '(document:pointerdown)': 'primerContacto()',
   },
 })
 export class LecturaVozBarra implements OnInit {
@@ -70,15 +73,23 @@ export class LecturaVozBarra implements OnInit {
     if (!this.voz.activa() || !(e.target instanceof HTMLElement)) return;
     const objetivo = e.target;
     if (objetivo.closest('main') || this.raiz.nativeElement.contains(objetivo)) {
-      this.voz.hablar(describirControl(objetivo));
+      // Durante la presentación lo enfocado se dice a continuación, para no cortarla.
+      this.voz.hablar(describirControl(objetivo), this.voz.saludando());
     }
+  }
+
+  /** El primer toque o tecla es el permiso que el navegador pide para hablar. */
+  protected primerContacto(): void {
+    this.voz.saludar();
   }
 
   protected alTeclear(e: KeyboardEvent): void {
     if (e.altKey && e.shiftKey && e.key.toLowerCase() === 'l') {
       e.preventDefault();
       this.voz.alternar();
+      return;
     }
+    this.primerContacto();
   }
 
   protected leerPagina(): void {

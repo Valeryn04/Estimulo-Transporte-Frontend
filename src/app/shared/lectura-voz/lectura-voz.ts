@@ -2,11 +2,12 @@ import { Injectable, signal } from '@angular/core';
 
 const CLAVE = 'lectura_voz_activa';
 
+/** Viene activada de entrada: solo se apaga si la persona la desactivó antes (quien no la necesita la apaga una vez). */
 const leerPreferencia = (): boolean => {
   try {
-    return localStorage.getItem(CLAVE) === '1';
+    return localStorage.getItem(CLAVE) !== '0';
   } catch {
-    return false;
+    return true;
   }
 };
 
@@ -190,6 +191,10 @@ export class LecturaVoz {
   readonly soportado = this.sintesis !== null;
   readonly activa = signal(leerPreferencia());
   readonly hablando = signal(false);
+  /** Ya se presentó (una sola vez por visita, con el primer toque de la persona). */
+  saludada = false;
+  /** Mientras se dice la presentación, lo que se enfoca se dice a continuación y no la corta. */
+  readonly saludando = signal(false);
 
   private elegirVoz(): SpeechSynthesisVoice | null {
     const voces = this.sintesis?.getVoices() ?? [];
@@ -228,7 +233,29 @@ export class LecturaVoz {
     this.hablando.set(false);
   }
 
+  /**
+   * Se presenta sola con el primer toque o tecla de la persona (los navegadores no dejan hablar antes). Dice cómo
+   * recorrer el formulario y cómo apagar la lectura si no se necesita.
+   */
+  saludar(): void {
+    if (!this.soportado || !this.activa() || this.saludada) return;
+    this.saludada = true;
+    this.saludando.set(true);
+    this.hablar(
+      'Bienvenido. La lectura en voz alta está activada: use la tecla Tab para recorrer el formulario y escuchará cada campo. ' +
+        'Si no la necesita, pulse Alt, Mayús y L para desactivarla.',
+    );
+    // La presentación termina cuando la voz deja de hablar.
+    const espera = setInterval(() => {
+      if (!this.hablando()) {
+        this.saludando.set(false);
+        clearInterval(espera);
+      }
+    }, 300);
+  }
+
   activar(): void {
+    this.saludada = true;
     this.activa.set(true);
     guardarPreferencia(true);
     this.hablar(
@@ -239,6 +266,7 @@ export class LecturaVoz {
 
   desactivar(): void {
     this.detener();
+    this.saludando.set(false);
     this.activa.set(false);
     guardarPreferencia(false);
   }

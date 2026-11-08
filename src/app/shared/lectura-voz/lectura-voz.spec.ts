@@ -73,7 +73,9 @@ describe('lectura en voz alta', () => {
       const d = fragmento(
         '<label for="x">Nombre <span class="solo-lectores">(obligatorio)</span></label><input id="x" required />',
       );
-      expect(describirControl(d.querySelector('input')!)).toBe('Nombre, campo de texto, obligatorio');
+      expect(describirControl(d.querySelector('input')!)).toBe(
+        'Nombre, campo de texto, obligatorio',
+      );
     });
 
     it('lee el valor ya escrito, salvo en contraseñas', () => {
@@ -151,15 +153,35 @@ describe('lectura en voz alta', () => {
       expect(dichas.every((t) => t.length <= 190)).toBe(true);
     });
 
-    it('activar y desactivar guardan la preferencia y avisan de cómo usarla', () => {
+    it('viene activada de entrada y solo se apaga si la persona la desactivó antes', () => {
+      expect(TestBed.inject(LecturaVoz).activa()).toBe(true);
+      localStorage.setItem('lectura_voz_activa', '0');
+      TestBed.resetTestingModule();
+      expect(TestBed.inject(LecturaVoz).activa()).toBe(false);
+    });
+
+    it('se presenta sola una vez, con el primer contacto, y dice cómo desactivarla', () => {
       const voz = TestBed.inject(LecturaVoz);
+      voz.saludar();
+      expect(dichas.join(' ')).toContain('Bienvenido. La lectura en voz alta está activada');
+      expect(dichas.join(' ')).toContain('Alt, Mayús y L para desactivarla');
+      dichas.length = 0;
+      voz.saludar();
+      expect(dichas).toEqual([]);
+    });
+
+    it('apagada no se presenta, y desactivar guarda la preferencia', () => {
+      const voz = TestBed.inject(LecturaVoz);
+      voz.desactivar();
+      expect(voz.activa()).toBe(false);
+      expect(localStorage.getItem('lectura_voz_activa')).toBe('0');
+      dichas.length = 0;
+      voz.saludar();
+      expect(dichas).toEqual([]);
       voz.activar();
       expect(voz.activa()).toBe(true);
       expect(localStorage.getItem('lectura_voz_activa')).toBe('1');
       expect(dichas.join(' ')).toContain('Lectura en voz alta activada');
-      voz.desactivar();
-      expect(voz.activa()).toBe(false);
-      expect(localStorage.getItem('lectura_voz_activa')).toBe('0');
     });
 
     it('sin voz en el navegador no falla', () => {
@@ -185,24 +207,41 @@ describe('lectura en voz alta', () => {
       return { fixture, el, main };
     }
 
-    it('el botón activa y desactiva la lectura y lo dice con aria-pressed', async () => {
+    it('viene activada: quien no la necesita la desactiva con el botón, y vuelve a activarla igual', async () => {
       const { fixture, el } = await montar();
       const boton = el.querySelector<HTMLButtonElement>('button')!;
-      expect(boton.getAttribute('aria-pressed')).toBe('false');
-      expect(boton.textContent).toContain('Activar lectura en voz alta');
-      boton.click();
-      fixture.detectChanges();
       expect(boton.getAttribute('aria-pressed')).toBe('true');
+      expect(boton.textContent).toContain('Desactivar lectura en voz alta');
+      expect(el.textContent).toContain('Lectura en voz alta activada.');
       expect(el.textContent).toContain('Leer esta página');
       boton.click();
       fixture.detectChanges();
+      expect(boton.getAttribute('aria-pressed')).toBe('false');
       expect(el.textContent).not.toContain('Leer esta página');
+      boton.click();
+      fixture.detectChanges();
+      expect(boton.getAttribute('aria-pressed')).toBe('true');
+    });
+
+    it('con la primera tecla o el primer toque se presenta sola, y lo primero que se enfoca se dice a continuación', async () => {
+      const { main } = await montar();
+      main.innerHTML = '<label for="a">Nombre completo</label><input id="a" type="text" />';
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
+      expect(dichas.join(' ')).toContain('Bienvenido');
+      main.querySelector('input')!.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+      // La presentación no se corta: lo enfocado se añade a continuación.
+      expect(dichas.join(' ')).toContain('Nombre completo, campo de texto');
+      dichas.length = 0;
+      document.dispatchEvent(new Event('pointerdown'));
+      expect(dichas).toEqual([]);
     });
 
     it('activada, dice el nombre de cada campo del contenido al enfocarlo; apagada, calla', async () => {
       const { fixture, main } = await montar();
       main.innerHTML = '<label for="a">Nombre completo</label><input id="a" type="text" />';
       const input = main.querySelector('input')!;
+      TestBed.inject(LecturaVoz).desactivar();
+      dichas.length = 0;
       input.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
       expect(dichas).toEqual([]);
       TestBed.inject(LecturaVoz).activar();
@@ -223,12 +262,16 @@ describe('lectura en voz alta', () => {
       expect(dichas.join(' ')).toContain('Preinscripción. Complete sus datos.');
     });
 
-    it('el atajo Alt + Mayús + L alterna la lectura', async () => {
+    it('el atajo Alt + Mayús + L alterna la lectura (viene activada: la primera vez la desactiva)', async () => {
       await montar();
       const voz = TestBed.inject(LecturaVoz);
-      document.dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'L', altKey: true, shiftKey: true }),
-      );
+      const atajo = () =>
+        document.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'L', altKey: true, shiftKey: true }),
+        );
+      atajo();
+      expect(voz.activa()).toBe(false);
+      atajo();
       expect(voz.activa()).toBe(true);
     });
 

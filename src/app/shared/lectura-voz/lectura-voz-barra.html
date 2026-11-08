@@ -10,6 +10,7 @@
       {{ voz.activa() ? 'Desactivar lectura en voz alta' : 'Activar lectura en voz alta' }}
     </button>
     @if (voz.activa()) {
+      <span class="estado">Lectura en voz alta activada.</span>
       <button type="button" class="boton secundario chico" (click)="leerPagina()">
         Leer esta página
       </button>
