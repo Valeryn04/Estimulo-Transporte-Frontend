@@ -79,13 +79,13 @@
     <app-campo
       idCampo="rolId"
       etiqueta="Rol"
-      ayuda="Cada usuario tiene un solo rol. Los permisos del usuario son los de ese rol."
+      ayuda="Cada usuario tiene un solo rol. Los permisos del usuario son los de ese rol. Por defecto los roles están unidos; el administrador puede pasar a roles individuales en Parámetros («roles_individuales»)."
       [control]="form.controls.rolId"
       [mensajes]="{ required: 'elija un rol de la lista' }"
     >
       <select appCampoControl formControlName="rolId">
         <option [ngValue]="null" disabled>Seleccione un rol</option>
-        @for (r of roles(); track r.id) {
+        @for (r of rolesDisponibles(); track r.id) {
           <option [ngValue]="r.id">{{ r.nombre }}</option>
         }
       </select>

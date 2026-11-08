@@ -36,6 +36,10 @@ export interface Rol {
   descripcion: string;
   /** Rol del documento (numeral 3.2): no se elimina ni se renombra. */
   sistema: boolean;
+  /** Cuándo se ofrece: siempre (GENERAL), con los roles unidos (UNIDO) o con los individuales (INDIVIDUAL). */
+  oferta: 'GENERAL' | 'UNIDO' | 'INDIVIDUAL';
+  /** Si se ofrece hoy al crear o editar usuarios (según el parámetro «roles_individuales»). */
+  ofrecido: boolean;
   /** Usuarios que tienen este rol. */
   usuarios: number;
   permisos: string[];

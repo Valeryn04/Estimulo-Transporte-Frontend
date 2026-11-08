@@ -5,6 +5,7 @@ import { Router, provideRouter } from '@angular/router';
 import { API_BASE } from '../../../../../core/api/api';
 import { erroresInterceptor } from '../../../../../core/api/errores.interceptor';
 import { asentar } from '../../../../../testing/asentar';
+import { Rol } from '../../modelos';
 import { UsuarioFormPage } from './usuario-form-page';
 
 const ROLES = [
@@ -14,6 +15,8 @@ const ROLES = [
     nombre: 'Analista',
     descripcion: 'Consulta',
     sistema: true,
+    oferta: 'GENERAL' as const,
+    ofrecido: true,
     usuarios: 0,
     permisos: [],
   },
@@ -23,6 +26,8 @@ const ROLES = [
     nombre: 'Administrador',
     descripcion: 'Admin',
     sistema: true,
+    oferta: 'GENERAL' as const,
+    ofrecido: true,
     usuarios: 1,
     permisos: ['usuarios.administrar'],
   },
@@ -32,13 +37,15 @@ const ROLES = [
     nombre: 'Coordinación',
     descripcion: 'Rol propio',
     sistema: false,
+    oferta: 'GENERAL' as const,
+    ofrecido: true,
     usuarios: 0,
     permisos: ['catalogos.administrar'],
   },
 ];
 
 describe('UsuarioFormPage', () => {
-  async function montar(id?: string, usuario?: object) {
+  async function montar(id?: string, usuario?: object, roles: Rol[] = ROLES) {
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withInterceptors([erroresInterceptor])),
@@ -50,7 +57,7 @@ describe('UsuarioFormPage', () => {
     if (id) fixture.componentRef.setInput('id', id);
     fixture.detectChanges();
     const ctrl = TestBed.inject(HttpTestingController);
-    ctrl.expectOne(`${API_BASE}/admin/roles`).flush({ items: ROLES });
+    ctrl.expectOne(`${API_BASE}/admin/roles`).flush({ items: roles });
     await asentar(fixture);
     if (usuario) {
       ctrl.expectOne(`${API_BASE}/admin/usuarios/${id}`).flush(usuario);
@@ -105,6 +112,49 @@ describe('UsuarioFormPage', () => {
     expect(el.querySelector('input[type="checkbox"]')).toBeNull();
     expect(el.querySelector('input[type="date"]')).toBeNull();
     expect(el.textContent).not.toMatch(/vigencia|vigente/i);
+  });
+
+  describe('roles unidos o individuales', () => {
+    const CON_UNIDO: Rol[] = [
+      ...ROLES,
+      {
+        id: 4,
+        codigo: 'AUDITOR_VERIFICADOR',
+        nombre: 'Auditor verificador',
+        descripcion: 'Valida',
+        sistema: true,
+        oferta: 'INDIVIDUAL' as const,
+        ofrecido: false,
+        usuarios: 1,
+        permisos: [],
+      },
+    ];
+    const opciones = (el: HTMLElement) =>
+      [...el.querySelectorAll<HTMLOptionElement>('#rolId option')].map((o) =>
+        o.textContent!.trim(),
+      );
+
+    it('al crear solo se ofrecen los roles del modo vigente', async () => {
+      const { el } = await montar(undefined, undefined, CON_UNIDO);
+      expect(opciones(el)).not.toContain('Auditor verificador');
+    });
+
+    it('al editar, quien ya tiene un rol que hoy no se ofrece lo conserva en la lista', async () => {
+      const { el } = await montar(
+        '7',
+        {
+          id: 7,
+          usuario: 'validador',
+          nombres: 'Auditor Uno',
+          correo: 'auditor@alcaldia.test',
+          estado: 'ACTIVO',
+          protegido: false,
+          rol: { id: 4, codigo: 'AUDITOR_VERIFICADOR', nombre: 'Auditor verificador' },
+        },
+        CON_UNIDO,
+      );
+      expect(opciones(el)).toContain('Auditor verificador');
+    });
   });
 
   it('al elegir un rol muestra qué es', async () => {

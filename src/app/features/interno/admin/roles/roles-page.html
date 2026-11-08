@@ -42,6 +42,9 @@
               <span class="etiqueta" [class.ok]="!r.sistema">
                 {{ r.sistema ? 'Del sistema' : 'Propio' }}
               </span>
+              @if (r.oferta !== 'GENERAL') {
+                <span class="etiqueta">{{ r.oferta === 'UNIDO' ? 'Unido' : 'Individual' }}</span>
+              }
               <small class="recorte" [title]="r.descripcion">{{ r.descripcion }}</small>
             </th>
             <td class="permisos">

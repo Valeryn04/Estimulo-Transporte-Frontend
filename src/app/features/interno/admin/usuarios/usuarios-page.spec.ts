@@ -31,6 +31,8 @@ const ROLES = [
     nombre: 'Analista',
     descripcion: 'Consulta',
     sistema: true,
+    oferta: 'GENERAL' as const,
+    ofrecido: true,
     usuarios: 1,
     permisos: [],
   },

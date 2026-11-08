@@ -60,6 +60,12 @@ export class UsuarioFormPage implements OnInit {
       !this.editando() ||
       this.correoEscrito().trim().toLowerCase() !== this.correoOriginal().trim().toLowerCase(),
   );
+  /** Rol que ya tenía la persona al abrir la edición: lo conserva aunque hoy no se ofrezca. */
+  private readonly rolInicial = signal<number | null>(null);
+  /** Solo los roles que se ofrecen con el modo vigente (unidos o individuales), más el que ya tiene la persona. */
+  protected readonly rolesDisponibles = computed(() =>
+    this.roles().filter((r) => r.ofrecido || r.id === this.rolInicial()),
+  );
   /** El rol elegido, para mostrar qué es y qué permisos da. */
   protected readonly rolSeleccionado = computed(
     () => this.roles().find((r) => r.id === this.rolElegido()) ?? null,
@@ -119,6 +125,7 @@ export class UsuarioFormPage implements OnInit {
           rolId: u.rol?.id ?? null,
         });
         this.correoOriginal.set(u.correo);
+        this.rolInicial.set(u.rol?.id ?? null);
         this.form.controls.usuario.disable();
         this.protegido.set(u.protegido);
         // El administrador principal conserva siempre el rol de administrador: la lista queda fija.
