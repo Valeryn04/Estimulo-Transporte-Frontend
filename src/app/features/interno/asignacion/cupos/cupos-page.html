@@ -3,9 +3,9 @@
   <h1>Cupos y presupuesto</h1>
 </div>
 <p class="intro">
-  Control en línea de los cupos y del presupuesto de la vigencia. No se puede asignar un beneficio
-  sin cupo o sin saldo. Cada cambio queda registrado con su motivo y, para cupos y presupuesto, con
-  su soporte.
+  Control en línea de los cupos y del presupuesto de la vigencia. Se escriben los cupos y el valor
+  estándar del estímulo por persona: el presupuesto sale solo. No se puede asignar un beneficio sin
+  cupo o sin saldo. Cada cambio queda registrado con su motivo.
 </p>
 
 @if (error()) {
@@ -103,7 +103,7 @@
 
   @if (puedeAdministrar()) {
     <section class="tarjeta" aria-labelledby="t-mod">
-      <h2 id="t-mod">Modificar cupos, valor, presupuesto o distribución</h2>
+      <h2 id="t-mod">Modificar cupos, valor del estímulo o distribución</h2>
       @if (mensaje()) {
         <p class="aviso exito" role="status">{{ mensaje() }}</p>
       }
@@ -128,7 +128,7 @@
           </app-campo>
           <app-campo
             idCampo="cupos-valor"
-            etiqueta="Valor del estímulo por persona (COP)"
+            etiqueta="Valor estándar del estímulo por persona (COP)"
             [control]="form.controls.valorEstimulo"
           >
             <input
@@ -139,19 +139,13 @@
               formControlName="valorEstimulo"
             />
           </app-campo>
-          <app-campo
-            idCampo="cupos-presupuesto"
-            etiqueta="Presupuesto total (COP)"
-            [control]="form.controls.presupuestoTotal"
-          >
-            <input
-              appCampoControl
-              type="number"
-              min="0"
-              step="1000"
-              formControlName="presupuestoTotal"
-            />
-          </app-campo>
+          <div class="campo-simple" id="cupos-presupuesto">
+            <span class="etiqueta-fija">Presupuesto total (calculado)</span>
+            <strong>{{
+              presupuestoCalculado() | currency: 'COP' : 'symbol-narrow' : '1.0-0'
+            }}</strong>
+            <small>Cupos × valor por persona × {{ PERSONAS_POR_CUPO }} personas por cupo.</small>
+          </div>
         </div>
 
         <fieldset class="distribucion" formArrayName="localidades">
@@ -182,6 +176,13 @@
             (click)="agregar(form.controls.localidades)"
           >
             Agregar localidad
+          </button>
+          <button
+            type="button"
+            class="boton secundario"
+            (click)="repartirParejo(form.controls.localidades, d.catalogos.localidades)"
+          >
+            Repartir parejo entre todas
           </button>
         </fieldset>
 
@@ -214,6 +215,13 @@
           >
             Agregar tipo de transporte
           </button>
+          <button
+            type="button"
+            class="boton secundario"
+            (click)="repartirParejo(form.controls.transportes, d.catalogos.tiposTransporte)"
+          >
+            Repartir parejo entre todos
+          </button>
         </fieldset>
 
         <app-campo
@@ -224,21 +232,6 @@
         >
           <textarea appCampoControl formControlName="motivo" rows="3" maxlength="1000"></textarea>
         </app-campo>
-        <div class="campo-simple">
-          <label for="cupos-soporte"
-            >Soporte (PDF, JPG o PNG)
-            <app-ayuda
-              etiqueta="Soporte"
-              texto="Obligatorio al cambiar los cupos o el presupuesto: por ejemplo, el acto de adición presupuestal."
-          /></label>
-          <input
-            #archivo
-            id="cupos-soporte"
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png"
-            (change)="elegirSoporte($event)"
-          />
-        </div>
         <div class="acciones">
           <button type="submit" class="boton" [disabled]="guardando()">
             {{ guardando() ? 'Guardando…' : 'Registrar el cambio' }}

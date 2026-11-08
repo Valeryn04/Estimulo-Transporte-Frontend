@@ -26,11 +26,10 @@ export class AsignacionApi {
     return this.http.get<CuposConCatalogos>(`${ASIGNACION}/cupos`);
   }
 
-  /** Modifica cupos, valor, presupuesto o distribución; los cupos y el presupuesto exigen el soporte. */
-  ajustarCupos(cambio: CambioCupos, soporte: File | null): Observable<CuposConCatalogos> {
+  /** Modifica cupos, valor estándar o distribución (el presupuesto sale solo). Solo el motivo es obligatorio. */
+  ajustarCupos(cambio: CambioCupos): Observable<CuposConCatalogos> {
     const form = new FormData();
     form.append('datos', JSON.stringify(cambio));
-    if (soporte) form.append('archivo', soporte, soporte.name);
     return this.http.put<CuposConCatalogos>(`${ASIGNACION}/cupos`, form);
   }
 

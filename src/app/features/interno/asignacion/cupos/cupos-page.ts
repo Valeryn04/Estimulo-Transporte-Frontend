@@ -1,5 +1,5 @@
 import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
-import { Component, ElementRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ApiError } from '../../../../core/api/api-error';
@@ -15,9 +15,9 @@ import {
   ItemDistribucion,
   NOMBRE_AJUSTE,
 } from '../modelos-asignacion';
-import { Ayuda } from '../../../../shared/ayuda/ayuda';
 import { Pestanas } from '../../../../shared/pestanas/pestanas';
 import { Alertas } from '../../../../shared/alertas/alertas';
+import { valorDe } from '../../../../shared/forms';
 
 const filaDistribucion = (itemId: number | null = null, cupos: number | null = null) =>
   new FormGroup({
@@ -30,9 +30,9 @@ const filaDistribucion = (itemId: number | null = null, cupos: number | null = n
 type Distribucion = FormArray<ReturnType<typeof filaDistribucion>>;
 
 /**
- * Cupos y presupuesto de la vigencia (RF-ASI-01): control en línea de lo ocupado, liberado y disponible, valor del
- * estímulo y distribución por localidad o transporte. Cada modificación exige su motivo y, para cupos y presupuesto,
- * el soporte (por ejemplo, el acto de adición presupuestal).
+ * Cupos y presupuesto de la vigencia (RF-ASI-01): control en línea de lo ocupado, liberado y disponible, valor
+ * estándar del estímulo por persona y distribución por localidad o transporte. Se escriben los cupos y el valor: el
+ * presupuesto sale solo (cupos × valor × 2 personas por cupo). Cada modificación exige solo su motivo.
  */
 @Component({
   selector: 'app-cupos-page',
@@ -43,7 +43,6 @@ type Distribucion = FormArray<ReturnType<typeof filaDistribucion>>;
     ReactiveFormsModule,
     Campo,
     CampoControl,
-    Ayuda,
     Pestanas,
   ],
   templateUrl: './cupos-page.html',
@@ -53,7 +52,6 @@ export class CuposPage implements OnInit {
   private readonly api = inject(AsignacionApi);
   private readonly sesion = inject(Sesion);
   private readonly alertas = inject(Alertas);
-  private readonly archivo = viewChild<ElementRef<HTMLInputElement>>('archivo');
 
   protected readonly datos = signal<CuposConCatalogos | null>(null);
   protected readonly ajustes = signal<AjusteCupos[]>([]);
@@ -62,8 +60,33 @@ export class CuposPage implements OnInit {
   protected readonly mensaje = signal('');
   protected readonly erroresForm = signal<string[]>([]);
   protected readonly guardando = signal(false);
-  protected readonly soporte = signal<File | null>(null);
   protected readonly nombreAjuste = NOMBRE_AJUSTE;
+
+  protected readonly form = new FormGroup({
+    cuposTotales: new FormControl<number | null>(null, {
+      validators: [Validators.required, Validators.min(0)],
+    }),
+    valorEstimulo: new FormControl<number | null>(null, {
+      validators: [Validators.required, Validators.min(0)],
+    }),
+    motivo: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.minLength(10), Validators.maxLength(1000)],
+    }),
+    localidades: new FormArray<ReturnType<typeof filaDistribucion>>([]),
+    transportes: new FormArray<ReturnType<typeof filaDistribucion>>([]),
+  });
+
+  /** Personas que puede tener un cupo (la persona con discapacidad y su cuidador). */
+  protected readonly PERSONAS_POR_CUPO = 2;
+  private readonly cuposEscritos = valorDe(this.form.controls.cuposTotales);
+  private readonly valorEscrito = valorDe(this.form.controls.valorEstimulo);
+  /** El presupuesto no se escribe: sale de los cupos y del valor estándar por persona. */
+  protected readonly presupuestoCalculado = computed(() =>
+    Math.round(
+      Number(this.cuposEscritos() ?? 0) * Number(this.valorEscrito() ?? 0) * this.PERSONAS_POR_CUPO,
+    ),
+  );
 
   protected readonly puedeAdministrar = computed(() => this.sesion.tiene(PERMISO.cupos));
   protected readonly pctCupos = computed(() => {
@@ -73,24 +96,6 @@ export class CuposPage implements OnInit {
   protected readonly pctPresupuesto = computed(() => {
     const p = this.datos()?.presupuesto;
     return p && p.total > 0 ? Math.min(100, Math.round((p.comprometido / p.total) * 100)) : 0;
-  });
-
-  protected readonly form = new FormGroup({
-    cuposTotales: new FormControl<number | null>(null, {
-      validators: [Validators.required, Validators.min(0)],
-    }),
-    valorEstimulo: new FormControl<number | null>(null, {
-      validators: [Validators.required, Validators.min(0)],
-    }),
-    presupuestoTotal: new FormControl<number | null>(null, {
-      validators: [Validators.required, Validators.min(0)],
-    }),
-    motivo: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.minLength(10), Validators.maxLength(1000)],
-    }),
-    localidades: new FormArray<ReturnType<typeof filaDistribucion>>([]),
-    transportes: new FormArray<ReturnType<typeof filaDistribucion>>([]),
   });
 
   ngOnInit(): void {
@@ -118,7 +123,6 @@ export class CuposPage implements OnInit {
     this.form.patchValue({
       cuposTotales: d.cupos.totales,
       valorEstimulo: d.valorEstimulo,
-      presupuestoTotal: d.presupuesto.total,
       motivo: '',
     });
     for (const [lista, items] of [
@@ -128,12 +132,20 @@ export class CuposPage implements OnInit {
       lista.clear();
       for (const i of items) lista.push(filaDistribucion(i.itemId, i.cupos));
     }
-    this.soporte.set(null);
-    const archivo = this.archivo();
-    if (archivo) archivo.nativeElement.value = '';
     // Los datos recién guardados no deben mostrarse como errores del envío anterior.
     this.form.markAsPristine();
     this.form.markAsUntouched();
+  }
+
+  /** Reparte los cupos en partes iguales entre todos los elementos del catálogo (el resto, a los primeros). Se puede editar. */
+  protected repartirParejo(lista: Distribucion, items: { id: number }[]): void {
+    const total = Number(this.form.controls.cuposTotales.value ?? 0);
+    if (items.length === 0 || total <= 0) return;
+    const base = Math.floor(total / items.length);
+    const resto = total - base * items.length;
+    lista.clear();
+    items.forEach((it, i) => lista.push(filaDistribucion(it.id, base + (i < resto ? 1 : 0))));
+    lista.markAsDirty();
   }
 
   protected agregar(lista: Distribucion): void {
@@ -142,10 +154,6 @@ export class CuposPage implements OnInit {
 
   protected quitar(lista: Distribucion, i: number): void {
     lista.removeAt(i);
-  }
-
-  protected elegirSoporte(evento: Event): void {
-    this.soporte.set((evento.target as HTMLInputElement).files?.[0] ?? null);
   }
 
   /** Lo ocupado de un elemento de la distribución actual, para mostrarlo junto a su tope. */
@@ -182,10 +190,10 @@ export class CuposPage implements OnInit {
     if (v.valorEstimulo === null || v.valorEstimulo < 0) {
       p.push('Valor del estímulo: escriba un valor de cero o mayor.');
     }
-    if (v.presupuestoTotal === null || v.presupuestoTotal < 0) {
-      p.push('Presupuesto total: escriba un valor de cero o mayor.');
-    } else if (v.presupuestoTotal < d.presupuesto.comprometido) {
-      p.push('Presupuesto total: no puede ser menor que lo que ya está comprometido.');
+    if (this.presupuestoCalculado() < d.presupuesto.comprometido) {
+      p.push(
+        'El presupuesto que resulta (cupos × valor por persona × 2) no puede ser menor que lo que ya está comprometido.',
+      );
     }
     if (v.motivo.trim().length < 10) {
       p.push('Motivo del cambio: explique el cambio con al menos 10 caracteres.');
@@ -228,8 +236,10 @@ export class CuposPage implements OnInit {
       partes.push(`cupos: ${num(d.cupos.totales)} → ${num(c.cuposTotales)}`);
     if (c.valorEstimulo !== undefined)
       partes.push(`valor del estímulo: $${num(d.valorEstimulo)} → $${num(c.valorEstimulo)}`);
-    if (c.presupuestoTotal !== undefined)
-      partes.push(`presupuesto: $${num(d.presupuesto.total)} → $${num(c.presupuestoTotal)}`);
+    if (c.cuposTotales !== undefined || c.valorEstimulo !== undefined)
+      partes.push(
+        `presupuesto (automático): $${num(d.presupuesto.total)} → $${num(this.presupuestoCalculado())}`,
+      );
     if (c.distribucionLocalidad !== undefined) partes.push('distribución por localidad');
     if (c.distribucionTransporte !== undefined) partes.push('distribución por transporte');
     return `Se modificará: ${partes.join('; ')}.`;
@@ -254,13 +264,10 @@ export class CuposPage implements OnInit {
       base: {
         cuposTotales: d.cupos.totales,
         valorEstimulo: d.valorEstimulo,
-        presupuestoTotal: d.presupuesto.total,
       },
     };
     if (v.cuposTotales !== d.cupos.totales) cambio.cuposTotales = Number(v.cuposTotales);
     if (v.valorEstimulo !== d.valorEstimulo) cambio.valorEstimulo = Number(v.valorEstimulo);
-    if (v.presupuestoTotal !== d.presupuesto.total)
-      cambio.presupuestoTotal = Number(v.presupuestoTotal);
     const loc = this.filas(this.form.controls.localidades);
     if (!this.mismaDistribucion(loc, d.distribucion.localidades))
       cambio.distribucionLocalidad = loc;
@@ -273,26 +280,17 @@ export class CuposPage implements OnInit {
       ]);
       return;
     }
-    if (
-      (cambio.cuposTotales !== undefined || cambio.presupuestoTotal !== undefined) &&
-      !this.soporte()
-    ) {
-      this.erroresForm.set([
-        'Soporte: adjunte el documento del cambio de cupos o presupuesto (por ejemplo, el acto de adición).',
-      ]);
-      return;
-    }
     const confirmado = await this.alertas.confirmar({
       titulo: '¿Registrar este cambio?',
-      texto: `${this.descripcion(d, cambio)} Quedará en el historial con su motivo y su soporte.`,
+      texto: `${this.descripcion(d, cambio)} Quedará en el historial con su motivo.`,
       confirmar: 'Sí, registrar',
     });
     if (!confirmado) return;
     this.guardando.set(true);
     try {
-      this.llenar(await firstValueFrom(this.api.ajustarCupos(cambio, this.soporte())));
+      this.llenar(await firstValueFrom(this.api.ajustarCupos(cambio)));
       this.ajustes.set(await firstValueFrom(this.api.ajustes()));
-      this.mensaje.set('Cambio registrado con su motivo y su soporte. Ya aparece en el historial.');
+      this.mensaje.set('Cambio registrado con su motivo. Ya aparece en el historial.');
       this.alertas.exito('Cambio registrado');
     } catch (e) {
       if (e instanceof ApiError && e.errores.length > 0) {

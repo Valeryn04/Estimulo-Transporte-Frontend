@@ -249,6 +249,9 @@ describe('AsignacionPage', () => {
     const filas = el.querySelectorAll('tbody tr');
     expect(filas[0]?.textContent).toContain('Pendiente de entrega');
     expect(filas[0]?.textContent).toContain('Reasignado del cupo de EST-2026-000001');
+    // La tabla de beneficiarios no muestra valores ni presupuestos: eso solo está en «Cupos y presupuesto».
+    expect(filas[0]?.textContent).not.toContain('1.000.000');
+    expect(el.querySelector('thead')?.textContent).not.toContain('Valor comprometido');
     expect(filas[1]?.textContent).toContain('Finalizado');
     expect(filas[1]?.textContent).toContain('Renuncia voluntaria');
   });

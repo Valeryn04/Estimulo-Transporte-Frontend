@@ -6,7 +6,7 @@
 
 <p class="intro">
   La vigencia activa es la que recibe las preinscripciones. Los cupos y el presupuesto de cada
-  vigencia se controlan y se modifican, con su soporte, en «Cupos y presupuesto».
+  vigencia se controlan y se modifican, con su motivo, en «Cupos y presupuesto».
 </p>
 
 @if (mensaje()) {
@@ -112,7 +112,7 @@
       etiqueta="Cupos totales"
       [ayuda]="
         editando()
-          ? 'Para modificarlos use «Cupos y presupuesto»: allí queda el motivo y el soporte.'
+          ? 'Para modificarlos use «Cupos y presupuesto»: allí queda el motivo.'
           : 'Número de beneficiarios que se pueden asignar en esta vigencia.'
       "
       [control]="form.controls.cuposTotales"

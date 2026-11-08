@@ -46,15 +46,6 @@ describe('CuposPage', () => {
     return p;
   }
 
-  const archivo = (el: HTMLElement) => {
-    const input = el.querySelector<HTMLInputElement>('#cupos-soporte')!;
-    Object.defineProperty(input, 'files', {
-      value: [new File(['%PDF-1.4'], 'acto.pdf', { type: 'application/pdf' })],
-      configurable: true,
-    });
-    input.dispatchEvent(new Event('change'));
-  };
-
   it('muestra los cupos y el presupuesto en línea, la distribución y el historial con su soporte', async () => {
     const { el } = await montar();
     const t = el.textContent!;
@@ -76,18 +67,39 @@ describe('CuposPage', () => {
     expect(el.querySelector('section[aria-labelledby="t-hist"]')).not.toBeNull();
   });
 
-  it('un cambio de cupos o presupuesto exige motivo y soporte antes de llamar a la API', async () => {
+  it('un cambio de cupos exige solo el motivo antes de llamar a la API: ya no hay soporte', async () => {
     const { el, ctrl, escribir, enviar, asentar } = await montar();
+    expect(el.querySelector('#cupos-soporte')).toBeNull();
     escribir('#cupos-totales', '5');
     enviar('section form');
     await asentar();
     ctrl.expectNone((r) => r.method === 'PUT');
     expect(el.querySelector('#cupos-motivo-error')?.textContent).toBeTruthy();
-    escribir('#cupos-motivo', 'Adición presupuestal de la vigencia');
-    enviar('section form');
+  });
+
+  it('el presupuesto no se escribe: se calcula con los cupos y el valor por persona', async () => {
+    const { el, escribir, asentar } = await montar();
+    expect(el.querySelector('#cupos-presupuesto input')).toBeNull();
+    // 3 cupos × 500.000 × 2 personas.
+    expect(el.querySelector('#cupos-presupuesto')?.textContent).toContain('3.000.000');
+    escribir('#cupos-totales', '5');
+    escribir('#cupos-valor', '400000');
     await asentar();
-    ctrl.expectNone((r) => r.method === 'PUT');
-    expect(el.querySelector('.aviso.error')?.textContent).toContain('Soporte: adjunte');
+    // 5 cupos × 400.000 × 2 personas.
+    expect(el.querySelector('#cupos-presupuesto')?.textContent).toContain('4.000.000');
+  });
+
+  it('reparte los cupos parejo entre todas las localidades y se puede editar', async () => {
+    const { el, escribir, asentar } = await montar();
+    escribir('#cupos-totales', '5');
+    await asentar();
+    [...el.querySelectorAll<HTMLButtonElement>('fieldset.distribucion button.boton')]
+      .find((b) => b.textContent?.includes('Repartir parejo entre todas'))!
+      .click();
+    await asentar();
+    // 5 cupos entre 2 localidades: 3 y 2.
+    expect(el.querySelector<HTMLInputElement>('#loc-cupos-0')!.value).toBe('3');
+    expect(el.querySelector<HTMLInputElement>('#loc-cupos-1')!.value).toBe('2');
   });
 
   it('sin ningún cambio no llama a la API', async () => {
@@ -99,12 +111,10 @@ describe('CuposPage', () => {
     expect(el.querySelector('.aviso.error')?.textContent).toContain('No hay ningún cambio');
   });
 
-  it('registra el cambio con su motivo y soporte y actualiza el resumen y el historial', async () => {
+  it('registra el cambio con su motivo, sin soporte, y actualiza el resumen y el historial', async () => {
     const { el, ctrl, escribir, enviar, asentar } = await montar();
     escribir('#cupos-totales', '5');
-    escribir('#cupos-presupuesto', '4000000');
     escribir('#cupos-motivo', 'Adición presupuestal de la vigencia');
-    archivo(el);
     enviar('section form');
     await esperarTareas();
     const r = ctrl.expectOne(URL);
@@ -113,9 +123,9 @@ describe('CuposPage', () => {
     expect(JSON.parse(form.get('datos') as string)).toMatchObject({
       motivo: 'Adición presupuestal de la vigencia',
       cuposTotales: 5,
-      presupuestoTotal: 4_000_000,
     });
-    expect(form.get('archivo')).toBeInstanceOf(File);
+    expect(JSON.parse(form.get('datos') as string).presupuestoTotal).toBeUndefined();
+    expect(form.get('archivo')).toBeNull();
     r.flush(
       datos({
         cupos: { totales: 5, ocupados: 1, liberados: 0, disponibles: 4 },
@@ -165,21 +175,20 @@ describe('CuposPage', () => {
 
   it('muestra los errores que devuelve la API', async () => {
     const { el, ctrl, escribir, enviar, asentar } = await montar();
-    escribir('#cupos-presupuesto', '3000000');
-    escribir('#cupos-motivo', 'Ajuste del presupuesto solicitado');
-    archivo(el);
+    escribir('#cupos-totales', '4');
+    escribir('#cupos-motivo', 'Ajuste de los cupos solicitado');
     enviar('section form');
     await esperarTareas();
     ctrl.expectOne(URL).flush(
       errorApi('VALIDACION', 'Revise', [
         {
-          campo: 'presupuestoTotal',
-          mensaje: 'Presupuesto: el acto adjunto no corresponde a la vigencia',
+          campo: 'cuposTotales',
+          mensaje: 'Cupos: la vigencia ya está cerrada para cambios',
         },
       ]),
       { status: 422, statusText: 'No procesable' },
     );
     await asentar();
-    expect(el.querySelector('.aviso.error')?.textContent).toContain('no corresponde a la vigencia');
+    expect(el.querySelector('.aviso.error')?.textContent).toContain('ya está cerrada para cambios');
   });
 });

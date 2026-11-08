@@ -127,7 +127,6 @@
               <th scope="col">Localidad</th>
               <th scope="col" class="num">Puntaje</th>
               <th scope="col">Estado</th>
-              <th scope="col">Cupo</th>
             </tr>
           </thead>
           <tbody>
@@ -282,7 +281,6 @@
               <th scope="col">Radicado</th>
               <th scope="col">Persona con discapacidad</th>
               <th scope="col">Estado</th>
-              <th scope="col" class="num">Valor comprometido</th>
               <th scope="col">Asignado</th>
               <th scope="col">Cupo</th>
               <th scope="col">Entrega</th>
@@ -320,9 +318,6 @@
                     <small>{{ x.motivoFin }}</small>
                   }
                 </td>
-                <td class="num">
-                  {{ x.valorComprometido | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
-                </td>
                 <td>
                   {{ x.asignadoPor }}
                   <small>
@@ -330,12 +325,8 @@
                       x.puntajeFinal | number: '1.0-2'
                     }})
                   </small>
-                </td>
-                <td>
                   @if (x.reemplazaRadicado) {
-                    Reasignado del cupo de {{ x.reemplazaRadicado }}
-                  } @else {
-                    —
+                    <small>Reasignado del cupo de {{ x.reemplazaRadicado }}</small>
                   }
                 </td>
                 <td>
@@ -357,7 +348,7 @@
               </tr>
             } @empty {
               <tr>
-                <td colspan="8">No hay beneficios con esos filtros.</td>
+                <td colspan="6">No hay beneficios con esos filtros.</td>
               </tr>
             }
           </tbody>

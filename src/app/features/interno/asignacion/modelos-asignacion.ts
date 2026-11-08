@@ -45,10 +45,9 @@ export interface AjusteCupos {
 
 export interface CambioCupos {
   /** Valores que la pantalla tenía cargados al editar. */
-  base?: { cuposTotales: number; valorEstimulo: number; presupuestoTotal: number };
+  base?: { cuposTotales: number; valorEstimulo: number };
   cuposTotales?: number;
   valorEstimulo?: number;
-  presupuestoTotal?: number;
   distribucionLocalidad?: { itemId: number; cupos: number }[];
   distribucionTransporte?: { itemId: number; cupos: number }[];
   motivo: string;
