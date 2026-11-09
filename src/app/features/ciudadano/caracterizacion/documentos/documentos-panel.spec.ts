@@ -4,6 +4,7 @@ import {
   DocumentoSolicitud,
   DocumentosSolicitud,
 } from '../../../../core/publico/caracterizacion-api';
+import { revisarAccesibilidad } from '../../../../testing/axe';
 import { errorApi, montarPantalla } from '../../../../testing/config';
 import { DocumentosPanel } from './documentos-panel';
 
@@ -334,5 +335,58 @@ describe('DocumentosPanel', () => {
     p.ctrl.expectOne(URL).flush(lista([doc({ id: 1 })]));
     await p.asentar();
     expect(p.el.querySelectorAll('.documento')).toHaveLength(1);
+  });
+
+  describe('lectores de pantalla', () => {
+    vi.setConfig({ testTimeout: 30_000 });
+
+    const variados = () =>
+      lista([
+        doc({
+          id: 1,
+          nombre: 'Documento de identidad',
+          estado: 'CARGADO',
+          archivo: archivoCargado('c.pdf'),
+        }),
+        doc({ id: 2, nombre: 'Recibo de servicio público' }),
+        doc({ id: 3, nombre: 'Carta', generado: true }),
+        doc({ id: 4, nombre: 'Régimen', automatico: true, documentoConsultado: 'CC 123' }),
+        doc({ id: 5, nombre: 'Soporte opcional', obligatorio: false, tieneModelo: true }),
+      ]);
+
+    it('sin errores de accesibilidad', async () => {
+      const p = await montar(variados());
+      expect(await revisarAccesibilidad(p.el)).toEqual([]);
+    });
+
+    it('cada selector de archivo dice a qué documento corresponde', async () => {
+      const p = await montar(variados());
+      const nombres = [...p.el.querySelectorAll('.documento input[type="file"]')].map((i) =>
+        i.getAttribute('aria-label'),
+      );
+      expect(nombres).toContain('Reemplazar archivo de Documento de identidad');
+      expect(nombres).toContain('Cargar archivo de Recibo de servicio público');
+      expect(nombres).toContain('Cargar archivo de Soporte opcional');
+    });
+
+    it('la barra de avance se lee como «X de Y documentos»', async () => {
+      const p = await montar(variados());
+      expect(p.q('[role="progressbar"]')!.getAttribute('aria-valuetext')).toMatch(
+        /^\d+ de \d+ documentos$/,
+      );
+    });
+
+    it('el aviso de carga no repite el porcentaje a cada instante', async () => {
+      const p = await montar(variados());
+      (
+        p.fixture.componentInstance as unknown as { subiendo: { set(v: object): void } }
+      ).subiendo.set({ 2: 40 });
+      p.fixture.detectChanges();
+      const aviso = p.q('.subida[role="status"]')!;
+      expect(aviso.querySelector(':scope > span[aria-hidden="true"]')!.textContent).toContain('40');
+      expect(aviso.querySelector(':scope > span:not([aria-hidden])')!.textContent).toContain(
+        'Cargando el archivo',
+      );
+    });
   });
 });

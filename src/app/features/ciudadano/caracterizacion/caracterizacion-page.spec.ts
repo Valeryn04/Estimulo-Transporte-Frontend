@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { API_BASE } from '../../../core/api/api';
 import {
@@ -7,6 +8,7 @@ import {
   DatosCaracterizacion,
   SesionCiudadano,
 } from '../../../core/publico/caracterizacion-api';
+import { revisarAccesibilidad } from '../../../testing/axe';
 import { errorApi, montarPantalla } from '../../../testing/config';
 import { CAMPOS } from './caracterizacion-datos';
 import { CaracterizacionPage } from './caracterizacion-page';
@@ -861,6 +863,35 @@ describe('CaracterizacionPage', () => {
       await p.paso('Revisión');
       expect(p.el.textContent).not.toContain('Enviar mis correcciones');
       expect(p.q('.enviar')).toBeNull();
+    });
+  });
+
+  describe('lectores de pantalla', () => {
+    vi.setConfig({ testTimeout: 30_000 });
+
+    it('acceso sin sesión: sin errores de accesibilidad', async () => {
+      const p = await montar(respuesta(), { sesion: false });
+      expect(await revisarAccesibilidad(p.el)).toEqual([]);
+    });
+
+    it('el formulario, sección por sección: sin errores de accesibilidad', async () => {
+      const p = await montar();
+      const secciones = [...p.el.querySelectorAll<HTMLButtonElement>('.paso')].map((b) =>
+        b.textContent!.replace(/\(.*\)/, '').trim(),
+      );
+      expect(secciones.length).toBeGreaterThan(3);
+      for (const nombre of secciones) {
+        await p.paso(nombre);
+        expect(await revisarAccesibilidad(p.el), nombre).toEqual([]);
+      }
+    });
+
+    it('el avance se anuncia con un texto y el guardado en una región de estado', async () => {
+      const p = await montar();
+      const barra = p.q('[role="progressbar"]')!;
+      expect(barra.getAttribute('aria-label')).toBeTruthy();
+      expect(p.q('.guardado')!.getAttribute('role')).toBe('status');
+      expect(p.q('.pasos [aria-current="step"]')).not.toBeNull();
     });
   });
 });

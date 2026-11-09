@@ -1,4 +1,3 @@
-import axe from 'axe-core';
 import { vi } from 'vitest';
 import { API_BASE } from './core/api/api';
 import { AyudaPage } from './features/ciudadano/ayuda/ayuda-page';
@@ -6,6 +5,7 @@ import { ConsultaPage } from './features/ciudadano/consulta/consulta-page';
 import { InicioPage } from './features/ciudadano/inicio/inicio-page';
 import { PreinscripcionPage } from './features/ciudadano/preinscripcion/preinscripcion-page';
 import { ReenviarVerificacionPage } from './features/ciudadano/reenviar-verificacion/reenviar-verificacion-page';
+import { revisarAccesibilidad as revisar } from './testing/axe';
 import { montarPantalla } from './testing/config';
 
 const FORMULARIO = {
@@ -20,36 +20,6 @@ const FORMULARIO = {
   autorizacion: { version: 1, contenido: 'AUTORIZACIÓN. Ley 1581 de 2012.' },
   formularioToken: 'token',
 };
-
-/**
- * Revisión automática de accesibilidad (WCAG 2.1 A y AA) de las pantallas del portal ciudadano. Es lo que los lectores de
- * pantalla (VoiceOver, TalkBack, NVDA…) necesitan de la página: nombres, etiquetas, roles y estructura. El contraste de
- * colores no se puede medir en este entorno: se revisa aparte.
- */
-async function revisar(el: HTMLElement) {
-  document.body.appendChild(el);
-  try {
-    const r = await axe.run(el, {
-      runOnly: {
-        type: 'tag',
-        values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice'],
-      },
-      rules: {
-        'color-contrast': { enabled: false },
-        // Una pantalla suelta no trae sus «landmarks» de página: los pone el marco (header/main).
-        region: { enabled: false },
-        'landmark-one-main': { enabled: false },
-        'page-has-heading-one': { enabled: false },
-      },
-    });
-    return r.violations.map(
-      (v) =>
-        `${v.id} (${v.impact}): ${v.help} → ${v.nodes.map((n) => n.target.join(' ')).join(' | ')}`,
-    );
-  } finally {
-    el.remove();
-  }
-}
 
 describe('accesibilidad del portal ciudadano (lectores de pantalla)', () => {
   // Revisar un formulario grande con axe tarda: con toda la suite en paralelo necesita más de los 5 segundos por defecto.

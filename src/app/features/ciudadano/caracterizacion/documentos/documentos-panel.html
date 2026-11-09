@@ -6,7 +6,7 @@
   </p>
   <button type="button" class="boton secundario" (click)="cargar()">Intentar de nuevo</button>
 } @else if (datos(); as d) {
-  <div class="resumen" role="group" aria-label="Documentos obligatorios cargados">
+  <div class="resumen">
     <div
       class="barra"
       role="progressbar"
@@ -14,6 +14,7 @@
       aria-valuemin="0"
       aria-valuemax="100"
       [attr.aria-valuenow]="porcentaje()"
+      [attr.aria-valuetext]="d.resumen.cargados + ' de ' + d.resumen.obligatorios + ' documentos'"
     >
       <span [style.width.%]="porcentaje()"></span>
     </div>
@@ -170,7 +171,8 @@
                 <div class="barra" aria-hidden="true">
                   <span [style.width.%]="subiendo()[doc.id]"></span>
                 </div>
-                <span>Cargando el archivo… {{ subiendo()[doc.id] }} %</span>
+                <span>Cargando el archivo…</span>
+                <span aria-hidden="true">{{ subiendo()[doc.id] }} %</span>
               </div>
             }
             @if (errores()[doc.id]; as texto) {
@@ -189,7 +191,9 @@
                     class="oculto"
                     [accept]="accept()"
                     [disabled]="subiendo()[doc.id] !== undefined"
-                    [attr.aria-describedby]="'doc-' + doc.id"
+                    [attr.aria-label]="
+                      (doc.archivo ? 'Reemplazar archivo de ' : 'Cargar archivo de ') + doc.nombre
+                    "
                     (change)="elegir(doc, $event)"
                   />
                 </label>
@@ -205,7 +209,7 @@
                       accept="image/*"
                       capture="environment"
                       [disabled]="subiendo()[doc.id] !== undefined"
-                      [attr.aria-describedby]="'doc-' + doc.id"
+                      [attr.aria-label]="'Tomar fotografía de ' + doc.nombre"
                       (change)="elegir(doc, $event)"
                     />
                   </label>
