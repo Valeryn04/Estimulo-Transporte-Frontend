@@ -25,6 +25,7 @@ import { PATRON_NOMBRE, numeroSegunTipo, soloDigitos } from '../../../shared/ide
 import { TurnstileCasilla } from '../../../shared/turnstile/turnstile';
 import { Ayuda } from '../../../shared/ayuda/ayuda';
 import { Confirmar } from '../../../shared/alertas/confirmar';
+import { AsistenteVoz } from './asistente-voz/asistente-voz';
 
 /** Campos que se muestran en el resumen de errores, en el orden del formulario. */
 const CAMPOS = [
@@ -67,6 +68,7 @@ interface ErrorResumen {
     Direccion,
     TurnstileCasilla,
     Ayuda,
+    AsistenteVoz,
   ],
   templateUrl: './preinscripcion-page.html',
   styleUrl: './preinscripcion-page.scss',

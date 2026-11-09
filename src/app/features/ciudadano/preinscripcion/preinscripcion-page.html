@@ -51,6 +51,13 @@
       </div>
     }
 
+    <app-asistente-voz
+      [form]="form"
+      [tipos]="d.tiposIdentificacion"
+      [autorizacion]="d.autorizacion?.contenido ?? null"
+      (enviar)="enviar()"
+    />
+
     <form [formGroup]="form" (ngSubmit)="enviar()" novalidate>
       <fieldset class="seccion">
         <legend>

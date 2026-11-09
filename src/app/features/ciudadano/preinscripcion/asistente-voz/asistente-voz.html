@@ -1,0 +1,75 @@
+@if (!abierto() && voz.soportado && voz.decidida() && voz.activa()) {
+  <div class="lanzador no-imprimir">
+    <button type="button" class="boton grande-lanzador" (click)="iniciar()">
+      Llenar la preinscripción con ayuda de voz
+    </button>
+  </div>
+}
+
+@if (abierto()) {
+  <section
+    class="asistente no-imprimir"
+    role="dialog"
+    aria-label="Asistente de preinscripción por voz"
+  >
+    <p class="estado" role="status">{{ textoEstado() }}</p>
+    <h2 class="pregunta">{{ pregunta() }}</h2>
+
+    @switch (modo()) {
+      @case ('sino') {
+        <div class="par">
+          <button type="button" class="grande si" (click)="responderSino(true)">Sí</button>
+          <button type="button" class="grande no" (click)="responderSino(false)">No</button>
+        </div>
+      }
+      @case ('texto') {
+        <label for="as-cuadro">{{ etiquetaEntrada() }}</label>
+        <input
+          #cuadro
+          id="as-cuadro"
+          type="text"
+          autocomplete="off"
+          [value]="entrada()"
+          (input)="alEscribir($event)"
+          (keydown.enter)="listo()"
+        />
+        <button type="button" class="grande" (click)="listo()">Listo</button>
+      }
+      @case ('sensible') {
+        <label for="as-sensible">{{ etiquetaEntrada() }}</label>
+        <input
+          #cuadro
+          id="as-sensible"
+          type="text"
+          autocomplete="off"
+          [attr.inputmode]="modoTeclado()"
+          [value]="entrada()"
+          (input)="alEscribir($event)"
+          (keydown.enter)="listo()"
+        />
+        <button type="button" class="grande" (click)="listo()">Listo, ya lo escribí</button>
+      }
+      @case ('opcion') {
+        <div class="lista">
+          @for (o of opciones(); track o.id) {
+            <button type="button" class="grande" (click)="elegirOpcion(o.id)">
+              {{ o.nombre }}
+            </button>
+          }
+        </div>
+      }
+      @case ('lectura') {
+        <button type="button" class="grande" (click)="saltarLectura()">Saltar la lectura</button>
+      }
+    }
+
+    <div class="fila">
+      <button type="button" class="boton secundario chico" (click)="repetir()">
+        Repetir la pregunta
+      </button>
+      <button type="button" class="boton secundario chico" (click)="salir()">
+        Salir del asistente
+      </button>
+    </div>
+  </section>
+}

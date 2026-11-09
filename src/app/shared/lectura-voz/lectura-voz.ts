@@ -2,12 +2,16 @@ import { Injectable, signal } from '@angular/core';
 
 const CLAVE = 'lectura_voz_activa';
 
-/** Viene activada de entrada: solo se apaga si la persona la desactivó antes (quien no la necesita la apaga una vez). */
-const leerPreferencia = (): boolean => {
+/**
+ * Lo que la persona ya dijo: sí necesita que se le lea (true), no lo necesita (false) o todavía no se le ha preguntado
+ * (null). Al entrar por primera vez el portal se lo pregunta.
+ */
+const leerPreferencia = (): boolean | null => {
   try {
-    return localStorage.getItem(CLAVE) !== '0';
+    const v = localStorage.getItem(CLAVE);
+    return v === '1' ? true : v === '0' ? false : null;
   } catch {
-    return true;
+    return null;
   }
 };
 
@@ -184,9 +188,13 @@ function frases(texto: string): string[] {
   return salida;
 }
 
+/** Lo que se dice a quien ya pidió la lectura cuando vuelve al portal. */
 export const SALUDO =
-  'Bienvenido. La lectura en voz alta está activada: use la tecla Tab para recorrer el formulario y escuchará cada campo. ' +
-  'Si no la necesita, pulse Alt, Mayús y L para desactivarla.';
+  'Bienvenido de nuevo. La lectura en voz alta está activada. Si ya no la necesita, pulse Alt, Mayús y L para desactivarla.';
+
+/** Lo primero que se le pregunta a quien entra: si necesita que se le lea y se le atienda por voz. */
+export const PREGUNTA_INICIAL =
+  'Bienvenido. ¿Es usted una persona con discapacidad visual y necesita que le leamos el formulario y poder responder hablando? Diga sí o no.';
 
 /**
  * Lectura en voz alta del portal para las personas con discapacidad visual que no tienen lector de pantalla: usa la
@@ -198,12 +206,22 @@ export class LecturaVoz {
     typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null;
 
   readonly soportado = this.sintesis !== null;
-  readonly activa = signal(leerPreferencia());
+  private readonly previa = leerPreferencia();
+  /** La persona dijo que necesita la lectura en voz alta. */
+  readonly activa = signal(this.previa === true);
+  /** Ya contestó si la necesita o no (se le pregunta una sola vez; queda guardado). */
+  readonly decidida = signal(this.previa !== null);
   readonly hablando = signal(false);
   /** Ya se presentó (una sola vez por visita, con el primer toque de la persona). */
   saludada = false;
   /** Mientras se dice la presentación, lo que se enfoca se dice a continuación y no la corta. */
   readonly saludando = signal(false);
+  /** La persona pidió el asistente por voz: la pantalla de preinscripción lo inicia. */
+  readonly asistenteSolicitado = signal(false);
+  /** La pantalla actual tiene asistente por voz (la lectura de entrada la hace él). */
+  readonly asistenteEnPagina = signal(false);
+  /** Ya hubo un toque o tecla: desde ahí el navegador deja hablar. */
+  gestoHecho = false;
 
   private elegirVoz(): SpeechSynthesisVoice | null {
     const voces = this.sintesis?.getVoices() ?? [];
@@ -264,6 +282,35 @@ export class LecturaVoz {
     });
   }
 
+  /** Dice el texto y avisa cuando termina (también si falla o no hay voz), para poder encadenar preguntas. */
+  decir(texto: string): Promise<void> {
+    const sintesis = this.sintesis;
+    const dicho = limpio(texto);
+    if (!sintesis || !dicho) return Promise.resolve();
+    return new Promise((resolver) => {
+      let hecho = false;
+      const listo = (): void => {
+        if (hecho) return;
+        hecho = true;
+        clearTimeout(seguridad);
+        this.hablando.set(false);
+        resolver();
+      };
+      // Si el navegador nunca avisa el final, no se queda esperando para siempre.
+      const seguridad = setTimeout(listo, 4000 + dicho.length * 110);
+      sintesis.cancel();
+      const partes = frases(dicho);
+      const voz = this.elegirVoz();
+      partes.forEach((parte, i) => {
+        const u = this.enunciado(parte, voz);
+        if (i === 0) u.onstart = () => this.hablando.set(true);
+        if (i === partes.length - 1) u.onend = listo;
+        u.onerror = listo;
+        sintesis.speak(u);
+      });
+    });
+  }
+
   /** Dice el texto; por defecto corta lo que se estaba leyendo (al cambiar de foco no se acumulan). */
   hablar(texto: string, anadir = false): void {
     const sintesis = this.sintesis;
@@ -287,8 +334,8 @@ export class LecturaVoz {
   }
 
   /**
-   * Se presenta sola con el primer toque o tecla de la persona (los navegadores no dejan hablar antes). Dice cómo
-   * recorrer el formulario y cómo apagar la lectura si no se necesita.
+   * Se presenta con el primer toque o tecla de la persona (los navegadores no dejan hablar antes) y le dice cómo
+   * apagar la lectura si no la necesita.
    */
   saludar(extra = ''): void {
     if (!this.soportado || !this.activa() || this.saludada) return;
@@ -304,21 +351,28 @@ export class LecturaVoz {
     }, 300);
   }
 
+  /** Guarda lo que la persona respondió (sin hablar): sí necesita la lectura, o no. */
+  fijar(necesita: boolean): void {
+    this.activa.set(necesita);
+    this.decidida.set(true);
+    guardarPreferencia(necesita);
+    if (!necesita) {
+      this.detener();
+      this.saludando.set(false);
+      this.asistenteSolicitado.set(false);
+    }
+  }
+
   activar(): void {
     this.saludada = true;
-    this.activa.set(true);
-    guardarPreferencia(true);
+    this.fijar(true);
     this.hablar(
-      'Lectura en voz alta activada. Use la tecla Tab para recorrer el formulario: se dirá el nombre de cada campo. ' +
-        'Pulse el botón Leer esta página para escuchar todo el contenido.',
+      'Lectura en voz alta activada. Pulse el botón Leer esta página para escuchar todo el contenido, o pulse Alt, Mayús y L para desactivarla.',
     );
   }
 
   desactivar(): void {
-    this.detener();
-    this.saludando.set(false);
-    this.activa.set(false);
-    guardarPreferencia(false);
+    this.fijar(false);
   }
 
   alternar(): void {
