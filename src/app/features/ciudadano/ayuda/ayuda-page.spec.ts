@@ -21,6 +21,7 @@ describe('AyudaPage', () => {
     expect(lector.textContent).toContain('VoiceOver');
     expect(lector.textContent).toContain('TalkBack');
     expect(lector.textContent).toContain('NVDA');
+    expect(lector.textContent).toContain('formato del documento');
   });
 
   it('las preguntas frecuentes se pueden abrir con el teclado (elementos details)', async () => {

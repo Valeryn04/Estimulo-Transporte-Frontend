@@ -13,7 +13,7 @@ describe('InicioPage', () => {
     const { el, asentar } = montarPantalla(InicioPage);
     await asentar();
     const opciones = [...el.querySelectorAll('a.tarjeta')].map(
-      (a) => a.querySelector('strong')?.textContent,
+      (a) => a.querySelector('.enfasis')?.textContent,
     );
     expect(opciones).toEqual([
       'Preinscribirme',

@@ -39,16 +39,16 @@ describe('Direccion', () => {
     const { el, cambiar, control } = await montar();
     await cambiar('dir-tipo', 'Carrera', 'change');
     // Desde el primer dato ya se ve cómo va quedando, sin avisos de error.
-    expect(el.querySelector('.vista strong')?.textContent).toBe('Carrera');
+    expect(el.querySelector('.vista .enfasis')?.textContent).toBe('Carrera');
     await cambiar('dir-numero', '54', 'input');
-    expect(el.querySelector('.vista strong')?.textContent).toBe('Carrera 54');
+    expect(el.querySelector('.vista .enfasis')?.textContent).toBe('Carrera 54');
     expect(el.querySelector('.vista')?.textContent).not.toContain('falta');
     expect(el.querySelector('#dir-error')).toBeNull();
     expect(control.value).toBe('');
     await cambiar('dir-cruce', '72', 'input');
     await cambiar('dir-placa', '30', 'input');
     await cambiar('dir-letra', 'B', 'change');
-    expect(el.querySelector('.vista strong')?.textContent).toBe('Carrera 54 B # 72 - 30');
+    expect(el.querySelector('.vista .enfasis')?.textContent).toBe('Carrera 54 B # 72 - 30');
     expect(control.value).toBe('Carrera 54 B # 72 - 30');
     expect(control.valid).toBe(true);
   });

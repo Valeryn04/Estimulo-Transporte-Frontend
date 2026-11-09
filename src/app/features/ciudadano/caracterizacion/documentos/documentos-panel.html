@@ -18,15 +18,15 @@
       <span [style.width.%]="porcentaje()"></span>
     </div>
     <p>
-      <strong>{{ d.resumen.cargados }} de {{ d.resumen.obligatorios }}</strong> documentos
-      obligatorios cargados.
+      <span class="enfasis">{{ d.resumen.cargados }} de {{ d.resumen.obligatorios }}</span>
+      documentos obligatorios cargados.
     </p>
   </div>
 
   <p class="reglas">
-    Formatos permitidos: <strong>{{ formatosTexto() }}</strong
-    >. Tamaño máximo: <strong>{{ d.reglas.maxMb }} MB</strong> por documento. El archivo debe verse
-    completo y legible. Si carga uno nuevo, reemplaza al anterior.
+    Formatos permitidos: <span class="enfasis">{{ formatosTexto() }}</span
+    >. Tamaño máximo: <span class="enfasis">{{ d.reglas.maxMb }} MB</span> por documento. El archivo
+    debe verse completo y legible. Si carga uno nuevo, reemplaza al anterior.
   </p>
 
   @for (g of grupos(); track g.clave) {
@@ -75,7 +75,7 @@
             }
             @if (doc.hojasMinimas > 1) {
               <p class="descripcion">
-                Debe traer <strong>{{ doc.hojasMinimas }} hojas</strong> en un solo PDF.
+                Debe traer <span class="enfasis">{{ doc.hojasMinimas }} hojas</span> en un solo PDF.
               </p>
             }
             @if (doc.automatico) {
@@ -140,7 +140,7 @@
               <div class="archivo">
                 <app-icono nombre="documento" />
                 <div class="datos">
-                  <strong>{{ a.nombre }}</strong>
+                  <span class="enfasis">{{ a.nombre }}</span>
                   <span>
                     {{ a.formato.toUpperCase() }} · {{ tamano(a.tamanoBytes) }} · cargado el
                     {{ a.cargadoAt | date: 'dd/MM/yyyy HH:mm' : '-0500' }}

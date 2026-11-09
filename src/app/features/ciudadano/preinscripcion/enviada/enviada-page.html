@@ -3,8 +3,8 @@
   <p class="aviso exito" role="status">
     <span>
       @if (correo) {
-        Enviamos un correo a <strong>{{ correo }}</strong> con un enlace para verificar su
-        dirección.
+        Enviamos un correo a <span class="enfasis">{{ correo }}</span> con un enlace para verificar
+        su dirección.
       } @else {
         Enviamos un correo al correo registrado con un enlace para verificar su dirección.
       }
@@ -32,9 +32,9 @@
 
   <p class="aviso" role="note">
     <span>
-      <strong>Importante:</strong> la preinscripción no equivale a la aprobación del beneficio. La
-      asignación depende de la verificación de requisitos, la disponibilidad presupuestal y los
-      criterios de priorización vigentes.
+      <span class="enfasis">Importante:</span> la preinscripción no equivale a la aprobación del
+      beneficio. La asignación depende de la verificación de requisitos, la disponibilidad
+      presupuestal y los criterios de priorización vigentes.
     </span>
   </p>
   <p><a routerLink="/">Volver al inicio</a></p>

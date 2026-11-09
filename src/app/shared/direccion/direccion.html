@@ -152,7 +152,7 @@
     <div class="vista" [class.completa]="estado().completa" role="status" aria-live="polite">
       <span class="titulo">Así va quedando su dirección</span>
       @if (vista()) {
-        <strong class="texto">{{ vista() }}</strong>
+        <span class="enfasis texto">{{ vista() }}</span>
       } @else {
         <span class="vacia">Elija el tipo de vía y vaya completando los datos.</span>
       }

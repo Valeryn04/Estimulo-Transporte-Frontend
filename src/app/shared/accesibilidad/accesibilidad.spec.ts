@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import axe from 'axe-core';
-import { vi } from 'vitest';
 import { Accesibilidad } from './accesibilidad';
 import { ModoAccesible } from './modo-accesible';
 
@@ -38,25 +37,21 @@ describe('accesibilidad del portal ciudadano', () => {
   }
 
   describe('la pregunta inicial', () => {
-    it('es un diálogo que el lector de pantalla lee solo: con título, descripción y dos botones con nombre claro', async () => {
+    it('el foco va al título de la pregunta y el lector lee solo lo que dice: sin rol de «ventana»', async () => {
       const { el, espera } = await montar();
       await espera();
-      const d = el.querySelector('[role="alertdialog"]')!;
-      expect(d.getAttribute('aria-modal')).toBe('true');
-      expect(document.getElementById(d.getAttribute('aria-labelledby')!)?.textContent).toContain(
-        '¿Es usted una persona con discapacidad visual?',
-      );
-      const descripcion = document.getElementById(
-        d.getAttribute('aria-describedby')!,
-      )!.textContent!;
-      expect(descripcion).toContain('VoiceOver');
-      expect(descripcion).toContain('TalkBack');
-      expect([...d.querySelectorAll('button')].map((b) => b.textContent!.trim())).toEqual([
+      const titulo = el.querySelector('h2')!;
+      expect(titulo.textContent).toContain('¿Es usted una persona con discapacidad visual?');
+      expect(document.activeElement).toBe(titulo);
+      // Nada que el lector anuncie de más: ni «ventana», ni regiones, ni avisos en vivo.
+      expect(el.querySelector('[role], [aria-modal], [aria-live], [aria-label]')).toBeNull();
+      const texto = el.querySelector('p')!.textContent!;
+      expect(texto).toContain('VoiceOver');
+      expect(texto).toContain('TalkBack');
+      expect([...el.querySelectorAll('button')].map((b) => b.textContent!.trim())).toEqual([
         'Sí, activar el modo accesible',
         'No, continuar normalmente',
       ]);
-      // El foco va al diálogo para que el lector empiece a leerlo.
-      expect(document.activeElement).toBe(d);
     });
 
     it('mientras está abierta, el resto de la página queda inerte (no se alcanza ni se lee)', async () => {
@@ -76,12 +71,9 @@ describe('accesibilidad del portal ciudadano', () => {
     it('no habla ni usa teclas: no pone su propia voz encima de la del lector de pantalla', async () => {
       const { el } = await montar();
       expect(el.textContent).not.toMatch(/\b(Alt|Mayús|Tab)\b/);
-      expect('speechSynthesis' in window && vi.isMockFunction(window.speechSynthesis.speak)).toBe(
-        false,
-      );
     });
 
-    it('con «Sí» activa el modo accesible, lo recuerda, lo anuncia y devuelve el foco al título', async () => {
+    it('con «Sí» activa el modo accesible, lo recuerda y devuelve el foco al título de la página, sin avisos aparte', async () => {
       const { el, fixture, espera, modo } = await montar();
       el.querySelectorAll<HTMLButtonElement>('button')[0]!.click();
       fixture.detectChanges();
@@ -89,8 +81,8 @@ describe('accesibilidad del portal ciudadano', () => {
       expect(modo.activo()).toBe(true);
       expect(localStorage.getItem('modo_accesible')).toBe('1');
       expect(document.documentElement.hasAttribute('data-modo-accesible')).toBe(true);
-      expect(el.querySelector('[role="alertdialog"]')).toBeNull();
-      expect(el.querySelector('[role="status"]')?.textContent).toContain('Modo accesible activado');
+      expect(el.querySelector('h2')).toBeNull();
+      expect(el.querySelector('[aria-live], [role="status"]')).toBeNull();
       expect(document.activeElement).toBe(document.querySelector('main h1'));
     });
 
@@ -114,23 +106,21 @@ describe('accesibilidad del portal ciudadano', () => {
       localStorage.setItem('modo_accesible', '1');
       const { el, modo } = await montar();
       expect(modo.respondida()).toBe(true);
-      expect(el.querySelector('[role="alertdialog"]')).toBeNull();
+      expect(el.querySelector('h2')).toBeNull();
       expect(document.documentElement.hasAttribute('data-modo-accesible')).toBe(true);
     });
   });
 
-  describe('anuncio de cada pantalla', () => {
-    it('al cambiar de pantalla anuncia su nombre y pasa el foco al título, para el lector de pantalla', async () => {
+  describe('cambio de pantalla', () => {
+    it('pasa el foco al título de la pantalla nueva, y no agrega un aviso que lo repita', async () => {
       localStorage.setItem('modo_accesible', '0');
       const { el, espera } = await montar();
       document.title = 'Consultar el estado · Estímulo Social de Transporte';
       document.querySelector('main')!.innerHTML = '<h1>Consultar el estado</h1>';
       await TestBed.inject(Router).navigateByUrl('/consulta');
       await espera(350);
-      expect(el.querySelector('[role="status"]')?.textContent).toContain(
-        'Pantalla: Consultar el estado',
-      );
       expect(document.activeElement).toBe(document.querySelector('main h1'));
+      expect(el.querySelector('[aria-live], [role="status"]')).toBeNull();
     });
   });
 

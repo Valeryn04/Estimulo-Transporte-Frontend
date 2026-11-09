@@ -18,11 +18,10 @@ const FONDO = 'header, main, .saltar';
 
 /**
  * Lo que la web aporta a los lectores de pantalla (VoiceOver, TalkBack, NVDA, el lector de Google):
- *  - la pregunta inicial («¿es usted una persona con discapacidad visual?») como un diálogo bien marcado, que el lector lee
- *    solo al abrirse y que deja el fondo inerte mientras está abierto;
- *  - el anuncio de cada pantalla nueva y el paso del foco a su título, que en una aplicación de una sola página el
- *    lector no hace por su cuenta;
- *  - los mensajes (errores, avisos) que aparecen se anuncian en la región «aria-live» de cada componente.
+ *  - la pregunta inicial («¿es usted una persona con discapacidad visual?»): el foco va a su título, el resto de la página
+ *    queda inerte mientras está abierta y no lleva roles de «ventana» ni avisos de más: el lector lee solo lo que dice;
+ *  - el paso del foco al título de cada pantalla nueva, que en una aplicación de una sola página el lector no hace por su
+ *    cuenta (el lector lee el título al recibir el foco, sin un aviso aparte que lo repita).
  */
 @Component({
   selector: 'app-accesibilidad',
@@ -34,15 +33,15 @@ export class Accesibilidad implements OnInit {
   private readonly router = inject(Router);
   private readonly documento = inject(DOCUMENT);
   private readonly destruir = inject(DestroyRef);
-  private readonly dialogo = viewChild<ElementRef<HTMLElement>>('dialogo');
+  private readonly titulo = viewChild<ElementRef<HTMLElement>>('titulo');
 
   constructor() {
     // Con la pregunta abierta, el resto de la página no se puede alcanzar ni leer; el foco va al diálogo.
     effect(() => {
       const abierta = !this.modo.respondida();
       this.documento.querySelectorAll(FONDO).forEach((el) => el.toggleAttribute('inert', abierta));
-      const d = this.dialogo();
-      if (abierta && d) setTimeout(() => d.nativeElement.focus(), 50);
+      const t = this.titulo();
+      if (abierta && t) setTimeout(() => t.nativeElement.focus(), 50);
     });
   }
 
@@ -63,8 +62,6 @@ export class Accesibilidad implements OnInit {
       h1.setAttribute('tabindex', '-1');
       h1.focus();
     }
-    const titulo = this.documento.title.split('·')[0]?.trim();
-    if (titulo) this.modo.anuncio.set(`Pantalla: ${titulo}`);
   }
 
   protected responder(activar: boolean): void {

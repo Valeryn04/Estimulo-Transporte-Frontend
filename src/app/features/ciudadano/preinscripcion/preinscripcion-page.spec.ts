@@ -290,7 +290,9 @@ describe('PreinscripcionPage', () => {
     escribir('#direccion-placa', '30');
     escribir('#direccion-complemento', 'Apto 301');
     await asentar();
-    expect(el.querySelector('.vista strong')?.textContent).toBe('Carrera 54 B # 72 - 30, Apto 301');
+    expect(el.querySelector('.vista .enfasis')?.textContent).toBe(
+      'Carrera 54 B # 72 - 30, Apto 301',
+    );
     enviar();
     const req = ctrl.expectOne(`${API_BASE}/publico/preinscripciones`);
     expect(req.request.body).toMatchObject({ direccion: 'Carrera 54 B # 72 - 30, Apto 301' });

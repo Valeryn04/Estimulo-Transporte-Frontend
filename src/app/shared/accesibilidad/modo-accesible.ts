@@ -33,8 +33,6 @@ export class ModoAccesible {
   /** La persona ya contestó la pregunta inicial (se le hace una sola vez). */
   readonly respondida = signal(this.previa !== null);
   readonly activo = signal(this.previa === true);
-  /** Mensaje para los lectores de pantalla (región «aria-live»). */
-  readonly anuncio = signal('');
 
   constructor() {
     this.aplicar();
@@ -45,11 +43,6 @@ export class ModoAccesible {
     this.respondida.set(true);
     guardar(activo);
     this.aplicar();
-    this.anuncio.set(
-      activo
-        ? 'Modo accesible activado: letra y botones más grandes, y la ayuda de cada campo siempre a la vista. Use su lector de pantalla para recorrer las opciones.'
-        : 'Modo accesible desactivado.',
-    );
   }
 
   /** Marca la página para que los estilos del modo accesible se apliquen. */

@@ -966,3 +966,9 @@ body.swal2-shown:not(:has(.swal2-container)) {
 main h1:focus {
   outline: none;
 }
+
+// Énfasis solo visual: no se usa <strong> en el portal ciudadano para que los lectores de pantalla no anuncien «negrita» ni
+// otros detalles de formato; el texto se lee tal cual.
+.enfasis {
+  font-weight: 700;
+}

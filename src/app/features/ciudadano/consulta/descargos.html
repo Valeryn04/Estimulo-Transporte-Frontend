@@ -6,7 +6,7 @@
     }
     <p>
       Se está estudiando la revocatoria de su beneficio por esta causal:
-      <strong>{{ r.causal }}</strong
+      <span class="enfasis">{{ r.causal }}</span
       >.
     </p>
     @if (r.razones) {
@@ -21,7 +21,7 @@
     } @else if (r.puedePresentarDescargos) {
       <p>
         Usted tiene derecho a presentar sus descargos y las pruebas que considere hasta el
-        <strong>{{ r.venceDescargosAt | date: 'dd/MM/yyyy HH:mm' : '-0500' }}</strong
+        <span class="enfasis">{{ r.venceDescargosAt | date: 'dd/MM/yyyy HH:mm' : '-0500' }}</span
         >.
       </p>
       @if (error()) {
