@@ -29,7 +29,6 @@
     <p class="aviso error" role="alert">{{ error() }}</p>
   }
 
-  <app-turnstile />
   <div class="acciones">
     <button type="submit" class="boton" [disabled]="cargando()">
       {{ cargando() ? 'Ingresando…' : 'Ingresar' }}

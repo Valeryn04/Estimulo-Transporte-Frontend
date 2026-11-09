@@ -22,7 +22,6 @@ import { CampoControl } from '../../../shared/campo-control';
 import { Direccion } from '../../../shared/direccion/direccion';
 import { aplicarErroresApi, igualA, valorDe } from '../../../shared/forms';
 import { PATRON_NOMBRE, numeroSegunTipo, soloDigitos } from '../../../shared/identificacion';
-import { TurnstileCasilla } from '../../../shared/turnstile/turnstile';
 import { Ayuda } from '../../../shared/ayuda/ayuda';
 import { Confirmar } from '../../../shared/alertas/confirmar';
 
@@ -58,16 +57,7 @@ interface ErrorResumen {
  */
 @Component({
   selector: 'app-preinscripcion-page',
-  imports: [
-    Confirmar,
-    ReactiveFormsModule,
-    RouterLink,
-    Campo,
-    CampoControl,
-    Direccion,
-    TurnstileCasilla,
-    Ayuda,
-  ],
+  imports: [Confirmar, ReactiveFormsModule, RouterLink, Campo, CampoControl, Direccion, Ayuda],
   templateUrl: './preinscripcion-page.html',
   styleUrl: './preinscripcion-page.scss',
 })
