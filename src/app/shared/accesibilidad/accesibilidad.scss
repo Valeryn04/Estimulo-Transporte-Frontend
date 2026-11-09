@@ -1,0 +1,68 @@
+:host {
+  display: block;
+}
+
+// Pregunta inicial: ocupa toda la pantalla; botones grandes y fáciles de tocar desde el teléfono.
+.velo {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  background: #fff;
+  overflow-y: auto;
+}
+
+.dialogo {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 40rem;
+  margin: auto;
+  padding: 24px 16px;
+
+  &:focus {
+    outline: none;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.6rem;
+    line-height: 1.3;
+    color: var(--alc-azul);
+  }
+
+  p {
+    margin: 0;
+    font-size: 1.1rem;
+    line-height: 1.5;
+  }
+}
+
+.grande {
+  min-height: 72px;
+  padding: 16px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  border: 3px solid var(--alc-azul);
+  border-radius: 16px;
+  cursor: pointer;
+
+  &.si {
+    color: #fff;
+    background: var(--alc-azul);
+  }
+
+  &.no {
+    color: var(--alc-azul);
+    background: #fff;
+  }
+}
+
+// Quien dijo que no puede cambiar de opinión: un enlace pequeño al final de la página.
+.cambiar {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 4px 16px;
+  text-align: right;
+}

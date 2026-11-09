@@ -16,6 +16,11 @@ describe('AyudaPage', () => {
     expect(el.querySelector('a[href="/preinscripcion"]')).not.toBeNull();
     expect(el.querySelector('a[href="/consulta"]')).not.toBeNull();
     expect(el.textContent).toContain('no equivale a la aprobación del beneficio');
+    // La guía explica cómo activar el lector de pantalla (VoiceOver, TalkBack, NVDA).
+    const lector = el.querySelector('#lector')!;
+    expect(lector.textContent).toContain('VoiceOver');
+    expect(lector.textContent).toContain('TalkBack');
+    expect(lector.textContent).toContain('NVDA');
   });
 
   it('las preguntas frecuentes se pueden abrir con el teclado (elementos details)', async () => {

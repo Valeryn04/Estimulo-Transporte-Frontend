@@ -1,0 +1,40 @@
+@if (!modo.respondida()) {
+  <div class="velo no-imprimir">
+    <section
+      #dialogo
+      class="dialogo"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="acc-titulo"
+      aria-describedby="acc-texto"
+      tabindex="-1"
+    >
+      <h2 id="acc-titulo">¿Es usted una persona con discapacidad visual?</h2>
+      <p id="acc-texto">
+        Si lo es, activamos el modo accesible: letra y botones más grandes, la ayuda de cada campo
+        siempre a la vista y un recorrido sencillo, preparado para su lector de pantalla (VoiceOver
+        en iPhone, TalkBack en Android, o NVDA y el lector de pantalla de Google en computador). Se
+        lo preguntamos una sola vez.
+      </p>
+      <button type="button" class="grande si" (click)="responder(true)">
+        Sí, activar el modo accesible
+      </button>
+      <button type="button" class="grande no" (click)="responder(false)">
+        No, continuar normalmente
+      </button>
+    </section>
+  </div>
+}
+
+<!-- Los lectores de pantalla anuncian aquí cada pantalla nueva y los cambios del modo accesible. -->
+<div class="solo-lectores" role="status" aria-live="polite" aria-atomic="true">
+  {{ modo.anuncio() }}
+</div>
+
+@if (modo.respondida() && !modo.activo()) {
+  <div class="cambiar no-imprimir">
+    <button type="button" class="enlace" (click)="responder(true)">
+      Activar el modo accesible
+    </button>
+  </div>
+}

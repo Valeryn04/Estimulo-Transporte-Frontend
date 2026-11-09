@@ -1,11 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { MenuVoz } from './menu-voz/menu-voz';
+import { ModoAccesible } from '../../../shared/accesibilidad/modo-accesible';
 
 @Component({
   selector: 'app-inicio-page',
-  imports: [RouterLink, MenuVoz],
+  imports: [RouterLink],
   templateUrl: './inicio-page.html',
   styleUrl: './inicio-page.scss',
 })
-export class InicioPage {}
+export class InicioPage {
+  protected readonly modo = inject(ModoAccesible);
+}
