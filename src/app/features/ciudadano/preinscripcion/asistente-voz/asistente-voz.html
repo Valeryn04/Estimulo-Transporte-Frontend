@@ -14,6 +14,9 @@
   >
     <p class="estado" role="status">{{ textoEstado() }}</p>
     <h2 class="pregunta">{{ pregunta() }}</h2>
+    @if (estado() === 'escuchando') {
+      <p class="oido" aria-live="polite">Escuché: {{ oido() || '…' }}</p>
+    }
 
     @switch (modo()) {
       @case ('sino') {
@@ -69,6 +72,9 @@
       </button>
       <button type="button" class="boton secundario chico" (click)="salir()">
         Salir del asistente
+      </button>
+      <button type="button" class="boton secundario chico" (click)="apagar()">
+        Apagar la voz y llenar yo
       </button>
     </div>
   </section>

@@ -2,16 +2,15 @@ import { Component, DestroyRef, ElementRef, OnInit, inject } from '@angular/core
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
-import { interpretarSiNo } from './analisis-voz';
+import { interpretarSiNo, primeraInterpretacion } from './analisis-voz';
 import {
   LecturaVoz,
   PREGUNTA_INICIAL,
   SALUDO,
   describirControl,
   textoConAyuda,
-  textoDePagina,
 } from './lectura-voz';
-import { ReconocimientoVoz } from './reconocimiento-voz';
+import { MENSAJES_FALLO, ReconocimientoVoz } from './reconocimiento-voz';
 
 /** Espera a que la pantalla termine de dibujarse antes de leerla. */
 export const RETRASO_ENTRADA = 700;
@@ -42,6 +41,8 @@ export class LecturaVozBarra implements OnInit {
   /** Aún no se pudo hablar solos (el navegador lo bloquea): se hará con el primer toque o tecla. */
   private pendiente = false;
   private preguntando = false;
+  /** La persona dijo que no quería volver al menú: se le vuelve a ofrecer con su próximo toque. */
+  private menuPendiente = false;
   private temporizador: ReturnType<typeof setTimeout> | undefined;
 
   ngOnInit(): void {
@@ -119,8 +120,48 @@ export class LecturaVozBarra implements OnInit {
     if (await this.voz.intentar(primera ? `${SALUDO} ${texto}` : texto)) {
       this.voz.saludada = true;
       this.pendiente = false;
+      await this.ofrecerMenu();
     } else {
       this.pendiente = true;
+    }
+  }
+
+  private async esperarFinDeVoz(): Promise<void> {
+    const limite = Date.now() + 30_000;
+    while (this.voz.hablando() && Date.now() < limite) {
+      await new Promise((r) => setTimeout(r, 200));
+    }
+  }
+
+  /**
+   * Después de leer una pantalla que no es el menú ni tiene asistente, pregunta si quiere volver al menú principal: así
+   * quien no ve nunca queda perdido. Si dice que no, se queda y se lo vuelve a ofrecer con el siguiente toque.
+   */
+  private async ofrecerMenu(): Promise<void> {
+    if (
+      !this.voz.activa() ||
+      this.voz.asistenteEnPagina() ||
+      !this.reconocimiento.soportado ||
+      this.router.url.split('?')[0] === '/'
+    ) {
+      return;
+    }
+    await this.esperarFinDeVoz();
+    await this.voz.decir(
+      '¿Quiere volver al menú principal? Diga sí para volver, o no para quedarse en esta pantalla.',
+    );
+    const r = await this.reconocimiento.escuchar(8000);
+    const respuesta = r.ok ? interpretarSiNo(r.texto) : null;
+    if (respuesta === 'si') {
+      this.menuPendiente = false;
+      await this.router.navigateByUrl('/');
+    } else {
+      this.menuPendiente = true;
+      if (respuesta === 'no') {
+        await this.voz.decir(
+          'De acuerdo, me quedo aquí. Cuando quiera volver al menú, toque la pantalla.',
+        );
+      }
     }
   }
 
@@ -141,12 +182,16 @@ export class LecturaVozBarra implements OnInit {
       if (!this.reconocimiento.soportado) break;
       const r = await this.reconocimiento.escuchar(8000);
       if (this.voz.decidida()) return;
-      const respuesta = r.ok ? interpretarSiNo(r.texto) : null;
+      const respuesta = r.ok ? primeraInterpretacion(r.alternativas, interpretarSiNo) : null;
       if (respuesta) {
         this.responder(respuesta === 'si');
         return;
       }
-      if (!r.ok && r.motivo === 'permiso') break;
+      // Si el problema es el micrófono (permiso, internet…), se le dice cuál es: no es que «no le entendí».
+      if (!r.ok && r.motivo !== 'sin-voz') {
+        await this.voz.decir(MENSAJES_FALLO[r.motivo]);
+        break;
+      }
       if (intento === 0) await this.voz.decir('No le entendí. Diga sí o no.');
     }
     if (!this.voz.decidida()) {
@@ -210,6 +255,10 @@ export class LecturaVozBarra implements OnInit {
       this.pendiente = false;
       if (!this.voz.saludada) this.voz.saludar(this.textoDeEntrada());
       else this.voz.hablar(this.textoDeEntrada());
+      void this.ofrecerMenu();
+    } else if (this.menuPendiente) {
+      this.menuPendiente = false;
+      void this.ofrecerMenu();
     }
   }
 
@@ -221,11 +270,5 @@ export class LecturaVozBarra implements OnInit {
       return;
     }
     this.primerContacto();
-  }
-
-  protected leerPagina(): void {
-    const principal = this.principal();
-    if (!principal) return;
-    this.voz.hablar(textoDePagina(principal));
   }
 }

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { vi } from 'vitest';
@@ -47,8 +47,11 @@ const sintesis = {
 
 /** Micrófono simulado: contesta lo que se le indique, en orden. */
 const respuestas: ResultadoEscucha[] = [];
+/** Lo que dice la persona, tal como lo devuelve el reconocimiento de voz. */
+const dice = (texto: string): ResultadoEscucha => ({ ok: true, texto, alternativas: [texto] });
 const reconocimiento = {
   soportado: true,
+  parcial: signal(''),
   escuchar: vi.fn(() =>
     Promise.resolve(respuestas.shift() ?? ({ ok: false, motivo: 'sin-voz' } as ResultadoEscucha)),
   ),
@@ -76,6 +79,8 @@ describe('lectura en voz alta', () => {
     vi.unstubAllGlobals();
     Reflect.deleteProperty(window, 'speechSynthesis');
     document.body.innerHTML = '';
+    // Otras pruebas comprueban que no quede nada guardado en el navegador.
+    localStorage.clear();
   });
 
   const fragmento = (html: string): HTMLElement => {
@@ -264,7 +269,7 @@ describe('lectura en voz alta', () => {
     });
 
     it('al entrar la dice sola si el navegador lo permite, y escucha la respuesta', async () => {
-      respuestas.push({ ok: true, texto: 'sí' });
+      respuestas.push(dice('sí'));
       const { espera, voz } = await montar();
       await espera();
       expect(dichas.join(' ')).toContain(PREGUNTA_INICIAL);
@@ -275,7 +280,7 @@ describe('lectura en voz alta', () => {
 
     it('si el navegador la bloquea, la dice con el primer toque fuera de los botones', async () => {
       bloqueada = true;
-      respuestas.push({ ok: true, texto: 'no gracias' });
+      respuestas.push(dice('no gracias'));
       const { espera, voz } = await montar();
       await espera();
       expect(dichas).toEqual([]);
@@ -331,7 +336,7 @@ describe('lectura en voz alta', () => {
     });
 
     it('si no la entiende, vuelve a preguntar y al final le dice cómo usar los botones', async () => {
-      respuestas.push({ ok: true, texto: 'qué dice' }, { ok: false, motivo: 'sin-voz' });
+      respuestas.push(dice('qué dice'), { ok: false, motivo: 'sin-voz' });
       const { espera, voz } = await montar();
       await espera(RETRASO_ENTRADA + 400);
       expect(dichas.join(' ')).toContain('No le entendí. Diga sí o no.');
@@ -359,15 +364,11 @@ describe('lectura en voz alta', () => {
     describe('cuando la persona ya dijo que sí', () => {
       beforeEach(() => localStorage.setItem('lectura_voz_activa', '1'));
 
-      it('no vuelve a preguntar: muestra el botón para desactivar y lo dice con aria-pressed', async () => {
-        const { fixture, el } = await montar();
+      it('no vuelve a preguntar y no muestra botones: todo es por voz', async () => {
+        const { el } = await montar();
         expect(el.querySelector('[role="dialog"]')).toBeNull();
-        const boton = el.querySelector<HTMLButtonElement>('.barra-voz button')!;
-        expect(boton.getAttribute('aria-pressed')).toBe('true');
-        expect(el.textContent).toContain('Lectura en voz alta activada.');
-        boton.click();
-        fixture.detectChanges();
-        expect(boton.getAttribute('aria-pressed')).toBe('false');
+        expect(el.querySelectorAll('button')).toHaveLength(0);
+        expect(el.textContent).not.toContain('Desactivar lectura');
         expect(el.textContent).not.toContain('Leer esta página');
       });
 
@@ -414,20 +415,48 @@ describe('lectura en voz alta', () => {
         expect(dichas.join(' ')).toContain('Verificar el correo');
       });
 
-      it('dice el nombre de cada campo al enfocarlo, con su ayuda, y lee la página con el botón', async () => {
-        const { fixture, el, main, espera } = await montar();
+      it('dice el nombre de cada campo al enfocarlo, con su ayuda', async () => {
+        const { main, espera } = await montar();
         await espera();
         main.innerHTML =
           '<h1>Preinscripción</h1><label for="a">Nombre completo</label><input id="a" type="text" />';
         dichas.length = 0;
         main.querySelector('input')!.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
         expect(dichas.join(' ')).toContain('Nombre completo, campo de texto');
-        fixture.detectChanges();
+      });
+
+      it('en una pantalla que no es el menú, después de leerla pregunta si quiere volver al menú y vuelve', async () => {
+        respuestas.push(dice('sí, por favor'));
+        const { main, espera } = await montar();
+        const router = TestBed.inject(Router);
+        await router.navigateByUrl('/consulta');
+        const ir = vi.spyOn(router, 'navigateByUrl');
+        main.innerHTML = '<h1>Consultar el estado</h1><p>Escriba su documento para consultar.</p>';
+        await espera(RETRASO_ENTRADA + 500);
+        expect(dichas.join(' ')).toContain('¿Quiere volver al menú principal?');
+        expect(ir).toHaveBeenCalledWith('/');
+      });
+
+      it('si dice que no, se queda y se lo vuelve a ofrecer con el siguiente toque', async () => {
+        respuestas.push(dice('no'));
+        const { main, espera } = await montar();
+        await TestBed.inject(Router).navigateByUrl('/consulta');
+        main.innerHTML = '<h1>Consultar el estado</h1><p>Escriba su documento para consultar.</p>';
+        await espera(RETRASO_ENTRADA + 500);
+        expect(dichas.join(' ')).toContain('me quedo aquí');
         dichas.length = 0;
-        [...el.querySelectorAll<HTMLButtonElement>('.barra-voz button')]
-          .find((b) => b.textContent?.includes('Leer esta página'))!
-          .click();
-        expect(dichas.join(' ')).toContain('Preinscripción. Nombre completo.');
+        respuestas.push(dice('sí'));
+        document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+        await espera(200);
+        expect(dichas.join(' ')).toContain('¿Quiere volver al menú principal?');
+      });
+
+      it('en el inicio no pregunta por el menú: ya está en él', async () => {
+        const { main, espera } = await montar();
+        main.innerHTML =
+          '<h1>Estímulo Social de Transporte</h1><p>Programa de la Alcaldía de Barranquilla.</p>';
+        await espera(RETRASO_ENTRADA + 300);
+        expect(dichas.join(' ')).not.toContain('volver al menú');
       });
 
       it('lee los errores que aparecen mientras la lectura está activa', async () => {
@@ -455,9 +484,18 @@ describe('lectura en voz alta', () => {
       });
     });
 
-    it('si la persona dijo que no, no lee nada al entrar', async () => {
+    it('si la persona dijo que no, no lee nada al entrar, pero puede activar la lectura', async () => {
       localStorage.setItem('lectura_voz_activa', '0');
-      const { main, espera } = await montar();
+      const { el, fixture, main, espera, voz } = await montar();
+      expect(el.querySelector('.barra-voz button')?.textContent).toContain(
+        'Activar lectura en voz alta',
+      );
+      el.querySelector<HTMLButtonElement>('.barra-voz button')!.click();
+      fixture.detectChanges();
+      expect(voz.activa()).toBe(true);
+      expect(el.querySelectorAll('button')).toHaveLength(0);
+      voz.desactivar();
+      dichas.length = 0;
       main.innerHTML = '<h1>Consulta de estado</h1><p>Escriba su documento para consultar.</p>';
       await espera();
       expect(dichas).toEqual([]);

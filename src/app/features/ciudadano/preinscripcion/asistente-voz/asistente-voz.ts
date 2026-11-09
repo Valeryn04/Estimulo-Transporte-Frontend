@@ -15,6 +15,7 @@ import { AbstractControl, FormControl } from '@angular/forms';
 import {
   OpcionDicha,
   coincidirOpcion,
+  primeraInterpretacion,
   deletrear,
   interpretarCorreo,
   interpretarSiNo,
@@ -22,7 +23,11 @@ import {
   nombrePropio,
 } from '../../../../shared/lectura-voz/analisis-voz';
 import { LecturaVoz } from '../../../../shared/lectura-voz/lectura-voz';
-import { ReconocimientoVoz } from '../../../../shared/lectura-voz/reconocimiento-voz';
+import {
+  MENSAJES_FALLO,
+  MotivoFallo,
+  ReconocimientoVoz,
+} from '../../../../shared/lectura-voz/reconocimiento-voz';
 import { textoError } from '../../../../shared/campo';
 import { soloDigitos } from '../../../../shared/identificacion';
 
@@ -52,7 +57,8 @@ export interface TipoDocumentoDicho {
 
 /** Lo que la persona contestó: hablando, escribiendo o con los botones grandes. */
 type Entrada =
-  | { via: 'voz'; texto: string }
+  | { via: 'voz'; texto: string; alternativas: string[] }
+  | { via: 'fallo'; motivo: MotivoFallo }
   | { via: 'ui'; texto: string }
   | { via: 'sino'; valor: boolean }
   | { via: 'opcion'; id: number }
@@ -90,6 +96,8 @@ const ALIAS: Record<string, string[]> = {
 export class AsistenteVoz implements OnInit {
   protected readonly voz = inject(LecturaVoz);
   private readonly reconocimiento = inject(ReconocimientoVoz);
+  /** Lo que se va oyendo mientras la persona habla. */
+  protected readonly oido = this.reconocimiento.parcial;
   private readonly destruir = inject(DestroyRef);
 
   readonly form = input.required<ControlesPreinscripcion>();
@@ -112,7 +120,13 @@ export class AsistenteVoz implements OnInit {
 
   private corriendo = false;
   private cancelado = false;
+  private destruido = false;
+  /** El micrófono no sirve (permiso, internet…): ya se le dijo y solo se usan los botones y el teclado. */
+  private microfonoMalo = false;
+  private temporizador: ReturnType<typeof setTimeout> | undefined;
   private resolverUI: ((e: Entrada) => void) | null = null;
+  /** Respuesta tocada mientras el asistente todavía hablaba: corta la voz y se toma como respuesta. */
+  private entradaPendiente: Entrada | null = null;
 
   constructor() {
     // Si la persona dijo que sí necesita la lectura, el asistente empieza.
@@ -129,12 +143,15 @@ export class AsistenteVoz implements OnInit {
   ngOnInit(): void {
     this.voz.asistenteEnPagina.set(true);
     this.destruir.onDestroy(() => {
+      this.destruido = true;
+      clearTimeout(this.temporizador);
+      this.cancelado = true;
       this.voz.asistenteEnPagina.set(false);
       this.cancelar();
     });
     // Quien ya pidió la lectura y vuelve a esta pantalla: empieza solo (si el navegador ya permite hablar).
     if (this.voz.activa() && this.voz.decidida() && this.voz.gestoHecho) {
-      setTimeout(() => void this.iniciar(), 500);
+      this.temporizador = setTimeout(() => void this.iniciar(), 500);
     }
   }
 
@@ -157,7 +174,7 @@ export class AsistenteVoz implements OnInit {
   // ------------------------------------------------------------------ control de la conversación
 
   protected async iniciar(): Promise<void> {
-    if (this.corriendo || !this.voz.soportado) return;
+    if (this.corriendo || this.destruido || !this.voz.soportado) return;
     this.corriendo = true;
     this.cancelado = false;
     this.abierto.set(true);
@@ -180,6 +197,12 @@ export class AsistenteVoz implements OnInit {
     this.resolverUI?.({ via: 'silencio' });
   }
 
+  /** Quien activó la voz sin necesitarla la apaga: el formulario queda como siempre. */
+  protected apagar(): void {
+    this.salir();
+    this.voz.fijar(false);
+  }
+
   private cancelar(): void {
     this.reconocimiento.cancelar();
     this.voz.detener();
@@ -199,10 +222,15 @@ export class AsistenteVoz implements OnInit {
   /** Espera la respuesta: hablando (si se puede) o con los botones y los cuadros de la pantalla. */
   private async esperar(conVoz: boolean): Promise<Entrada> {
     this.revisar();
+    if (this.entradaPendiente) {
+      const e = this.entradaPendiente;
+      this.entradaPendiente = null;
+      return e;
+    }
     const ui = new Promise<Entrada>((resolver) => {
       this.resolverUI = resolver;
     });
-    if (!conVoz || !this.reconocimiento.soportado) {
+    if (!conVoz || this.microfonoMalo || !this.reconocimiento.soportado) {
       this.estado.set('esperando');
       const r = await ui;
       this.revisar();
@@ -210,11 +238,25 @@ export class AsistenteVoz implements OnInit {
     }
     this.estado.set('escuchando');
     const voz = this.reconocimiento
-      .escuchar(10_000)
-      .then((r): Entrada => (r.ok ? { via: 'voz', texto: r.texto } : { via: 'silencio' }));
+      .escuchar(12_000)
+      .then((r): Entrada =>
+        r.ok
+          ? { via: 'voz', texto: r.texto, alternativas: r.alternativas }
+          : r.motivo === 'sin-voz'
+            ? { via: 'silencio' }
+            : { via: 'fallo', motivo: r.motivo },
+      );
     const ganador = await Promise.race([ui, voz]);
-    if (ganador.via !== 'voz' && ganador.via !== 'silencio') this.reconocimiento.cancelar();
+    if (ganador.via !== 'voz' && ganador.via !== 'silencio' && ganador.via !== 'fallo') {
+      this.reconocimiento.cancelar();
+    }
     this.revisar();
+    if (ganador.via === 'fallo') {
+      // Si el problema es el micrófono, se le dice cuál es; después se vuelve a preguntar solo con botones y teclado.
+      this.microfonoMalo = true;
+      await this.decirA(MENSAJES_FALLO[ganador.motivo as Exclude<MotivoFallo, 'sin-voz'>]);
+      return { via: 'repetir' };
+    }
     return ganador;
   }
 
@@ -224,11 +266,12 @@ export class AsistenteVoz implements OnInit {
     this.modo.set('sino');
     this.pregunta.set(texto);
     for (let intento = 0; ; intento++) {
+      this.entradaPendiente = null;
       await this.decirA(`${texto} Diga sí o no.`);
       const r = await this.esperar(intento < 3);
       if (r.via === 'sino') return r.valor;
       if (r.via === 'voz') {
-        const v = interpretarSiNo(r.texto);
+        const v = primeraInterpretacion(r.alternativas, interpretarSiNo);
         if (v) return v === 'si';
       }
       if (r.via === 'repetir') continue;
@@ -249,6 +292,7 @@ export class AsistenteVoz implements OnInit {
     this.etiquetaEntrada.set(etiqueta);
     this.entrada.set('');
     for (let intento = 0; ; intento++) {
+      this.entradaPendiente = null;
       await this.decirA(texto);
       const r = await this.esperar(intento < 3);
       if (r.via === 'repetir') continue;
@@ -257,7 +301,8 @@ export class AsistenteVoz implements OnInit {
           await this.decirA('No la escuché. Puede escribir la respuesta en el recuadro.');
         continue;
       }
-      const valor = normalizar(r.texto);
+      const valor =
+        r.via === 'voz' ? primeraInterpretacion(r.alternativas, normalizar) : normalizar(r.texto);
       if (valor === null) {
         await this.decirA('No le entendí.');
         continue;
@@ -293,6 +338,7 @@ export class AsistenteVoz implements OnInit {
     this.pregunta.set(texto);
     this.opciones.set(lista);
     for (let intento = 0; ; intento++) {
+      this.entradaPendiente = null;
       await this.decirA(
         `${texto} Por ejemplo: cédula de ciudadanía, tarjeta de identidad, registro civil, cédula de extranjería o pasaporte.`,
       );
@@ -300,7 +346,9 @@ export class AsistenteVoz implements OnInit {
       if (r.via === 'repetir') continue;
       let id: number | null = null;
       if (r.via === 'opcion') id = r.id;
-      else if (r.via === 'voz') id = coincidirOpcion(r.texto, opciones)?.id ?? null;
+      else if (r.via === 'voz') {
+        id = primeraInterpretacion(r.alternativas, (t) => coincidirOpcion(t, opciones))?.id ?? null;
+      }
       if (id === null) {
         await this.decirA('No le entendí.');
         continue;
@@ -490,22 +538,33 @@ export class AsistenteVoz implements OnInit {
 
   // ------------------------------------------------------------------ lo que la persona hace en la pantalla
 
+  private recibir(e: Entrada): void {
+    if (this.resolverUI) {
+      const resolver = this.resolverUI;
+      this.resolverUI = null;
+      resolver(e);
+    } else {
+      this.entradaPendiente = e;
+      this.voz.detener();
+    }
+  }
+
   protected responderSino(valor: boolean): void {
-    this.resolverUI?.({ via: 'sino', valor });
+    this.recibir({ via: 'sino', valor });
   }
 
   protected elegirOpcion(id: number): void {
-    this.resolverUI?.({ via: 'opcion', id });
+    this.recibir({ via: 'opcion', id });
   }
 
   protected listo(): void {
-    this.resolverUI?.({ via: 'ui', texto: this.entrada() });
+    this.recibir({ via: 'ui', texto: this.entrada() });
   }
 
   protected repetir(): void {
     this.reconocimiento.cancelar();
     this.voz.detener();
-    this.resolverUI?.({ via: 'repetir' });
+    this.recibir({ via: 'repetir' });
   }
 
   protected saltarLectura(): void {

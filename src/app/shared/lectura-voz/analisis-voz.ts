@@ -151,3 +151,59 @@ export function coincidirOpcion(texto: string, opciones: OpcionDicha[]): OpcionD
   }
   return puntaje > 0 && !empate ? mejor : null;
 }
+
+/**
+ * Qué opción del menú principal eligió la persona, dicha por su número («dos», «la tercera») o por su nombre
+ * («quiero consultar mi solicitud»). 1 preinscribirse, 2 continuar la caracterización, 3 consultar el estado,
+ * 4 reenviar el correo de verificación, 5 guía paso a paso, 6 apagar la voz.
+ */
+export function interpretarMenu(texto: string): number | null {
+  const t = sinAcentos(texto);
+  const palabras = t.split(' ');
+  const numeros: [string, number][] = [
+    ['uno', 1],
+    ['1', 1],
+    ['primera', 1],
+    ['primero', 1],
+    ['dos', 2],
+    ['2', 2],
+    ['segunda', 2],
+    ['segundo', 2],
+    ['tres', 3],
+    ['3', 3],
+    ['tercera', 3],
+    ['tercero', 3],
+    ['cuatro', 4],
+    ['4', 4],
+    ['cuarta', 4],
+    ['cinco', 5],
+    ['5', 5],
+    ['quinta', 5],
+    ['seis', 6],
+    ['6', 6],
+    ['sexta', 6],
+  ];
+  for (const [p, n] of numeros) if (palabras.includes(p)) return n;
+  const claves: [RegExp, number][] = [
+    [/apag|desactiv|silencio|callar|salir/, 6],
+    [/correo|verificacion|reenv/, 4],
+    [/continu|caracteriz|document/, 2],
+    [/estado|consult|etapa|como va/, 3],
+    [/preinscri|inscrib|registr|solicit/, 1],
+    [/guia|ayuda|paso a paso|instruc/, 5],
+  ];
+  for (const [re, n] of claves) if (re.test(t)) return n;
+  return null;
+}
+
+/** La primera interpretación (de las que da el navegador, de la más a la menos probable) que se entiende. */
+export function primeraInterpretacion<T>(
+  alternativas: readonly string[],
+  entender: (texto: string) => T | null,
+): T | null {
+  for (const a of alternativas) {
+    const r = entender(a);
+    if (r !== null) return r;
+  }
+  return null;
+}

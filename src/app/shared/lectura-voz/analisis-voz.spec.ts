@@ -1,5 +1,6 @@
 import {
   coincidirOpcion,
+  interpretarMenu,
   deletrear,
   interpretarCorreo,
   interpretarSiNo,
@@ -87,6 +88,33 @@ describe('análisis de lo que dice la persona', () => {
       expect(coincidirOpcion('documento', tipos)).toBeNull();
       expect(coincidirOpcion('', tipos)).toBeNull();
       expect(coincidirOpcion('de', tipos)).toBeNull();
+    });
+  });
+
+  describe('interpretarMenu', () => {
+    it('entiende el número de la opción', () => {
+      expect(interpretarMenu('uno')).toBe(1);
+      expect(interpretarMenu('la opción dos')).toBe(2);
+      expect(interpretarMenu('Tres.')).toBe(3);
+      expect(interpretarMenu('la cuarta')).toBe(4);
+      expect(interpretarMenu('5')).toBe(5);
+    });
+
+    it('entiende el nombre de la opción', () => {
+      expect(interpretarMenu('quiero preinscribirme')).toBe(1);
+      expect(interpretarMenu('quiero inscribirme al estímulo')).toBe(1);
+      expect(interpretarMenu('continuar con los documentos')).toBe(2);
+      expect(interpretarMenu('continuar mi solicitud')).toBe(2);
+      expect(interpretarMenu('consultar el estado de mi solicitud')).toBe(3);
+      expect(interpretarMenu('en qué etapa va')).toBe(3);
+      expect(interpretarMenu('no me llegó el correo')).toBe(4);
+      expect(interpretarMenu('la guía paso a paso')).toBe(5);
+      expect(interpretarMenu('apagar la voz')).toBe(6);
+    });
+
+    it('si no entiende, no elige', () => {
+      expect(interpretarMenu('hola buenas')).toBeNull();
+      expect(interpretarMenu('')).toBeNull();
     });
   });
 });

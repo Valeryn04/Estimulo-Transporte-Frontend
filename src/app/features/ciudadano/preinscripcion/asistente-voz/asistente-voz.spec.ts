@@ -1,4 +1,4 @@
-import { ComponentRef } from '@angular/core';
+import { ComponentRef, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { vi } from 'vitest';
@@ -34,12 +34,13 @@ const sintesis = {
 const respuestas: ResultadoEscucha[] = [];
 const reconocimiento = {
   soportado: true,
+  parcial: signal(''),
   escuchar: vi.fn(() =>
     Promise.resolve(respuestas.shift() ?? ({ ok: false, motivo: 'sin-voz' } as ResultadoEscucha)),
   ),
   cancelar: vi.fn(),
 };
-const dice = (texto: string): ResultadoEscucha => ({ ok: true, texto });
+const dice = (texto: string): ResultadoEscucha => ({ ok: true, texto, alternativas: [texto] });
 
 const TIPOS = [
   { id: 1, codigo: 'CC', nombre: 'Cédula de Ciudadanía' },
@@ -93,6 +94,8 @@ describe('AsistenteVoz', () => {
     vi.unstubAllGlobals();
     Reflect.deleteProperty(window, 'speechSynthesis');
     document.body.innerHTML = '';
+    // Otras pruebas comprueban que no quede nada guardado en el navegador.
+    localStorage.clear();
   });
 
   async function montar(autorizacion: string | null = null) {
@@ -241,6 +244,31 @@ describe('AsistenteVoz', () => {
     salir(el);
   });
 
+  it('si el micrófono no sirve, lo dice con claridad y sigue con botones, sin repetir «no le entendí»', async () => {
+    respuestas.push({ ok: false, motivo: 'red' });
+    const { el, form, hasta } = await montar();
+    el.querySelector<HTMLButtonElement>('.lanzador button')!.click();
+    await hasta(() => dichas.join(' ').includes('necesita conexión a internet'));
+    expect(dichas.join(' ')).not.toContain('No le entendí');
+    await hasta(() => !!el.querySelector('.par .grande'));
+    [...el.querySelectorAll<HTMLButtonElement>('.par .grande')]
+      .find((b) => b.textContent?.trim() === 'Sí')!
+      .click();
+    await hasta(() => form.controls.diligencia.value === 'PCD');
+    expect(form.controls.diligencia.value).toBe('PCD');
+    expect(reconocimiento.escuchar).toHaveBeenCalledTimes(1);
+    salir(el);
+  });
+
+  it('prueba todas las interpretaciones: «tras» no se entiende pero la alternativa «sí» sí', async () => {
+    respuestas.push({ ok: true, texto: 'ci', alternativas: ['ci', 'sí'] });
+    const { el, form, hasta } = await montar();
+    el.querySelector<HTMLButtonElement>('.lanzador button')!.click();
+    await hasta(() => form.controls.diligencia.value === 'PCD');
+    expect(form.controls.diligencia.value).toBe('PCD');
+    salir(el);
+  });
+
   it('«Salir del asistente» lo cierra y deja el formulario como estaba', async () => {
     respuestas.push(dice('sí'));
     const { fixture, form, el, hasta } = await montar();
@@ -253,6 +281,19 @@ describe('AsistenteVoz', () => {
     await hasta(() => !el.querySelector('.asistente'));
     expect(el.querySelector('.asistente')).toBeNull();
     expect(form.controls.pcdNombre.value).toBe('');
+  });
+
+  it('«Apagar la voz y llenar yo» cierra el asistente y deja la lectura apagada', async () => {
+    respuestas.push(dice('sí'));
+    const { el, hasta, voz } = await montar();
+    el.querySelector<HTMLButtonElement>('.lanzador button')!.click();
+    await hasta(() => !!el.querySelector('.asistente'));
+    [...el.querySelectorAll<HTMLButtonElement>('.fila button')]
+      .find((b) => b.textContent?.includes('Apagar la voz'))!
+      .click();
+    await hasta(() => !el.querySelector('.asistente'));
+    expect(voz.activa()).toBe(false);
+    expect(localStorage.getItem('lectura_voz_activa')).toBe('0');
   });
 
   it('si la persona acaba de decir que sí en la pregunta inicial, el asistente empieza solo', async () => {

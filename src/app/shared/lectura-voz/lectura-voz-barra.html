@@ -16,30 +16,16 @@
 }
 
 <div class="barra-voz no-imprimir" role="region" aria-label="Lectura en voz alta">
-  @if (voz.soportado && voz.decidida()) {
+  <!-- Quien dijo que sí no ve botones: todo es por voz. Quien dijo que no puede cambiar de opinión aquí. -->
+  @if (voz.soportado && voz.decidida() && !voz.activa()) {
     <button
       type="button"
       class="boton secundario chico"
-      [attr.aria-pressed]="voz.activa()"
       aria-keyshortcuts="Alt+Shift+L"
       (click)="voz.alternar()"
     >
-      {{ voz.activa() ? 'Desactivar lectura en voz alta' : 'Activar lectura en voz alta' }}
+      Activar lectura en voz alta
     </button>
-    @if (voz.activa()) {
-      <span class="estado">Lectura en voz alta activada.</span>
-      <button type="button" class="boton secundario chico" (click)="leerPagina()">
-        Leer esta página
-      </button>
-      <button
-        type="button"
-        class="boton secundario chico"
-        [disabled]="!voz.hablando()"
-        (click)="voz.detener()"
-      >
-        Detener la lectura
-      </button>
-    }
   } @else if (!voz.soportado) {
     <p class="nota">
       Este navegador no trae voz para leer en voz alta. Puede usar su lector de pantalla (NVDA,
