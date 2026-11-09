@@ -906,69 +906,13 @@ body.swal2-shown:not(:has(.swal2-container)) {
   overflow: auto !important;
 }
 
-// ---- Modo accesible (portal ciudadano) ----
-// Lo activa quien dice que tiene una discapacidad visual. No es una voz: es una página preparada para VoiceOver, TalkBack,
-// NVDA y el lector de pantalla de Google, y más fácil de usar con baja visión: letra grande, botones grandes, foco muy
-// visible y la ayuda de cada campo siempre escrita (sin pasar el cursor por un «?»).
-:root[data-modo-accesible] {
-  font-size: 118%;
-
-  :focus-visible {
-    outline: 4px solid var(--alc-amarillo, #ffea00);
-    outline-offset: 3px;
-    box-shadow: 0 0 0 7px var(--alc-azul);
-  }
-
-  // Objetivos táctiles grandes.
-  button,
-  .boton,
-  select,
-  textarea,
-  input:not([type='checkbox'], [type='radio'], [type='hidden']) {
-    min-height: 52px;
-  }
-
-  input[type='checkbox'],
-  input[type='radio'] {
-    width: 1.6rem;
-    height: 1.6rem;
-  }
-
-  .tarjeta {
-    padding-block: 20px;
-  }
-
-  // La ayuda queda escrita bajo la pregunta: se lee de corrido y no hay un botón «?» de más en el recorrido.
-  .ayuda-boton {
-    display: none;
-  }
-
-  .ayuda-envoltura {
-    display: block;
-  }
-
-  .ayuda-envoltura .tooltip {
-    position: static;
-    width: auto;
-    max-width: none;
-    margin-top: 4px;
-    color: var(--color-text);
-    background: transparent;
-    border: 0;
-    box-shadow: none;
-    visibility: visible;
-    opacity: 1;
-    transform: none !important;
-  }
+// Énfasis solo visual: no se usa <strong> en el portal ciudadano para que los lectores de pantalla no anuncien «negrita» ni
+// otros detalles de formato; el texto se lee tal cual.
+.enfasis {
+  font-weight: 700;
 }
 
 // El título que recibe el foco al cambiar de pantalla no se dibuja con recuadro.
 main h1:focus {
   outline: none;
-}
-
-// Énfasis solo visual: no se usa <strong> en el portal ciudadano para que los lectores de pantalla no anuncien «negrita» ni
-// otros detalles de formato; el texto se lee tal cual.
-.enfasis {
-  font-weight: 700;
 }

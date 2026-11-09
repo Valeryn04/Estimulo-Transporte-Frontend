@@ -24,6 +24,18 @@ describe('CiudadanoShell', () => {
     return { fixture, router, el: fixture.nativeElement as HTMLElement };
   }
 
+  it('al cambiar de pantalla pasa el foco al título, para que el lector de pantalla lo lea', async () => {
+    const { fixture, router } = await montar();
+    document.body.appendChild(fixture.nativeElement);
+    const main = (fixture.nativeElement as HTMLElement).querySelector('main')!;
+    main.insertAdjacentHTML('beforeend', '<h1>Consultar el estado</h1>');
+    await router.navigateByUrl('/consulta');
+    await new Promise((r) => setTimeout(r, 300));
+    expect(document.activeElement?.textContent).toBe('Consultar el estado');
+    expect(document.querySelector('[aria-live], [role="status"], [role="alertdialog"]')).toBeNull();
+    fixture.nativeElement.remove();
+  });
+
   it('en el inicio no muestra «Volver al inicio»', async () => {
     const { el } = await montar();
     expect(el.querySelector('.volver')).toBeNull();
