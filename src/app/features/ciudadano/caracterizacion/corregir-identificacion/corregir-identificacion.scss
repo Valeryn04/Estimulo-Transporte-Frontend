@@ -1,0 +1,29 @@
+.corregir {
+  margin: 0 0 16px;
+}
+
+.panel-corregir {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--color-borde, #d0d5dd);
+  border-radius: 8px;
+}
+
+.nota {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+}
+
+.rejilla {
+  display: grid;
+  gap: 12px 24px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
