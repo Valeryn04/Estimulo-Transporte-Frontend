@@ -127,18 +127,7 @@ export interface Caracterizacion {
     ocupaciones: ItemLista[];
     eps: ItemLista[];
     tiposTransporte: ItemLista[];
-    tiposIdentificacion: ItemLista[];
   };
-}
-
-/** Lo que devuelve el servidor al corregir el tipo o el número de documento. */
-export interface RespuestaCorreccionDocumento {
-  cambio: boolean;
-  pcd: IdentificacionPersona & { correo: string };
-  cuidador: (IdentificacionPersona & { nombreEditable: boolean }) | null;
-  regimen: ConsultaRegimen | null;
-  version: number;
-  avance: Avance;
 }
 
 export type CambiosCaracterizacion = Partial<DatosCaracterizacion> & {
@@ -314,19 +303,6 @@ export class CaracterizacionApi {
   /** Dirección del modelo descargable de un documento (carta de solicitud, carta de cuidador). */
   urlModelo(documentoId: number): string {
     return `${API_BASE}/publico/documentos/${documentoId}/modelo`;
-  }
-
-  /** Corrige el tipo y el número de documento de la persona con discapacidad o del cuidador (antes de enviar). */
-  corregirIdentificacion(cuerpo: {
-    persona: 'PCD' | 'CUIDADOR';
-    tipoIdentificacionId: number;
-    numero: string;
-  }): Observable<RespuestaCorreccionDocumento> {
-    return this.http.patch<RespuestaCorreccionDocumento>(
-      `${this.base}/identificacion`,
-      cuerpo,
-      this.cabeceras(),
-    );
   }
 
   guardar(cambios: CambiosCaracterizacion): Observable<CaracterizacionGuardada> {

@@ -248,16 +248,9 @@
                   Datos de su preinscripción
                   <app-ayuda
                     etiqueta="Datos de la preinscripción"
-                    texto="El correo viene de su preinscripción y no se puede cambiar aquí. Si escribió mal el tipo o el número del documento, puede corregirlo con el botón de abajo antes de enviar la solicitud."
+                    texto="Estos datos vienen de su preinscripción y no se pueden cambiar aquí."
                   />
                 </p>
-                <app-corregir-identificacion
-                  persona="PCD"
-                  [actual]="datos.pcd"
-                  [tipos]="datos.catalogos.tiposIdentificacion"
-                  [editable]="editable() && !modoSubsanacion()"
-                  (corregido)="alCorregirDocumento($event)"
-                />
                 <div class="rejilla">
                   <app-campo
                     idCampo="car-generoId"
@@ -627,16 +620,9 @@
                   Datos de su preinscripción
                   <app-ayuda
                     etiqueta="Datos de la preinscripción"
-                    texto="Estos datos vienen de su preinscripción. Si escribió mal el tipo o el número del documento del cuidador, puede corregirlo con el botón de abajo antes de enviar la solicitud."
+                    texto="Estos datos vienen de su preinscripción y no se pueden cambiar aquí. Si hay un error en el documento del cuidador, comuníquese con la Gerencia de Desarrollo Social."
                   />
                 </p>
-                <app-corregir-identificacion
-                  persona="CUIDADOR"
-                  [actual]="datos.cuidador!"
-                  [tipos]="datos.catalogos.tiposIdentificacion"
-                  [editable]="editable() && !modoSubsanacion()"
-                  (corregido)="alCorregirDocumento($event)"
-                />
                 <div class="rejilla">
                   <app-campo
                     idCampo="car-cuidadorGeneroId"

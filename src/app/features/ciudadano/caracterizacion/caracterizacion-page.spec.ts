@@ -142,7 +142,6 @@ const respuesta = (cambios: Partial<Caracterizacion> = {}): Caracterizacion => (
     ocupaciones: [item(40, 'Ama de casa'), item(41, 'Estudiante')],
     eps: [item(50, 'Sanitas'), item(51, 'Nueva EPS')],
     tiposTransporte: [item(60, 'Transmetro'), item(61, 'SiBus')],
-    tiposIdentificacion: [item(70, 'CC'), item(71, 'TI')],
   },
   ...cambios,
 });

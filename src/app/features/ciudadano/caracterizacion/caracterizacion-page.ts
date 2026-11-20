@@ -34,7 +34,6 @@ import {
   DocumentosSolicitud,
   Embarazo,
   Radicacion,
-  RespuestaCorreccionDocumento,
   RespuestaSubsanacion,
   RevisionSolicitud,
   SesionCiudadano,
@@ -60,7 +59,6 @@ import {
   normalizarTelefono,
   textoONulo,
 } from './caracterizacion-datos';
-import { CorregirIdentificacion } from './corregir-identificacion/corregir-identificacion';
 import { DocumentosPanel } from './documentos/documentos-panel';
 import { Ayuda } from '../../../shared/ayuda/ayuda';
 
@@ -122,7 +120,6 @@ const textoControl = (validadores: ((c: AbstractControl) => object | null)[] = [
     RouterLink,
     Campo,
     CampoControl,
-    CorregirIdentificacion,
     Dialogo,
     DocumentosPanel,
     Icono,
@@ -610,20 +607,6 @@ export class CaracterizacionPage implements OnInit, OnDestroy {
       this.estadoGuardado.set('pendiente');
       this.mensajeGuardado.set('');
     }
-  }
-
-  /** Se corrigió el tipo o el número de documento: se muestran los datos vigentes que devolvió el servidor. */
-  protected alCorregirDocumento(r: RespuestaCorreccionDocumento): void {
-    this.c.update((x) =>
-      x
-        ? {
-            ...x,
-            pcd: { ...x.pcd, tipoIdentificacion: r.pcd.tipoIdentificacion, numero: r.pcd.numero },
-            cuidador: r.cuidador,
-            avance: r.avance,
-          }
-        : x,
-    );
   }
 
   /** Guarda ya (botón «Guardar avance», cambio de sección o fin de la pausa al escribir). */
