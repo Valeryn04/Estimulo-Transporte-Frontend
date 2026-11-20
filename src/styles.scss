@@ -114,6 +114,25 @@ textarea {
   }
 }
 
+// En iPhone/Safari los campos de fecha, hora y mes tienen un ancho propio que desborda su contenedor: se
+// ajustan al ancho disponible y el valor se muestra alineado a la izquierda, como el resto de campos.
+input[type='date'],
+input[type='time'],
+input[type='month'],
+input[type='datetime-local'],
+input[type='week'] {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+
+  &::-webkit-date-and-time-value {
+    min-height: 1.5em;
+    text-align: left;
+  }
+}
+
 textarea {
   min-height: 96px;
   resize: vertical;
